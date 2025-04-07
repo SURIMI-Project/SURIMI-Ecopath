@@ -134,6 +134,8 @@ namespace Ecopath.EwE
             _thread.Start();
             _pausewait.WaitOne();
 
+            // Pas terugkomen als Ecospace staat te wachten op timestep X
+
             return 1;
         }
 

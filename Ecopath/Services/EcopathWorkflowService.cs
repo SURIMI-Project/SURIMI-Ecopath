@@ -15,19 +15,12 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
         _controller = new EwEController();
     }
 
-    public override Task<InitResponse> Init(InitRequest request, ServerCallContext context)
+    public override async Task<InitResponse> Init(InitRequest request, ServerCallContext context)
     {
         GrpcValidation.ArgumentNotNullOrEmpty(request.ScenarioId);
         Console.WriteLine($"Ecopath Initializing scenario {request.ScenarioId}...");
 
-        if (_controller.Start() > 0)
-        {
-            // ToDo: wait until controller is paused
-            while (!_controller.IsWaiting)
-            {
-                // ToDo: Fix this horrendous band-aid
-            }
-        }
+        var result = await _controller.start_Async();
         return Task.FromResult(new InitResponse());
     }
 
