@@ -7,6 +7,27 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecopath", "Ecopath\Ecopath.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SURIMI.ServiceDefaults", "SURIMI.ServiceDefaults\SURIMI.ServiceDefaults.csproj", "{C3E0D297-7EA5-49FF-B8BD-D5A2D0BB2643}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "proto", "proto", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "surimi", "surimi", "{FAFEAEFA-5B7A-4509-9B43-A00C6E6796E6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "v1", "v1", "{F55D6A95-2369-4E3F-9C24-8D6F3AADE1F0}"
+	ProjectSection(SolutionItems) = preProject
+		proto\surimi\v1\biomass.proto = proto\surimi\v1\biomass.proto
+		proto\surimi\v1\controller.proto = proto\surimi\v1\controller.proto
+		proto\surimi\v1\market.proto = proto\surimi\v1\market.proto
+		proto\surimi\v1\species_price.proto = proto\surimi\v1\species_price.proto
+		proto\surimi\v1\workflow.proto = proto\surimi\v1\workflow.proto
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6E13B947-F77A-41C6-8D2A-0ED04AB3A2B3}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		.gitmodules = .gitmodules
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +45,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FAFEAEFA-5B7A-4509-9B43-A00C6E6796E6} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{F55D6A95-2369-4E3F-9C24-8D6F3AADE1F0} = {FAFEAEFA-5B7A-4509-9B43-A00C6E6796E6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1C44F9D1-9422-41D4-8C6A-991858F92E66}
