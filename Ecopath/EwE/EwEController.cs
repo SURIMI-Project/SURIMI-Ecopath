@@ -8,7 +8,6 @@ namespace Ecopath.EwE
     public class EwEController
     {
         private readonly cCore _core;
-        private readonly EventWaitHandle _pausewait; // ToDo: replace with something more modern
         private Thread? _thread;
         private cMessageHandler? _mh;
 
@@ -25,7 +24,6 @@ namespace Ecopath.EwE
         public EwEController() {
 
             _core = new cCore();
-            _pausewait = new EventWaitHandle(false, EventResetMode.AutoReset); 
 
             _mh = new cMessageHandler(OnCoreMessage, eCoreComponentType.Ecospace, eMessageType.EcospaceRunCompleted, SynchronizationContext.Current);
             _core.Messages.AddMessageHandler(_mh);
@@ -137,12 +135,9 @@ namespace Ecopath.EwE
             var task = Task.Run(() =>
             {
                 _thread.Start();
-                _pausewait.WaitOne();
             });
 
             await task;
-
-            // Pas terugkomen als Ecospace staat te wachten op timestep X
 
             return 1;
         }
@@ -165,7 +160,6 @@ namespace Ecopath.EwE
             {
                 _runstate = RunState.Stopping;
                 _core.StopEcospace();
-                _pausewait.WaitOne();
             }
             catch (Exception ex)
             {
@@ -192,7 +186,6 @@ namespace Ecopath.EwE
             Console.WriteLine("EwE - pausing");
 
             IsWaiting = true;
-            _pausewait.Set();
             _core.EcospacePaused = (_runstate != RunState.Stopping);
             IsWaiting = false;
         }
@@ -202,7 +195,6 @@ namespace Ecopath.EwE
             switch (msg.Type)
             {
                 case eMessageType.EcospaceRunCompleted:
-                    _pausewait.Set();
 
                     // Clear all modifications made by the process
                     _core.DiscardChanges();
