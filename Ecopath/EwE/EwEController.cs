@@ -47,7 +47,7 @@ namespace Ecopath.EwE
         public EwEConfiguration? Configuration { get; private set; }
         public bool IsWaiting { get; private set; } = false;
 
-        public int Start()
+        public async Task<int> StartAsync()
         {
             if (_runstate != RunState.Idle)
             {
@@ -58,16 +58,18 @@ namespace Ecopath.EwE
             _runstate = RunState.Starting;
 
             // Todo: this needs to come from somewhere
-            this.Configuration = new EwEConfiguration { 
-                ModelName =  Path.Combine(Directory.GetCurrentDirectory(), @"Includes\Anchovy Bay Spatial.eiixml"), 
-                EcosimScenario = 1, 
-                EcosimTimeSeries = 0, 
-                EcospaceScenario = 1, 
-                SpinupYears = 10, 
-                StartYear = 5};
+            this.Configuration = new EwEConfiguration
+            {
+                ModelName = Path.Combine(Directory.GetCurrentDirectory(), @"Includes\Anchovy Bay Spatial.eiixml"),
+                EcosimScenario = 1,
+                EcosimTimeSeries = 0,
+                EcospaceScenario = 1,
+                SpinupYears = 10,
+                StartYear = 5
+            };
 
             _core.PluginManager = new cPluginManager();
-            Console.WriteLine("EwE loaded {0} plug-in(s)",_core.PluginManager.LoadPlugins()); // ToDo: log this
+            Console.WriteLine("EwE loaded {0} plug-in(s)", _core.PluginManager.LoadPlugins()); // ToDo: log this
 
             if (!File.Exists(Configuration.ModelName))
             {
@@ -83,7 +85,7 @@ namespace Ecopath.EwE
             Console.WriteLine("EwE - Ecopath loaded model '{0}'", Configuration.ModelName); // ToDo: log this
 
             bool bIsBalanced = false;
-            if (!_core.RunEcopath(ref bIsBalanced) | !bIsBalanced )
+            if (!_core.RunEcopath(ref bIsBalanced) | !bIsBalanced)
             {
                 Console.WriteLine("EwE - Ecopath does not balance"); // ToDo: log this
                 return -1; // ToDo: return informative error code?
@@ -131,8 +133,14 @@ namespace Ecopath.EwE
 
             // Phew, we managed to plow through. Run Ecospace!
             _thread = new Thread(RunEcospace);
-            _thread.Start();
-            _pausewait.WaitOne();
+
+            var task = Task.Run(() =>
+            {
+                _thread.Start();
+                _pausewait.WaitOne();
+            });
+
+            await task;
 
             // Pas terugkomen als Ecospace staat te wachten op timestep X
 

@@ -20,8 +20,19 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
         GrpcValidation.ArgumentNotNullOrEmpty(request.ScenarioId);
         Console.WriteLine($"Ecopath Initializing scenario {request.ScenarioId}...");
 
-        var result = await _controller.start_Async();
-        return Task.FromResult(new InitResponse());
+        try
+        {
+            var result = await _controller.StartAsync();
+            if (result < 0)
+            {
+                throw new RpcException(new Status(StatusCode.Internal, "Failed to initialize Ecopath"));
+            }
+            return new InitResponse();
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
     }
 
     public override Task<UpdatePricesResponse> UpdatePrices(UpdatePricesRequest list, ServerCallContext context)
