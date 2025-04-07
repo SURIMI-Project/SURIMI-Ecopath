@@ -7,12 +7,12 @@ namespace Ecopath.Services;
 public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
 {
     private readonly ILogger<EcopathWorkflowService> _logger;
-    private readonly EwEController _ewEcontroller;
+    private readonly EwEController _MEMcontroller;
 
     public EcopathWorkflowService(ILogger<EcopathWorkflowService> logger, EwEController ewEcontroller)
     {
         _logger = logger;
-        _ewEcontroller = ewEcontroller;
+        _MEMcontroller = ewEcontroller;
     }
 
     public override async Task<InitResponse> Init(InitRequest request, ServerCallContext context)
@@ -22,7 +22,7 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
 
         try
         {
-            var result = await _ewEcontroller.StartAsync();
+            var result = await _MEMcontroller.StartAsync();
             if (result < 0)
             {
                 throw new RpcException(new Status(StatusCode.Internal, "Failed to initialize Ecopath"));
@@ -49,7 +49,7 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
     {
         Console.WriteLine($"Simulate step for simulation {req.SimulationId}");
 
-        _ewEcontroller.Continue();
+        _MEMcontroller.Continue();
         // Simulate some processing delay
         //Task.Delay(1000).Wait();
 

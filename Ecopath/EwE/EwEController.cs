@@ -1,29 +1,42 @@
 ﻿using EwECore;
 using EwEPlugin;
 using EwEUtils.Core;
+using System.Threading;
 using static EwECore.cCore;
 
 namespace Ecopath.EwE
 {
     public class EwEController
     {
+        #region Private vars 
+        
+        /// <summary>The <see cref="cCore"/> to operate on.</summary>
         private readonly cCore _core;
+        /// <summary>The Ecospace run thread, if any.</summary>
         private Thread? _thread;
+        /// <summary>Core message handler for tracking EwE execution flow.</summary>
         private cMessageHandler? _mh;
 
-        public enum RunState
+        private RunStates _runstate = RunStates.idle;
+
+        /// <summary>Event for internal state monitoring.</summary>
+        private event Action<RunStates>? OnRunStateChanged;
+
+        #endregion // Private vars 
+
+        public enum RunStates
         {
-            Idle, // Ready to be started
-            Starting, // Starting up, not ready yet
-            Waiting, // Waiting for exteral input
-            Running, // Busy running simulations
-            Stopping // Busy stoppping
+            idle, // Ready to be started
+            starting, // Starting up, not ready yet
+            waiting, // Waiting for exteral input
+            running, // Busy running simulations
+            stopping // Busy stoppping
         }
-        private RunState _runstate = RunState.Idle;
 
         public EwEController() {
 
             _core = new cCore();
+            RunState = RunStates.idle;
 
             _mh = new cMessageHandler(OnCoreMessage, eCoreComponentType.Ecospace, eMessageType.EcospaceRunCompleted, SynchronizationContext.Current);
             _core.Messages.AddMessageHandler(_mh);
@@ -37,23 +50,52 @@ namespace Ecopath.EwE
             _core.Messages.RemoveMessageHandler(_mh);
             _mh = null;
 
-            Stop();
+            ForceStop();
+
             _core.CloseModel();
             _core.Dispose();
         }
 
-        public EwEConfiguration? Configuration { get; private set; }
-        public bool IsWaiting { get; private set; } = false;
+        #region Public interaction 
 
-        public async Task<int> StartAsync()
+        /// <summary>
+        /// The configuration that EwE is running against
+        /// </summary>
+        public EwEConfiguration? Configuration { get; private set; }
+
+        /// <summary>
+        /// The current EwE run state.
+        /// </summary>
+        public RunStates RunState 
+        { get => _runstate; 
+            private set
+            {
+                if (_runstate != value)
+                {
+                    _runstate = value;
+                    OnRunStateChanged?.Invoke(_runstate);
+                }
+            }
+        } 
+
+        /// <summary>
+        /// Helper method, returns if Ecospace is waiting for input.
+        /// </summary>
+        public bool IsWaiting { get { return RunState == RunStates.waiting; } }
+
+        /// <summary>
+        /// Start EwE and wait for Ecospace to get ready for simulations
+        /// </summary>
+        /// <returns></returns>
+        public async Task<int> StartAsync(int timeoutMs = 60000)
         {
-            if (_runstate != RunState.Idle)
+            if (RunState != RunStates.idle)
             {
                 Console.WriteLine("EwE controller already busy, aborting"); // ToDo: log this
                 return -1; // ToDo: return informative error code?
             }
 
-            _runstate = RunState.Starting;
+            RunState = RunStates.starting;
 
             // Todo: this needs to come from somewhere
             this.Configuration = new EwEConfiguration
@@ -129,46 +171,85 @@ namespace Ecopath.EwE
             ds.UseSpinUp = (Configuration.SpinupYears > 0);
             Console.WriteLine("EwE - Ecospace spin-up {0}", ds.UseSpinUp ? Configuration.SpinupYears.ToString() : "off"); // ToDo: log this
 
+            var tcs = new TaskCompletionSource();
+
+            void Handler(RunStates state)
+            {
+                if (state == RunStates.waiting)
+                {
+                    tcs.TrySetResult();
+                }
+            }
+            OnRunStateChanged += Handler;
+
             // Phew, we managed to plow through. Run Ecospace!
             _thread = new Thread(RunEcospace);
+            _thread.Start();
 
-            var task = Task.Run(() =>
-            {
-                _thread.Start();
-            });
+            var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMs));
+            OnRunStateChanged -= Handler;
 
-            await task;
-
-            return 1;
+            return (RunState == RunStates.waiting) ? 1: -1;
         }
 
+        /// <summary>
+        /// We might as well make this an async method too, even though there won't be any waiting
+        /// </summary>
+        /// <returns></returns>
         public int Continue()
         {
-            if (_runstate != RunState.Waiting) return -1;
+            if (RunState != RunStates.waiting) return -1;
 
             // Carry on
             _core.EcospacePaused = false;
+            RunState = RunStates.running;
+
             Console.WriteLine("EwE - continue");
             return 0;
         }
 
-        public int Stop()
+        /// <summary>
+        /// Stop any simulation
+        /// </summary>
+        /// <returns></returns>
+        public async Task<bool> StopAsync(int timeoutMs = 10000)
         {
-            if (_runstate != RunState.Waiting) return -1;
-            Console.WriteLine("EwE - stopping");
-            try
+            var tcs = new TaskCompletionSource();
+
+            void Handler(RunStates state)
             {
-                _runstate = RunState.Stopping;
-                _core.StopEcospace();
+                if (state == RunStates.idle)
+                {
+                    tcs.TrySetResult();
+                }
             }
-            catch (Exception ex)
+
+            OnRunStateChanged += Handler;
+
+            _core.StopEcospace(); // Initiate graceful shutdown
+
+            if (this.RunState == RunStates.idle)
             {
-                // ToDo: log this
+                OnRunStateChanged -= Handler;
+                return true;
             }
-            _runstate = RunState.Idle;
-            _thread = null;
-            return 1;
+
+            var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMs));
+
+            if (completedTask == tcs.Task)
+            {
+                return true; // All good
+            }
+
+            // Timeout hit: force kill
+            OnRunStateChanged -= Handler;
+            ForceStop();
+            return false;
         }
+
+        #endregion // Public interaction
+
+        #region Internals
 
         private void RunEcospace()
         {
@@ -182,12 +263,12 @@ namespace Ecopath.EwE
             cEcospaceDataStructures ds = _core.EcospaceDataStructures;
             if (ds.bInSpinUp) return;
             if (timestep.TimeStepinYears < Configuration.StartYear) return;
+            if (RunState == RunStates.stopping) return;
 
             Console.WriteLine("EwE - pausing");
 
-            IsWaiting = true;
-            _core.EcospacePaused = (_runstate != RunState.Stopping);
-            IsWaiting = false;
+            RunState = RunStates.waiting;
+            _core.EcospacePaused = true;
         }
 
         private void OnCoreMessage(ref cMessage msg)
@@ -198,10 +279,28 @@ namespace Ecopath.EwE
 
                     // Clear all modifications made by the process
                     _core.DiscardChanges();
-                    _runstate = RunState.Idle;
+                    // Correctly reset the state and clean up
+                    RunState = RunStates.idle;
+                    _thread = null;
                     break;
             }
 
         }
+
+        private void ForceStop()
+        {
+            try
+            {
+                if (_thread != null && _thread.IsAlive)
+                    _thread.Interrupt();
+            }
+            catch (Exception ex)
+            {
+            }
+
+            RunState = RunStates.idle; // Manually reset to idle if needed
+        }
+
+        #endregion // Internals
     }
 }
