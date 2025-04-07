@@ -1,3 +1,4 @@
+using Ecopath.EwE;
 using Ecopath.Services;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
@@ -14,6 +15,8 @@ public class Program
         builder.Services.AddGrpc();
         builder.Services.AddGrpcHealthChecks()
                         .AddCheck("Sample", () => HealthCheckResult.Healthy());
+
+        builder.Services.AddSingleton<EwEController>(); // Add EwEController as a Singleton
 
         var app = builder.Build();
 
