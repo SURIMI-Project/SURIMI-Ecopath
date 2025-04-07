@@ -1,0 +1,59 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>74f0a63a-fc70-49c2-85c4-61d71e502bdc</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Api.CommonProtos" Version="2.16.0" />
+    <PackageReference Include="Grpc.AspNetCore" Version="2.70.0" />
+    <PackageReference Include="Grpc.AspNetCore.HealthChecks" Version="2.70.0" />
+    <PackageReference Include="Grpc.StatusProto" Version="2.70.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SURIMI.ServiceDefaults\SURIMI.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<Protobuf Include="..\proto\surimi\v1\biomass.proto" ProtoRoot="..\proto\" />
+		<Protobuf Include="..\proto\surimi\v1\species_price.proto" ProtoRoot="..\proto\" />
+		<Protobuf Include="..\proto\surimi\v1\workflow.proto" ProtoRoot="..\proto\" GrpcServices="Server" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="EwECore">
+	    <HintPath>Includes\EwECore.dll</HintPath>
+	  </Reference>
+	  <Reference Include="EwELicense">
+	    <HintPath>Includes\EwELicense.dll</HintPath>
+	  </Reference>
+	  <Reference Include="EwEPlugin">
+	    <HintPath>Includes\EwEPlugin.dll</HintPath>
+	  </Reference>
+	  <Reference Include="EwEUtils">
+	    <HintPath>Includes\EwEUtils.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="Includes\Anchovy Bay Spatial.eiixml">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Includes\EwECore.pdb">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Includes\EwEPlugin.pdb">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Includes\EwEUtils.pdb">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
+</Project>
