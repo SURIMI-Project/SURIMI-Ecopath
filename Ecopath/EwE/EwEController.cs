@@ -36,6 +36,7 @@ namespace Ecopath.EwE
         public EwEController() {
 
             _core = new cCore();
+            cLog.VerboseLevel = eVerboseLevel.Disabled; // Turn off all internal event logging
             RunState = RunStates.idle;
 
             _mh = new cMessageHandler(OnCoreMessage, eCoreComponentType.Ecospace, eMessageType.EcospaceRunCompleted, SynchronizationContext.Current);
