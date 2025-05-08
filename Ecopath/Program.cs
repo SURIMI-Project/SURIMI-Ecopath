@@ -1,5 +1,5 @@
+using Ecopath.EwE;
 using Ecopath.Services;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Ecopath;
 
@@ -11,17 +11,20 @@ public class Program
         builder.AddServiceDefaults();
 
         // Add services to the container.
-        builder.Services.AddGrpc();
-        builder.Services.AddGrpcHealthChecks()
-                        .AddCheck("Sample", () => HealthCheckResult.Healthy());
+        builder.Services.AddGrpc(options =>
+        {
+            options.Interceptors.Add<ExceptionMetadataInterceptor>();
+        });
+
+        builder.Services.AddSingleton<EwEController>(); // Add EwEController as a Singleton
 
         var app = builder.Build();
 
         app.MapDefaultEndpoints();
 
         // Configure the HTTP request pipeline.
+        app.MapGrpcService<EcopathEcologyService>();
         app.MapGrpcService<EcopathWorkflowService>();
-        app.MapGrpcHealthChecksService();
 
         app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
 
