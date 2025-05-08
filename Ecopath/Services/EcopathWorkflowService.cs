@@ -1,4 +1,5 @@
 using Ecopath.EwE;
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Grpc.Surimi;
 
@@ -50,9 +51,8 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
         Console.WriteLine($"Simulate step for simulation {req.SimulationId}");
 
         _MEMcontroller.Continue();
-        // Simulate some processing delay
-        //Task.Delay(1000).Wait();
 
-        return Task.FromResult(new SimulateStepResponse());
+        // Convert DateTime.UtcNow to Google.Protobuf.WellKnownTypes.Timestamp
+        return Task.FromResult(new SimulateStepResponse() { DateTime = Timestamp.FromDateTime(DateTime.UtcNow) });
     }
 }

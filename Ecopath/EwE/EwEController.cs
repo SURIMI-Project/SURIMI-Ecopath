@@ -100,7 +100,7 @@ namespace Ecopath.EwE
             // Todo: this needs to come from somewhere
             this.Configuration = new EwEConfiguration
             {
-                ModelName = Path.Combine(Directory.GetCurrentDirectory(), @"Includes\Anchovy Bay Spatial.eiixml"),
+                ModelName = @"Includes/Anchovy Bay Spatial.eiixml",
                 EcosimScenario = 1,
                 EcosimTimeSeries = 0,
                 EcospaceScenario = 1,
