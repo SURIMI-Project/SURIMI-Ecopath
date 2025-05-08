@@ -24,13 +24,21 @@ namespace Ecopath.EwE
 
         #endregion // Private vars 
 
-        public enum RunStates
+        /// <summary>
+        /// Enumerated type, defining the possible run states of the EwEController.
+        /// </summary>
+        public enum RunStates : uint
         {
-            idle, // Ready to be started
-            starting, // Starting up, not ready yet
-            waiting, // Waiting for exteral input
-            running, // Busy running simulations
-            stopping // Busy stoppping
+            /// <summary>Ready to be started.</summary>
+            idle = 0,
+            /// <summary>Starting up, not ready yet.</summary>
+            starting,
+            /// <summary>Waiting for exteral input.</summary>
+            waiting,
+            /// <summary>Busy running simulations.</summary>
+            running,
+            /// <summary>Busy stoppping.</summary>
+            stopping
         }
 
         public EwEController() {
@@ -42,7 +50,7 @@ namespace Ecopath.EwE
             _mh = new cMessageHandler(OnCoreMessage, eCoreComponentType.Ecospace, eMessageType.EcospaceRunCompleted, SynchronizationContext.Current);
             _core.Messages.AddMessageHandler(_mh);
 
-            // To make sure we can find local resources. THis is rather hack.
+            // To make sure we can find local resources. This is rather hack.
             Directory.SetCurrentDirectory(System.AppDomain.CurrentDomain.BaseDirectory);
         }
 
@@ -263,7 +271,8 @@ namespace Ecopath.EwE
             // Do not halt while in spinup
             cEcospaceDataStructures ds = _core.EcospaceDataStructures;
             if (ds.bInSpinUp) return;
-            if (timestep.TimeStepinYears < Configuration.StartYear) return;
+            if (timestep.TimeStepinYears < Configuration?.StartYear) return; 
+            //if (_core.EcosimFirstYear() + timestep.TimeStepinYears < Configuration?.StartYear) return; // Should use absolute start year instead; is more robust
             if (RunState == RunStates.stopping) return;
 
             Console.WriteLine("EwE - pausing");
