@@ -7,6 +7,10 @@ WORKDIR /app
 EXPOSE 8080
 #EXPOSE 8081
 
+ENV OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:18889
+ENV OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+ENV OTEL_SERVICE_NAME=Ecopath
+
 
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
