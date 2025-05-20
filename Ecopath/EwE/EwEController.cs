@@ -1,12 +1,12 @@
-﻿using EwECore;
+﻿using Ecopath.Models;
+using EwECore;
 using EwEPlugin;
 using EwEUtils.Core;
-using System.Threading;
 using static EwECore.cCore;
 
 namespace Ecopath.EwE
 {
-    public class EwEController
+    public class EwEController : IEwEController
     {
         #region Private vars 
         
@@ -16,6 +16,8 @@ namespace Ecopath.EwE
         private Thread? _thread;
         /// <summary>Core message handler for tracking EwE execution flow.</summary>
         private cMessageHandler? _mh;
+
+        private readonly ILogger<EwEController> _logger;
 
         private RunStates _runstate = RunStates.idle;
 
@@ -41,7 +43,8 @@ namespace Ecopath.EwE
             stopping
         }
 
-        public EwEController() {
+        public EwEController(ILogger<EwEController> logger)
+        {
 
             _core = new cCore();
             cLog.VerboseLevel = eVerboseLevel.Disabled; // Turn off all internal event logging
@@ -52,6 +55,7 @@ namespace Ecopath.EwE
 
             // To make sure we can find local resources. This is rather hack.
             Directory.SetCurrentDirectory(System.AppDomain.CurrentDomain.BaseDirectory);
+            _logger = logger;
         }
 
         ~EwEController()
@@ -100,8 +104,7 @@ namespace Ecopath.EwE
         {
             if (RunState != RunStates.idle)
             {
-                Console.WriteLine("EwE controller already busy, aborting"); // ToDo: log this
-                return -1; // ToDo: return informative error code?
+                throw new Exception("EwE controller already busy, aborting");
             }
 
             RunState = RunStates.starting;
@@ -118,44 +121,39 @@ namespace Ecopath.EwE
             };
 
             _core.PluginManager = new cPluginManager();
-            Console.WriteLine("EwE loaded {0} plug-in(s)", _core.PluginManager.LoadPlugins()); // ToDo: log this
+            _logger.LogInformation("EwE loaded {0} plug-in(s)", _core.PluginManager.LoadPlugins());
 
             if (!File.Exists(Configuration.ModelName))
             {
-                Console.WriteLine("EwE model file '{0}' cannot be found", Configuration.ModelName); // ToDo: log this
-                return -1; // ToDo: return informative error code?
+                throw new FileNotFoundException("EwE model file '{0}' cannot be found", Configuration.ModelName); 
             }
 
             if (!_core.LoadModel(Configuration.ModelName))
             {
-                Console.WriteLine("EwE could not load model '{0}'", Configuration.ModelName); // ToDo: log this
-                return -1; // ToDo: return informative error code?
+                throw new Exception($"EwE could not load model '{Configuration.ModelName}'");
             }
-            Console.WriteLine("EwE - Ecopath loaded model '{0}'", Configuration.ModelName); // ToDo: log this
+            _logger.LogInformation("EwE - Ecopath loaded model '{0}'", Configuration.ModelName);
 
             bool bIsBalanced = false;
             if (!_core.RunEcopath(ref bIsBalanced) | !bIsBalanced)
             {
-                Console.WriteLine("EwE - Ecopath does not balance"); // ToDo: log this
-                return -1; // ToDo: return informative error code?
+                throw new Exception("EwE - Ecopath does not balance");
             }
-            Console.WriteLine("EwE - Ecopath does balance"); // ToDo: log this
+            _logger.LogInformation("EwE - Ecopath does balance"); 
 
             if (Configuration.EcosimScenario <= 0 | !_core.LoadEcosimScenario(Configuration.EcosimScenario))
             {
-                Console.WriteLine("EwE - Ecosim scenario {0} not loaded", Configuration.EcosimScenario); // ToDo: log this
-                return -1; // ToDo: return informative error code?
+                throw new Exception($"EwE - Ecosim scenario {Configuration.EcosimScenario} not loaded");
             }
-            Console.WriteLine("EwE - Ecosim scenario {0} loaded", Configuration.EcosimScenario); // ToDo: log this
+            _logger.LogInformation("EwE - Ecosim scenario {0} loaded", Configuration.EcosimScenario);
 
             if (Configuration.EcosimTimeSeries > 0)
             {
                 if (!_core.LoadTimeSeries(Configuration.EcosimTimeSeries))
                 {
-                    Console.WriteLine("EwE - Ecosim time series {0} not loaded", Configuration.EcosimTimeSeries); // ToDo: log this
-                    return -1; // ToDo: return informative error code?
+                    throw new Exception($"EwE - Ecosim time series {Configuration.EcosimTimeSeries} not loaded");
                 }
-                Console.WriteLine("EwE - Ecosim time series {0} loaded", Configuration.EcosimTimeSeries); // ToDo: log this
+                _logger.LogInformation("EwE - Ecosim time series {0} loaded", Configuration.EcosimTimeSeries);
             }
 
             cEcoSimModelParameters parms = _core.EcosimModelParameters;
@@ -163,22 +161,20 @@ namespace Ecopath.EwE
 
             if (!_core.RunEcosim())
             {
-                Console.WriteLine("EwE - Ecosim failed to run"); // ToDo: log this
-                return -1; // ToDo: return informative error code?
+                throw new Exception("EwE - Ecosim failed to run");
             }
-            Console.WriteLine("EwE - Ecosim run successfully"); // ToDo: log this
+            _logger.LogInformation("EwE - Ecosim run successfully");
 
             if (Configuration.EcospaceScenario <= 0 | !_core.LoadEcospaceScenario(Configuration.EcospaceScenario))
             {
-                Console.WriteLine("EwE - Ecospace scenario {0} not loaded", Configuration.EcospaceScenario); // ToDo: log this
-                return -1; // ToDo: return informative error code?
+                throw new Exception($"EwE - Ecospace scenario {Configuration.EcospaceScenario} not loaded");
             }
-            Console.WriteLine("EwE - Ecospace scenario {0} loaded", Configuration.EcospaceScenario); // ToDo: log this
+            _logger.LogInformation("EwE - Ecospace scenario {0} loaded", Configuration.EcospaceScenario);
 
             cEcospaceDataStructures ds = _core.EcospaceDataStructures;
             ds.SpinUpYears = Configuration.SpinupYears;
             ds.UseSpinUp = (Configuration.SpinupYears > 0);
-            Console.WriteLine("EwE - Ecospace spin-up {0}", ds.UseSpinUp ? Configuration.SpinupYears.ToString() : "off"); // ToDo: log this
+            _logger.LogInformation("EwE - Ecospace spin-up {0}", ds.UseSpinUp ? Configuration.SpinupYears.ToString() : "off"); 
 
             var tcs = new TaskCompletionSource();
 
@@ -213,7 +209,7 @@ namespace Ecopath.EwE
             _core.EcospacePaused = false;
             RunState = RunStates.running;
 
-            Console.WriteLine("EwE - continue");
+            _logger.LogInformation("EwE - continue");
             return 0;
         }
 
@@ -275,7 +271,7 @@ namespace Ecopath.EwE
             //if (_core.EcosimFirstYear() + timestep.TimeStepinYears < Configuration?.StartYear) return; // Should use absolute start year instead; is more robust
             if (RunState == RunStates.stopping) return;
 
-            Console.WriteLine("EwE - pausing");
+            _logger.LogInformation("EwE - pausing");
 
             RunState = RunStates.waiting;
             _core.EcospacePaused = true;
@@ -309,6 +305,42 @@ namespace Ecopath.EwE
             }
 
             RunState = RunStates.idle; // Manually reset to idle if needed
+        }
+
+        public Task<bool> UpdatePricesAsync(List<SpeciesPrice> speciesPrices)
+        {
+            /// TODO: implement this
+            return Task.FromResult(true);
+        }
+
+        public Task<Biomass> GetBiomassAsync()
+        {
+            var response = new Biomass()
+            {
+                MeasurementUnit = "kg"
+            };
+            response.BiomassGrids.Add(new BiomassGrid()
+            {
+                SpeciesId = "PIL"
+            });
+            response.BiomassGrids[0].BiomassCells.Add(new BiomassCell()
+            {
+                Longitude = 1.6877561f,
+                Latitude = 40.901618f,
+                Biomass = 1000.0f
+            });
+            response.BiomassGrids.Add(new BiomassGrid()
+            {
+                SpeciesId = "BOG"
+            });
+            response.BiomassGrids[1].BiomassCells.Add(new BiomassCell()
+            {
+                Longitude = 1.6170411f,
+                Latitude = 40.801618f,
+                Biomass = 2500.0f
+            });
+
+            return Task.FromResult(response);
         }
 
         #endregion // Internals

@@ -1,5 +1,3 @@
-using Ecopath.EwE;
-using EwECore;
 using Grpc.Core;
 using Grpc.Surimi;
 
@@ -8,44 +6,42 @@ namespace Ecopath.Services;
 public class EcopathEcologyService : EcologyService.EcologyServiceBase
 {
     private readonly ILogger<EcopathEcologyService> _logger;
-    private readonly EwEController _MEMcontroller;
+    private readonly SimulationService _simulationService;
 
-    public EcopathEcologyService(ILogger<EcopathEcologyService> logger, EwEController mEMcontroller)
+    public EcopathEcologyService(ILogger<EcopathEcologyService> logger, SimulationService simulationService)
     {
         _logger = logger;
-        _MEMcontroller = mEMcontroller;
+        _simulationService = simulationService;
     }
 
-    public override Task<GetBiomassResponse> GetBiomass(GetBiomassRequest request, ServerCallContext context)
+    public override async Task<GetBiomassResponse> GetBiomass(GetBiomassRequest request, ServerCallContext context)
     {
         GrpcValidation.ArgumentNotNullOrEmpty(request.SimulationId);
         _logger.LogInformation($"Ecopath Getting biomass for simulation {request.SimulationId}...");
-        // Simulate some processing delay
-        //Task.Delay(1000).Wait();
 
-        var response = new GetBiomassResponse() { 
-            MeasurementUnit = "kg"
+        var biomass = await _simulationService.GetBiomassAsync(request.SimulationId);
+
+        var grpcBiomass = new GetBiomassResponse
+        {
+            MeasurementUnit = biomass.MeasurementUnit ?? string.Empty
         };
-        response.BiomassGrids.Add(new BiomassGrid()
+
+        if (biomass.BiomassGrids != null)
         {
-            SpeciesId = "PIL"
-        });
-        response.BiomassGrids[0].BiomassCells.Add(new BiomassCell()
-        {
-            Longitude = 1.6877561f,
-            Latitude = 40.901618f,
-            Biomass = 1000.0f
-        });
-        response.BiomassGrids.Add(new BiomassGrid()
-        {
-            SpeciesId = "BOG"
-        });
-        response.BiomassGrids[1].BiomassCells.Add(new BiomassCell()
-        {
-            Longitude = 1.6170411f,
-            Latitude = 40.801618f,
-            Biomass = 2500.0f
-        });
-        return Task.FromResult(response);
+            grpcBiomass.BiomassGrids.AddRange(
+                biomass.BiomassGrids.Select(grid => new Grpc.Surimi.BiomassGrid
+                {
+                    SpeciesId = grid.SpeciesId ?? string.Empty,
+                    BiomassCells = { grid.BiomassCells?.Select(cell => new Grpc.Surimi.BiomassCell
+                    {
+                        Biomass = cell.Biomass,
+                        Latitude = cell.Latitude,
+                        Longitude = cell.Longitude
+                    }) ?? Enumerable.Empty<Grpc.Surimi.BiomassCell>() }
+                })
+            );
+        }
+
+        return grpcBiomass;
     }
 }
