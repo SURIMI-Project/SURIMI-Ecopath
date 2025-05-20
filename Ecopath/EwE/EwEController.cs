@@ -209,6 +209,8 @@ namespace Ecopath.EwE
             _core.EcospacePaused = false;
             RunState = RunStates.running;
 
+            // Need to wait for RunState to switch back to Waiting. Only return after
+
             _logger.LogInformation("EwE - continue");
             return 0;
         }

@@ -49,8 +49,7 @@ namespace Ecopath.Services
                 throw new Exception($"Simulation with ID {simulationId} does not exist.");
             }
 
-            var res = await _controllers[simulationId].StartAsync();
-            return true;
+            return (_controllers[simulationId].Continue() > 0);
         }
 
         public async Task<Biomass> GetBiomassAsync(string simulationId)
