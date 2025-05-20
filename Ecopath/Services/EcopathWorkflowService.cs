@@ -1,5 +1,3 @@
-using Ecopath.EwE;
-using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Grpc.Surimi;
 
@@ -8,23 +6,24 @@ namespace Ecopath.Services;
 public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
 {
     private readonly ILogger<EcopathWorkflowService> _logger;
-    private readonly EwEController _MEMcontroller;
+    private readonly SimulationService _simulationService;
 
-    public EcopathWorkflowService(ILogger<EcopathWorkflowService> logger, EwEController ewEcontroller)
+    public EcopathWorkflowService(ILogger<EcopathWorkflowService> logger, SimulationService simulationService)
     {
         _logger = logger;
-        _MEMcontroller = ewEcontroller;
+        _simulationService = simulationService;
     }
 
     public override async Task<InitResponse> Init(InitRequest request, ServerCallContext context)
     {
         GrpcValidation.ArgumentNotNullOrEmpty(request.ScenarioId);
-        Console.WriteLine($"Ecopath Initializing scenario {request.ScenarioId}...");
+        GrpcValidation.ArgumentNotNullOrEmpty(request.SimulationId);
+        _logger.LogInformation($"Ecopath Initializing scenario {request.ScenarioId}...");
 
         try
         {
-            var result = await _MEMcontroller.StartAsync();
-            if (result < 0)
+            var result = await _simulationService.InitAsync(request.SimulationId, request.ScenarioId, request.StartDateTime.ToDateTime(), request.StepSize);
+            if (result == false)
             {
                 throw new RpcException(new Status(StatusCode.Internal, "Failed to initialize Ecopath"));
             }
@@ -36,23 +35,27 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
         }
     }
 
-    public override Task<UpdatePricesResponse> UpdatePrices(UpdatePricesRequest list, ServerCallContext context)
+    public override async Task<UpdatePricesResponse> UpdatePrices(UpdatePricesRequest request, ServerCallContext context)
     {
-        Console.WriteLine($"Updating prices for {list.Prices.Count} species...");
+        GrpcValidation.ArgumentNotNullOrEmpty(request.SimulationId);
+        _logger.LogInformation($"Updating prices for {request.Prices.Count} species...");
 
-        // Simulate some processing delay
-        //Task.Delay(1000).Wait();
+        var speciesPrices = request.Prices
+            .Select(p => new Ecopath.Models.SpeciesPrice { Species_id = p.SpeciesId, Price = p.Price })     // add more properties as needed
+            .ToList();
 
-        return Task.FromResult(new UpdatePricesResponse());
+        var res = await _simulationService.UpdatePricesAsync(request.SimulationId, speciesPrices);
+
+        return new UpdatePricesResponse();
     }
 
-    public override Task<SimulateStepResponse> SimulateStep(SimulateStepRequest req, ServerCallContext context)
+    public override async Task<SimulateStepResponse> SimulateStep(SimulateStepRequest request, ServerCallContext context)
     {
-        Console.WriteLine($"Simulate step for simulation {req.SimulationId}");
+        GrpcValidation.ArgumentNotNullOrEmpty(request.SimulationId);
+        _logger.LogInformation($"Simulate step for simulation {request.SimulationId}");
 
-        _MEMcontroller.Continue();
+        var res = await _simulationService.ContinueAsync(request.SimulationId);
 
-        // Convert DateTime.UtcNow to Google.Protobuf.WellKnownTypes.Timestamp
-        return Task.FromResult(new SimulateStepResponse() { DateTime = Timestamp.FromDateTime(DateTime.UtcNow) });
+        return new SimulateStepResponse();
     }
 }

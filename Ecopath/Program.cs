@@ -16,7 +16,8 @@ public class Program
             options.Interceptors.Add<ExceptionMetadataInterceptor>();
         });
 
-        builder.Services.AddSingleton<EwEController>(); // Add EwEController as a Singleton
+        builder.Services.AddSingleton<SimulationService>(); // Add SimulationService as a Singleton
+        builder.Services.AddTransient<IEwEController, EwEController>();
 
         var app = builder.Build();
 
