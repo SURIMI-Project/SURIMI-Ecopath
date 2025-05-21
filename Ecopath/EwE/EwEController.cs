@@ -359,6 +359,7 @@ namespace Ecopath.EwE
                 {
                     BiomassGrid grid = new BiomassGrid()
                     {
+                        // Also add projection
                         SpeciesId = spp
                     };
                     int iGroup = _configuration.get_SpeciesGroup(spp);
