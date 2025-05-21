@@ -2,6 +2,7 @@
 using EwECore;
 using EwEPlugin;
 using EwEUtils.Core;
+using System.Threading;
 using static EwECore.cCore;
 
 namespace Ecopath.EwE
@@ -201,18 +202,31 @@ namespace Ecopath.EwE
         /// We might as well make this an async method too, even though there won't be any waiting
         /// </summary>
         /// <returns></returns>
-        public int Continue()
+        public async Task<bool> ContinueAsync(int timeoutMs = 60000)
         {
-            if (RunState != RunStates.waiting) return -1;
+            if (RunState != RunStates.waiting) return false;
+    
+            // Need to wait for RunState to switch back to Waiting. Only return after
+            var tcs = new TaskCompletionSource();
+
+            void Handler(RunStates state)
+            {
+                if (state == RunStates.waiting)
+                {
+                    tcs.TrySetResult();
+                }
+            }
+            OnRunStateChanged += Handler;
 
             // Carry on
             _core.EcospacePaused = false;
             RunState = RunStates.running;
 
-            // Need to wait for RunState to switch back to Waiting. Only return after
+            var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMs));
+            OnRunStateChanged -= Handler;
 
             _logger.LogInformation("EwE - continue");
-            return 0;
+            return true;
         }
 
         /// <summary>
@@ -273,7 +287,7 @@ namespace Ecopath.EwE
             //if (_core.EcosimFirstYear() + timestep.TimeStepinYears < Configuration?.StartYear) return; // Should use absolute start year instead; is more robust
             if (RunState == RunStates.stopping) return;
 
-            _logger.LogInformation("EwE - pausing");
+            _logger.LogInformation(string.Format("EwE - pausing at timestep {0}, {1}", timestep.iTimeStep, _core.EcospaceTimestepToAbsoluteTime(timestep.iTimeStep)));
 
             RunState = RunStates.waiting;
             _core.EcospacePaused = true;
