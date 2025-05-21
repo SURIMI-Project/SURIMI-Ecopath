@@ -4,8 +4,24 @@ namespace Ecopath.EwE
 {
     public class EwEConfiguration : IEwEConfiguration
     {
+        /// <summary>
+        /// Mapping of three-letter species code to Ecopath group index
+        /// </summary>
         private Dictionary<string, int> _speciesgroup = new Dictionary<string, int>();
+        /// <summary>
+        /// Amount [0, 1] that three-letter species code contributes to an Ecopath group
+        /// </summary>
         private Dictionary<string, Single> _speciescontribution = new Dictionary<string, Single>();
+
+        /// <summary>
+        /// Mapping of gear code to Ecopath fleet index
+        /// </summary>
+        private Dictionary<string, int> _gearfleet = new Dictionary<string, int>();
+
+        /// <summary>
+        /// A list of gear codes managed externally (e.g., not fishing within EwE).
+        /// </summary>
+        private List<string> _externalGears = new List<string>();
 
         public EwEConfiguration() 
         {
@@ -45,11 +61,45 @@ namespace Ecopath.EwE
             _speciescontribution.TryAdd(speccode.ToUpper(), contribution);
         }
 
-        public List<string> SpeciesOfInterest()
+        public string[] SpeciesOfInterest()
         {
-            return [.. _speciesgroup.Keys]; // Gawd this is ugly
+            return [.. _speciesgroup.Keys]; // Gawd! Who invented this syntaxis, and was it really necessary?
         }
 
+        public int get_GearFleet(string gearcode)
+        {
+            return _gearfleet.TryGetValue(gearcode.ToUpper(), out var group) ? group : 0;
+        }
+        public void set_GearFleet(string gearcode, int iFleet)
+        {
+            _gearfleet.TryAdd(gearcode.ToUpper(), iFleet);
+        }
+
+        public string[] GearsOfInterest()
+        {
+            return [.. _gearfleet.Keys]; // Doesn't get any prettier second time around
+        }
+
+        public void set_ExternalGear(string gearcode, bool isExternal)
+        { 
+            if (string.IsNullOrEmpty(gearcode)) return;
+            gearcode = gearcode.ToUpper();
+            if (isExternal)
+                _externalGears.Remove(gearcode);
+            else
+                _externalGears.Add(gearcode);
+        }
+
+        public bool get_ExternalGear(string gearcode)
+        {
+            if (string.IsNullOrEmpty(gearcode)) return false;
+            return _externalGears.Contains(gearcode.ToUpper());
+        }
+
+        public string[] GearsExternal()
+        {
+            return _externalGears.ToArray(); // Ahhh, this is better
+        }
 
     }
 }
