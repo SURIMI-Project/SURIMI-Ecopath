@@ -23,9 +23,10 @@ namespace Ecopath.Services
             }
 
             // Get a new instance from DI
-            _controllers[simulationId] = _serviceProvider.GetRequiredService<IEwEController>(); ;
+            _controllers[simulationId] = _serviceProvider.GetRequiredService<IEwEController>();
 
-            var res = await _controllers[simulationId].StartAsync();
+            // ToDo: get the correct configuration for a given scenario
+            var res = await _controllers[simulationId].StartAsync(new EwEConfiguration());
             _logger.LogInformation($"Simulation with ID {simulationId} added.");
             return true;
         }

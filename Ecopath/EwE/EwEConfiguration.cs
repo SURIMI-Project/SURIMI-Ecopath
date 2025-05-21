@@ -2,10 +2,23 @@
 
 namespace Ecopath.EwE
 {
-    public class EwEConfiguration
+    public class EwEConfiguration : IEwEConfiguration
     {
         private Dictionary<string, int> _speciesgroup = new Dictionary<string, int>();
-        private Dictionary<string, float> _speciescontribution = new Dictionary<string, float>();
+        private Dictionary<string, Single> _speciescontribution = new Dictionary<string, Single>();
+
+        public EwEConfiguration() 
+        {
+            ModelName = @"Includes/Anchovy Bay Spatial.eiixml";
+            EcosimScenario = 1;
+            EcosimTimeSeries = 0;
+            EcospaceScenario = 1;
+            SpinupYears = 10;
+            StartYear = 5;
+
+            _speciesgroup.Add("PIL", 3);
+            _speciescontribution.Add("PIL", 1);
+        }
 
         public string ModelName { get; set; } = "";
         public int EcosimScenario { get; set; } = 0;
@@ -17,20 +30,26 @@ namespace Ecopath.EwE
 
         public int get_SpeciesGroup(string speccode)
         {
-            return _speciesgroup.TryGetValue(speccode.ToLower(), out var group) ? group : 0;
+            return _speciesgroup.TryGetValue(speccode.ToUpper(), out var group) ? group : 0;
         }
         public void set_SpeciesGroup(string speccode, int iGroup)
         {
-            _speciesgroup.TryAdd(speccode.ToLower(), iGroup);
+            _speciesgroup.TryAdd(speccode.ToUpper(), iGroup);
         }
-        public float get_SpeciesContribution(string speccode)
+        public Single get_SpeciesContribution(string speccode)
         {
-            return _speciescontribution.TryGetValue(speccode.ToLower(), out var contribution) ? contribution : 0!;
+            return _speciescontribution.TryGetValue(speccode.ToUpper(), out var contribution) ? contribution : 0!;
         }
-        public void set_SpeciesContribution(string speccode, float contribution)
+        public void set_SpeciesContribution(string speccode, Single contribution)
         {
-            _speciescontribution.TryAdd(speccode.ToLower(), contribution);
+            _speciescontribution.TryAdd(speccode.ToUpper(), contribution);
         }
+
+        public List<string> SpeciesOfInterest()
+        {
+            return [.. _speciesgroup.Keys]; // Gawd this is ugly
+        }
+
 
     }
 }

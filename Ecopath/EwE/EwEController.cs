@@ -2,7 +2,7 @@
 using EwECore;
 using EwEPlugin;
 using EwEUtils.Core;
-using System.Threading;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using static EwECore.cCore;
 
 namespace Ecopath.EwE
@@ -19,11 +19,16 @@ namespace Ecopath.EwE
         private cMessageHandler? _mh;
 
         private readonly ILogger<EwEController> _logger;
+        private EwEConfiguration? _configuration;
 
         private RunStates _runstate = RunStates.idle;
 
         /// <summary>Event for internal state monitoring.</summary>
         private event Action<RunStates>? OnRunStateChanged;
+
+        // --- Cached run info
+        private List<SpeciesPrice>? _prices;
+        private Biomass? _biomass;
 
         #endregion // Private vars 
 
@@ -73,11 +78,6 @@ namespace Ecopath.EwE
         #region Public interaction 
 
         /// <summary>
-        /// The configuration that EwE is running against
-        /// </summary>
-        public EwEConfiguration? Configuration { get; private set; }
-
-        /// <summary>
         /// The current EwE run state.
         /// </summary>
         public RunStates RunState 
@@ -90,7 +90,7 @@ namespace Ecopath.EwE
                     OnRunStateChanged?.Invoke(_runstate);
                 }
             }
-        } 
+        }
 
         /// <summary>
         /// Helper method, returns if Ecospace is waiting for input.
@@ -101,7 +101,7 @@ namespace Ecopath.EwE
         /// Start EwE and wait for Ecospace to get ready for simulations
         /// </summary>
         /// <returns></returns>
-        public async Task<int> StartAsync(int timeoutMs = 60000)
+        public async Task<int> StartAsync(EwEConfiguration config, int timeoutMs = 60000)
         {
             if (RunState != RunStates.idle)
             {
@@ -109,31 +109,21 @@ namespace Ecopath.EwE
             }
 
             RunState = RunStates.starting;
-
-            // Todo: this needs to come from somewhere
-            this.Configuration = new EwEConfiguration
-            {
-                ModelName = @"Includes/Anchovy Bay Spatial.eiixml",
-                EcosimScenario = 1,
-                EcosimTimeSeries = 0,
-                EcospaceScenario = 1,
-                SpinupYears = 10,
-                StartYear = 5
-            };
+            _configuration = config;
 
             _core.PluginManager = new cPluginManager();
             _logger.LogInformation("EwE loaded {0} plug-in(s)", _core.PluginManager.LoadPlugins());
 
-            if (!File.Exists(Configuration.ModelName))
+            if (!File.Exists(_configuration.ModelName))
             {
-                throw new FileNotFoundException("EwE model file '{0}' cannot be found", Configuration.ModelName); 
+                throw new FileNotFoundException("EwE model file '{0}' cannot be found", _configuration.ModelName); 
             }
 
-            if (!_core.LoadModel(Configuration.ModelName))
+            if (!_core.LoadModel(_configuration.ModelName))
             {
-                throw new Exception($"EwE could not load model '{Configuration.ModelName}'");
+                throw new Exception($"EwE could not load model '{_configuration.ModelName}'");
             }
-            _logger.LogInformation("EwE - Ecopath loaded model '{0}'", Configuration.ModelName);
+            _logger.LogInformation("EwE - Ecopath loaded model '{0}'", _configuration.ModelName);
 
             bool bIsBalanced = false;
             if (!_core.RunEcopath(ref bIsBalanced) | !bIsBalanced)
@@ -142,23 +132,23 @@ namespace Ecopath.EwE
             }
             _logger.LogInformation("EwE - Ecopath does balance"); 
 
-            if (Configuration.EcosimScenario <= 0 | !_core.LoadEcosimScenario(Configuration.EcosimScenario))
+            if (_configuration.EcosimScenario <= 0 | !_core.LoadEcosimScenario(_configuration.EcosimScenario))
             {
-                throw new Exception($"EwE - Ecosim scenario {Configuration.EcosimScenario} not loaded");
+                throw new Exception($"EwE - Ecosim scenario {_configuration.EcosimScenario} not loaded");
             }
-            _logger.LogInformation("EwE - Ecosim scenario {0} loaded", Configuration.EcosimScenario);
+            _logger.LogInformation("EwE - Ecosim scenario {0} loaded", _configuration.EcosimScenario);
 
-            if (Configuration.EcosimTimeSeries > 0)
+            if (_configuration.EcosimTimeSeries > 0)
             {
-                if (!_core.LoadTimeSeries(Configuration.EcosimTimeSeries))
+                if (!_core.LoadTimeSeries(_configuration.EcosimTimeSeries))
                 {
-                    throw new Exception($"EwE - Ecosim time series {Configuration.EcosimTimeSeries} not loaded");
+                    throw new Exception($"EwE - Ecosim time series {_configuration.EcosimTimeSeries} not loaded");
                 }
-                _logger.LogInformation("EwE - Ecosim time series {0} loaded", Configuration.EcosimTimeSeries);
+                _logger.LogInformation("EwE - Ecosim time series {0} loaded", _configuration.EcosimTimeSeries);
             }
 
             cEcoSimModelParameters parms = _core.EcosimModelParameters;
-            parms.NumberYears = Configuration.MaxRunYears; // No of years apply to both Sim and Space
+            parms.NumberYears = _configuration.MaxRunYears; // No of years apply to both Sim and Space
 
             if (!_core.RunEcosim())
             {
@@ -166,16 +156,16 @@ namespace Ecopath.EwE
             }
             _logger.LogInformation("EwE - Ecosim run successfully");
 
-            if (Configuration.EcospaceScenario <= 0 | !_core.LoadEcospaceScenario(Configuration.EcospaceScenario))
+            if (_configuration.EcospaceScenario <= 0 | !_core.LoadEcospaceScenario(_configuration.EcospaceScenario))
             {
-                throw new Exception($"EwE - Ecospace scenario {Configuration.EcospaceScenario} not loaded");
+                throw new Exception($"EwE - Ecospace scenario {_configuration.EcospaceScenario} not loaded");
             }
-            _logger.LogInformation("EwE - Ecospace scenario {0} loaded", Configuration.EcospaceScenario);
+            _logger.LogInformation("EwE - Ecospace scenario {0} loaded", _configuration.EcospaceScenario);
 
             cEcospaceDataStructures ds = _core.EcospaceDataStructures;
-            ds.SpinUpYears = Configuration.SpinupYears;
-            ds.UseSpinUp = (Configuration.SpinupYears > 0);
-            _logger.LogInformation("EwE - Ecospace spin-up {0}", ds.UseSpinUp ? Configuration.SpinupYears.ToString() : "off"); 
+            ds.SpinUpYears = _configuration.SpinupYears;
+            ds.UseSpinUp = (_configuration.SpinupYears > 0);
+            _logger.LogInformation("EwE - Ecospace spin-up {0}", ds.UseSpinUp ? _configuration.SpinupYears.ToString() : "off"); 
 
             var tcs = new TaskCompletionSource();
 
@@ -280,17 +270,28 @@ namespace Ecopath.EwE
 
         private void EcospaceCallBack(ref cEcospaceTimestep timestep)
         {
+            if (RunState == RunStates.stopping) return;
+
             // Do not halt while in spinup
             cEcospaceDataStructures ds = _core.EcospaceDataStructures;
             if (ds.bInSpinUp) return;
-            if (timestep.TimeStepinYears < Configuration?.StartYear) return; 
-            //if (_core.EcosimFirstYear() + timestep.TimeStepinYears < Configuration?.StartYear) return; // Should use absolute start year instead; is more robust
-            if (RunState == RunStates.stopping) return;
+            if (timestep.TimeStepinYears < _configuration?.StartYear) return; 
+            //if (_core.EcosimFirstYear() + timestep.TimeStepinYears < _configuration?.StartYear) return; // Should use absolute start year instead; is more robust
 
             _logger.LogInformation(string.Format("EwE - pausing at timestep {0}, {1}", timestep.iTimeStep, _core.EcospaceTimestepToAbsoluteTime(timestep.iTimeStep)));
 
             RunState = RunStates.waiting;
             _core.EcospacePaused = true;
+
+            try
+            {
+                // Build relevant biomass grids for the first tmie 
+                BuildBiomassCache(timestep);
+            }
+            catch (Exception ex)
+            {
+                //_logger.LogInformation("EwE - exception ...");
+            }
         }
 
         private void OnCoreMessage(ref cMessage msg)
@@ -318,6 +319,7 @@ namespace Ecopath.EwE
             }
             catch (Exception ex)
             {
+                //_logger.LogInformation("EwE - exception ...");
             }
 
             RunState = RunStates.idle; // Manually reset to idle if needed
@@ -325,40 +327,58 @@ namespace Ecopath.EwE
 
         public Task<bool> UpdatePricesAsync(List<SpeciesPrice> speciesPrices)
         {
-            /// TODO: implement this
+            _prices = speciesPrices;
             return Task.FromResult(true);
         }
 
         public Task<Biomass> GetBiomassAsync()
         {
-            var response = new Biomass()
+            if (_biomass == null)
+                _biomass = new Biomass();
+            return Task.FromResult(_biomass);
+        }
+
+        void Clear()
+        {
+            _prices = null;
+            _biomass = null;
+        }
+
+        void BuildBiomassCache(cEcospaceTimestep timestep)
+        {
+            _biomass = new Biomass()
             {
                 MeasurementUnit = "kg"
             };
-            response.BiomassGrids.Add(new BiomassGrid()
+            if (_configuration != null)
             {
-                SpeciesId = "PIL"
-            });
-            response.BiomassGrids[0].BiomassCells.Add(new BiomassCell()
-            {
-                Longitude = 1.6877561f,
-                Latitude = 40.901618f,
-                Biomass = 1000.0f
-            });
-            response.BiomassGrids.Add(new BiomassGrid()
-            {
-                SpeciesId = "BOG"
-            });
-            response.BiomassGrids[1].BiomassCells.Add(new BiomassCell()
-            {
-                Longitude = 1.6170411f,
-                Latitude = 40.801618f,
-                Biomass = 2500.0f
-            });
+                cEcospaceBasemap bm = _core.EcospaceBasemap;
+                cEcospaceDataStructures ds = _core.EcospaceDataStructures;
 
-            return Task.FromResult(response);
+                foreach (string spp in _configuration.SpeciesOfInterest())
+                {
+                    BiomassGrid grid = new BiomassGrid()
+                    {
+                        SpeciesId = spp
+                    };
+                    int iGroup = _configuration.get_SpeciesGroup(spp);
+                    Single scalar = _configuration.get_SpeciesContribution(spp);
+
+                    for (int ic = 1; ic <= ds.InCol; ic++)
+                        for (int ir = 1; ir <= ds.InRow; ir++)  
+                            if (bm.IsModelledCell(ir, ic))
+                            {
+                                grid.BiomassCells.Add(new BiomassCell()
+                                {
+                                    Latitude = bm.RowToLat(ir),
+                                    Longitude = bm.ColToLon(ic),
+                                    Biomass = ds.Bcell[ir, ic, iGroup] * scalar
+                                });
+                            }
+                    _biomass.BiomassGrids.Add(grid);
+                }
+            }
         }
-
         #endregion // Internals
     }
 }
