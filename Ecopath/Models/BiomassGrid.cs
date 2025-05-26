@@ -2,7 +2,7 @@
 {
     public class BiomassGrid
     {
-        public string SpeciesId { get; set; } = string.Empty;
+        public required string SpeciesCode { get; set; }
         public List<BiomassCell> BiomassCells { get; set; } = new List<BiomassCell>();
     }
 }
