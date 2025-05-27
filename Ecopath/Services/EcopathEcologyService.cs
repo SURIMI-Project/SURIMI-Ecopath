@@ -44,4 +44,36 @@ public class EcopathEcologyService : EcologyService.EcologyServiceBase
 
         return grpcBiomass;
     }
+
+    public override async Task<UpdateCatchDispositionSummaryResponse> UpdateCatchDispositionSummary(UpdateCatchDispositionSummaryRequest request, ServerCallContext context)
+    {
+        GrpcValidation.ArgumentNotNullOrEmpty(request.SimulationId);
+        GrpcValidation.ArgumentNotNullOrEmpty(request.MeasurementUnit);
+
+        var catchDispositionSummary = new Ecopath.Models.CatchDispositionSummary
+        {
+            MeasurementUnit = request.MeasurementUnit,
+            DispositionGrids = request.DispositionGrids
+            .Select(grpcGrid => new Ecopath.Models.DispositionGrid
+            {
+                GearCode = grpcGrid.GearCode,
+                SpeciesCode = grpcGrid.SpeciesCode,
+                DispositionCells = grpcGrid.DispositionCells
+                    .Select(grpcCell => new Models.DispositionCell
+                    {
+                        GrossCatchBiomass = grpcCell.GrossCatch,
+                        LiveDiscardsBiomass = grpcCell.LiveDiscards,
+                        DeadDiscardsBiomass = grpcCell.DeadDiscards,
+                        Latitude = grpcCell.Latitude,
+                        Longitude = grpcCell.Longitude
+                    })
+                    .ToList()
+            })
+            .ToList()
+        };
+
+        var res = await _simulationService.UpdateCatchDispositionSummary(request.SimulationId, catchDispositionSummary);
+
+        return new UpdateCatchDispositionSummaryResponse();
+    }
 }
