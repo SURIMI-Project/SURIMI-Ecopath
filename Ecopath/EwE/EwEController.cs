@@ -415,12 +415,16 @@ namespace Ecopath.EwE
                                 GrossCatchBiomass = 5000.0f,
                                 LiveDiscardsBiomass = 1000.0f,
                                 DeadDiscardsBiomass = 2000.0f,
+                                Latitude = 40.901618f,
+                                Longitude = 1.6877561f
                             },
                             new DispositionCell()
                             {
                                 GrossCatchBiomass = 3000.0f,
                                 LiveDiscardsBiomass = 500.0f,
                                 DeadDiscardsBiomass = 1000.0f,
+                                Latitude = 40.801618f,
+                                Longitude = 1.6170411f
                             }
                         }
                     },
@@ -435,18 +439,28 @@ namespace Ecopath.EwE
                                 GrossCatchBiomass = 7000.0f,
                                 LiveDiscardsBiomass = 1500.0f,
                                 DeadDiscardsBiomass = 2500.0f,
+                                Latitude = 40.901618f,
+                                Longitude = 1.6877561f
                             },
                             new DispositionCell()
                             {
                                 GrossCatchBiomass = 4000.0f,
                                 LiveDiscardsBiomass = 800.0f,
                                 DeadDiscardsBiomass = 1200.0f,
+                                Latitude = 40.801618f,
+                                Longitude = 1.6170411f
                             }
                         }
                     }
                 }
             };
             return Task.FromResult(response);
+        }
+
+        public Task<bool> UpdateCatchDispositionSummaryAsync(CatchDispositionSummary catchDispositionSummary)
+        {
+            /// TODO: implement this
+            return Task.FromResult(true);
         }
         #endregion // Internals
     }

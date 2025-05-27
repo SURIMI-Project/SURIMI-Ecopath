@@ -81,5 +81,16 @@ namespace Ecopath.Services
 
             return await _controllers[simulationId].GetCatchDispositionSummaryAsync(start, end);
         }
+
+        public async Task<bool> UpdateCatchDispositionSummary(string simulationId, CatchDispositionSummary catchDispositionSummary)
+        {
+            if (!_controllers.ContainsKey(simulationId))
+            {
+                throw new Exception($"Simulation with ID {simulationId} does not exist.");
+            }
+
+            var res = await _controllers[simulationId].UpdateCatchDispositionSummaryAsync(catchDispositionSummary);
+            return true;
+        }
     }
 }
