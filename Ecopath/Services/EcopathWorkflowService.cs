@@ -41,7 +41,14 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
         _logger.LogInformation($"Updating prices for {request.Prices.Count} species...");
 
         var speciesPrices = request.Prices
-            .Select(p => new Ecopath.Models.SpeciesPrice { Species_id = p.SpeciesId, Price = p.Price })     // add more properties as needed
+            .Select(p => new Models.SpeciesPrice { 
+                SpeciesCode = p.SpeciesCode, 
+                Price = p.Price, 
+                Currency = p.Currency, 
+                MeasuremenyUnit = p.MeasurementUnit,
+                PortCode = p.PortCode,
+                Timestamp = p.Timestamp.ToDateTime()
+            }) 
             .ToList();
 
         var res = await _simulationService.UpdatePricesAsync(request.SimulationId, speciesPrices);
