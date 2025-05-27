@@ -3,7 +3,7 @@ using Grpc.Surimi;
 
 namespace Ecopath.Services
 {
-    public class EcopathFisheryService : AgentsService.AgentsServiceBase
+    public class EcopathFisheryService : FisheryService.FisheryServiceBase
     {
         private readonly ILogger<EcopathEcologyService> _logger;
         private readonly SimulationService _simulationService;
@@ -27,16 +27,16 @@ namespace Ecopath.Services
                 {
                     var grpcSummary = new SalesSummary
                     {
-                        MarketId = summary.MarketId ?? "",
-                        MeasurementUnit = summary.MeasurementUnit ?? "",
-                        Currency = summary.Currency ?? ""
+                        MarketCode = summary.MarketId,
+                        MeasurementUnit = summary.MeasurementUnit,
+                        Currency = summary.Currency
                     };
 
                     if (summary.Sales != null)
                     {
                         grpcSummary.Sales.AddRange(summary.Sales.Select(sale => new Sale
                         {
-                            SpeciesCode = sale.SpeciesCode ?? "",
+                            SpeciesCode = sale.SpeciesCode,
                             Quantity = sale.Quantity,
                             Value = sale.Value,
                         }));
@@ -62,7 +62,7 @@ namespace Ecopath.Services
 
             var response = new GetCatchDispositionSummaryResponse
             {
-                MeasurementUnit = catchDispositionSummary?.MeasurementUnit ?? ""
+                MeasurementUnit = catchDispositionSummary?.MeasurementUnit
             };
 
             if (catchDispositionSummary?.DispositionGrids != null)
@@ -72,17 +72,19 @@ namespace Ecopath.Services
                     {
                         var dispositionGrid = new DispositionGrid
                         {
-                            SpeciesCode = grid.SpeciesCode ?? "",
-                            GearCode = grid.GearCode ?? "",
+                            SpeciesCode = grid.SpeciesCode,
+                            GearCode = grid.GearCode,
                         };
                         if (grid.DispositionCells != null)
                         {
-                            dispositionGrid.BiomassCells.AddRange(
+                            dispositionGrid.DispositionCells.AddRange(
                                 grid.DispositionCells.Select(cell => new DispositionCell
                                 {
-                                    GrossCatchBiomass = cell.GrossCatchBiomass,
-                                    LiveDiscardsBiomass = cell.LiveDiscardsBiomass,
-                                    DeadDiscardsBiomass = cell.DeadDiscardsBiomass,
+                                    GrossCatch = cell.GrossCatchBiomass,
+                                    LiveDiscards = cell.LiveDiscardsBiomass,
+                                    DeadDiscards = cell.DeadDiscardsBiomass,
+                                    Latitude = cell.Latitude,
+                                    Longitude = cell.Longitude
                                 })
                             );
                         }
