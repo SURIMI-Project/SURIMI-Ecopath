@@ -62,5 +62,36 @@ namespace Ecopath.Services
 
             return await _controllers[simulationId].GetBiomassAsync();
         }
+
+        public async Task<List<SalesSummary>> GetSalesSummariesAsync(string simulationId, DateTime start, DateTime end)
+        {
+            if (!_controllers.ContainsKey(simulationId))
+            {
+                throw new Exception($"Simulation with ID {simulationId} does not exist.");
+            }
+
+            return await _controllers[simulationId].GetSalesSummariesAsync(start, end);
+        }
+
+        public async Task<CatchDispositionSummary> GetCatchDispositionSummaryAsync(string simulationId, DateTime start, DateTime end)
+        {
+            if (!_controllers.ContainsKey(simulationId))
+            {
+                throw new Exception($"Simulation with ID {simulationId} does not exist.");
+            }
+
+            return await _controllers[simulationId].GetCatchDispositionSummaryAsync(start, end);
+        }
+
+        public async Task<bool> UpdateCatchDispositionSummary(string simulationId, CatchDispositionSummary catchDispositionSummary)
+        {
+            if (!_controllers.ContainsKey(simulationId))
+            {
+                throw new Exception($"Simulation with ID {simulationId} does not exist.");
+            }
+
+            var res = await _controllers[simulationId].UpdateCatchDispositionSummaryAsync(catchDispositionSummary);
+            return true;
+        }
     }
 }

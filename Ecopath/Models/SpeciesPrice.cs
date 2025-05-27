@@ -2,8 +2,11 @@
 {
     public class SpeciesPrice
     {
-        public string Species_id { get; set; } = string.Empty;
-        public double? Price { get; set; }
-        /// TODO Add more properties as needed
+        public required string SpeciesCode { get; set; }
+        public required string PortCode { get; set; }
+        public double Price { get; set; }
+        public required string MeasuremenyUnit { get; set; }
+        public required string Currency { get; set; }
+        public DateTime Timestamp { get; set; }
     }
 }

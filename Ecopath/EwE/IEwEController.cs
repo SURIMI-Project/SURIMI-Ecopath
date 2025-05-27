@@ -11,5 +11,8 @@ namespace Ecopath.EwE
         Task<bool> StopAsync(int timeoutMs = 10000);
         Task<bool> UpdatePricesAsync(List<SpeciesPrice> speciesPrices);
         Task<Biomass> GetBiomassAsync();
+        Task<List<SalesSummary>> GetSalesSummariesAsync(DateTime start, DateTime end);
+        Task<CatchDispositionSummary> GetCatchDispositionSummaryAsync(DateTime start, DateTime end);
+        Task<bool> UpdateCatchDispositionSummaryAsync(CatchDispositionSummary catchDispositionSummary);
     }
 }

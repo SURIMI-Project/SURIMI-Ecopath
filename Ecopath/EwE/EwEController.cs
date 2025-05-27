@@ -10,7 +10,7 @@ namespace Ecopath.EwE
     public class EwEController : IEwEController
     {
         #region Private vars 
-        
+
         /// <summary>The <see cref="cCore"/> to operate on.</summary>
         private readonly cCore _core;
         /// <summary>The Ecospace run thread, if any.</summary>
@@ -80,8 +80,9 @@ namespace Ecopath.EwE
         /// <summary>
         /// The current EwE run state.
         /// </summary>
-        public RunStates RunState 
-        { get => _runstate; 
+        public RunStates RunState
+        {
+            get => _runstate;
             private set
             {
                 if (_runstate != value)
@@ -130,7 +131,7 @@ namespace Ecopath.EwE
             {
                 throw new Exception("EwE - Ecopath does not balance");
             }
-            _logger.LogInformation("EwE - Ecopath does balance"); 
+            _logger.LogInformation("EwE - Ecopath does balance");
 
             if (_configuration.EcosimScenario <= 0 | !_core.LoadEcosimScenario(_configuration.EcosimScenario))
             {
@@ -185,7 +186,7 @@ namespace Ecopath.EwE
             var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMs));
             OnRunStateChanged -= Handler;
 
-            return (RunState == RunStates.waiting) ? 1: -1;
+            return (RunState == RunStates.waiting) ? 1 : -1;
         }
 
         /// <summary>
@@ -379,6 +380,123 @@ namespace Ecopath.EwE
                     _biomass.BiomassGrids.Add(grid);
                 }
             }
+        }
+
+        public Task<List<SalesSummary>> GetSalesSummariesAsync(DateTime start, DateTime end)
+        {
+            var response = new List<SalesSummary>()
+            {
+                new SalesSummary()
+                {
+                    MarketId = "Market1",
+                    MeasurementUnit = "kg",
+                    Currency = "EUR",
+                    Sales = new List<Sale>()
+                    {
+                        new Sale()
+                        {
+                            SpeciesCode = "PIL",
+                            Quantity = 23,
+                            Value = 232.3
+                        },
+                        new Sale()
+                        {
+                            SpeciesCode = "BOG",
+                            Quantity = 12,
+                            Value = 123.4
+                        }
+                    }
+                },
+                new SalesSummary()
+                {
+                    MarketId = "Market2",
+                    MeasurementUnit = "kg",
+                    Currency = "EUR",
+                    Sales = new List<Sale>()
+                    {
+                        new Sale()
+                        {
+                            SpeciesCode = "PIL",
+                            Quantity = 234,
+                            Value = 532.3
+                        },
+                        new Sale()
+                        {
+                            SpeciesCode = "BOG",
+                            Quantity = 132,
+                            Value = 223.4
+                        }
+                    }
+                },
+            };
+            return Task.FromResult(response);
+
+        }
+
+        public Task<CatchDispositionSummary> GetCatchDispositionSummaryAsync(DateTime start, DateTime end)
+        {
+            var response = new CatchDispositionSummary()
+            {
+                MeasurementUnit = "kg",
+                DispositionGrids = new List<DispositionGrid>()
+                {
+                    new DispositionGrid()
+                    {
+                        GearCode = "Gear1",
+                        SpeciesCode = "PIL",
+                        DispositionCells = new List<DispositionCell>()
+                        {
+                            new DispositionCell()
+                            {
+                                GrossCatchBiomass = 5000.0f,
+                                LiveDiscardsBiomass = 1000.0f,
+                                DeadDiscardsBiomass = 2000.0f,
+                                Latitude = 40.901618f,
+                                Longitude = 1.6877561f
+                            },
+                            new DispositionCell()
+                            {
+                                GrossCatchBiomass = 3000.0f,
+                                LiveDiscardsBiomass = 500.0f,
+                                DeadDiscardsBiomass = 1000.0f,
+                                Latitude = 40.801618f,
+                                Longitude = 1.6170411f
+                            }
+                        }
+                    },
+                    new DispositionGrid()
+                    {
+                        GearCode = "Gear2",
+                        SpeciesCode = "BOG",
+                        DispositionCells = new List<DispositionCell>()
+                        {
+                            new DispositionCell()
+                            {
+                                GrossCatchBiomass = 7000.0f,
+                                LiveDiscardsBiomass = 1500.0f,
+                                DeadDiscardsBiomass = 2500.0f,
+                                Latitude = 40.901618f,
+                                Longitude = 1.6877561f
+                            },
+                            new DispositionCell()
+                            {
+                                GrossCatchBiomass = 4000.0f,
+                                LiveDiscardsBiomass = 800.0f,
+                                DeadDiscardsBiomass = 1200.0f,
+                                Latitude = 40.801618f,
+                                Longitude = 1.6170411f
+                            }
+                        }
+                    }
+                }
+            };
+            return Task.FromResult(response);
+        }
+
+        public Task<bool> UpdateCatchDispositionSummaryAsync(CatchDispositionSummary catchDispositionSummary)
+        {
+            /// TODO: implement this
+            return Task.FromResult(true);
         }
         #endregion // Internals
     }
