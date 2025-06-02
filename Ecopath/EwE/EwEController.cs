@@ -41,11 +41,11 @@ namespace Ecopath.EwE
             idle = 0,
             /// <summary>Starting up, not ready yet.</summary>
             starting,
-            /// <summary>Waiting for exteral input.</summary>
+            /// <summary>Waiting for external input.</summary>
             waiting,
             /// <summary>Busy running simulations.</summary>
             running,
-            /// <summary>Busy stoppping.</summary>
+            /// <summary>Busy stopping.</summary>
             stopping
         }
 
@@ -273,7 +273,7 @@ namespace Ecopath.EwE
         {
             if (RunState == RunStates.stopping) return;
 
-            // Do not halt while in spinup
+            // Do not halt while in spin-up
             cEcospaceDataStructures ds = _core.EcospaceDataStructures;
             if (ds.bInSpinUp) return;
             if (timestep.TimeStepinYears < _configuration?.StartYear) return; 
@@ -335,7 +335,7 @@ namespace Ecopath.EwE
         public Task<Biomass> GetBiomassAsync()
         {
             if (_biomass == null)
-                _biomass = new Biomass();
+                _biomass = new Biomass() { MeasurementUnit = "kg" }; 
             return Task.FromResult(_biomass);
         }
 
@@ -361,10 +361,10 @@ namespace Ecopath.EwE
                     BiomassGrid grid = new BiomassGrid()
                     {
                         // Also add projection
-                        SpeciesId = spp
+                        SpeciesCode = spp
                     };
                     int iGroup = _configuration.get_SpeciesGroup(spp);
-                    Single scalar = _configuration.get_SpeciesContribution(spp);
+                    Single scalar = _configuration.get_SpeciesContribution(spp); // Also need to correct for cell area, expected kg
 
                     for (int ic = 1; ic <= ds.InCol; ic++)
                         for (int ir = 1; ir <= ds.InRow; ir++)  
@@ -384,6 +384,7 @@ namespace Ecopath.EwE
 
         public Task<List<SalesSummary>> GetSalesSummariesAsync(DateTime start, DateTime end)
         {
+            // ToDo: validate if the time step falls within the indicated time span
             var response = new List<SalesSummary>()
             {
                 new SalesSummary()
