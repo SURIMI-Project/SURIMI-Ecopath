@@ -2,33 +2,37 @@
 using EwECore;
 using EwEPlugin;
 using EwEUtils.Core;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
+using EwEBridge;
 using static EwECore.cCore;
+using EwEBridge.Ecospace;
 
 namespace Ecopath.EwE
 {
+    // ToDo: devise a mechanism to bridge time step sizes; right now the code assumes that time steps are monthly
+
     public class EwEController : IEwEController
     {
         #region Private vars 
 
         /// <summary>The <see cref="cCore"/> to operate on.</summary>
-        private readonly cCore _core;
+        private readonly cCore m_core;
         /// <summary>The Ecospace run thread, if any.</summary>
-        private Thread? _thread;
+        private Thread? m_thread;
         /// <summary>Core message handler for tracking EwE execution flow.</summary>
-        private cMessageHandler? _mh;
+        private cMessageHandler? m_mh;
 
-        private readonly ILogger<EwEController> _logger;
-        private EwEConfiguration? _configuration;
+        private readonly ILogger<EwEController> m_logger;
+        private EwEConfiguration? m_configuration;
 
-        private RunStates _runstate = RunStates.idle;
+        private RunStates m_runstate = RunStates.idle;
 
         /// <summary>Event for internal state monitoring.</summary>
         private event Action<RunStates>? OnRunStateChanged;
 
         // --- Cached run info
-        private List<SpeciesPrice>? _prices;
-        private Biomass? _biomass;
+        private List<SpeciesPrice>? m_prices;
+        private Biomass? m_biomass;
+        private SalesSummary? m_salessummary;
 
         #endregion // Private vars 
 
@@ -52,27 +56,37 @@ namespace Ecopath.EwE
         public EwEController(ILogger<EwEController> logger)
         {
 
-            _core = new cCore();
+            this.m_core = new cCore();
             cLog.VerboseLevel = eVerboseLevel.Disabled; // Turn off all internal event logging
-            RunState = RunStates.idle;
+            this.RunState = RunStates.idle;
 
-            _mh = new cMessageHandler(OnCoreMessage, eCoreComponentType.Ecospace, eMessageType.EcospaceRunCompleted, SynchronizationContext.Current);
-            _core.Messages.AddMessageHandler(_mh);
+            this.m_mh = new cMessageHandler(OnCoreMessage, eCoreComponentType.Ecospace, eMessageType.EcospaceRunCompleted, SynchronizationContext.Current);
+            this.m_core.Messages.AddMessageHandler(m_mh);
 
             // To make sure we can find local resources. This is rather hack.
             Directory.SetCurrentDirectory(System.AppDomain.CurrentDomain.BaseDirectory);
-            _logger = logger;
+            this.m_logger = logger;
+
+            this.m_core.PluginManager = new cPluginManager();
+            this.m_logger.LogInformation("EwE loaded {0} plug-in(s)", this.m_core.PluginManager.LoadPlugins());
+
+            IPlugin? pi = GetPlugin(typeof(EwEBridge.Ecospace.cEcospaceBridgePlugin));
+            if (pi != null)
+            {
+                cEcospaceBridgePlugin ppt = (cEcospaceBridgePlugin)pi;
+                ppt.BridgeCallback = this.BridgeCallback;
+            }
         }
 
         ~EwEController()
         {
-            _core.Messages.RemoveMessageHandler(_mh);
-            _mh = null;
+            this.m_core.Messages.RemoveMessageHandler(m_mh);
+            this.m_mh = null;
 
-            ForceStop();
+            this.ForceStop();
 
-            _core.CloseModel();
-            _core.Dispose();
+            this.m_core.CloseModel();
+            this.m_core.Dispose();
         }
 
         #region Public interaction 
@@ -82,13 +96,13 @@ namespace Ecopath.EwE
         /// </summary>
         public RunStates RunState
         {
-            get => _runstate;
+            get => this.m_runstate;
             private set
             {
-                if (_runstate != value)
+                if (this.m_runstate != value)
                 {
-                    _runstate = value;
-                    OnRunStateChanged?.Invoke(_runstate);
+                    this.m_runstate = value;
+                    this.OnRunStateChanged?.Invoke(this.m_runstate);
                 }
             }
         }
@@ -109,64 +123,61 @@ namespace Ecopath.EwE
                 throw new Exception("EwE controller already busy, aborting");
             }
 
-            RunState = RunStates.starting;
-            _configuration = config;
+            this.RunState = RunStates.starting;
+            this.m_configuration = config;
 
-            _core.PluginManager = new cPluginManager();
-            _logger.LogInformation("EwE loaded {0} plug-in(s)", _core.PluginManager.LoadPlugins());
-
-            if (!File.Exists(_configuration.ModelName))
+            if (!File.Exists(this.m_configuration.ModelName))
             {
-                throw new FileNotFoundException("EwE model file '{0}' cannot be found", _configuration.ModelName); 
+                throw new FileNotFoundException("EwE model file '{0}' cannot be found", this.m_configuration.ModelName); 
             }
 
-            if (!_core.LoadModel(_configuration.ModelName))
+            if (!this.m_core.LoadModel(m_configuration.ModelName))
             {
-                throw new Exception($"EwE could not load model '{_configuration.ModelName}'");
+                throw new Exception($"EwE could not load model '{this.m_configuration.ModelName}'");
             }
-            _logger.LogInformation("EwE - Ecopath loaded model '{0}'", _configuration.ModelName);
+            this.m_logger.LogInformation("EwE - Ecopath loaded model '{0}'", this.m_configuration.ModelName);
 
             bool bIsBalanced = false;
-            if (!_core.RunEcopath(ref bIsBalanced) | !bIsBalanced)
+            if (!this.m_core.RunEcopath(ref bIsBalanced) | !bIsBalanced)
             {
                 throw new Exception("EwE - Ecopath does not balance");
             }
-            _logger.LogInformation("EwE - Ecopath does balance");
+            this.m_logger.LogInformation("EwE - Ecopath does balance");
 
-            if (_configuration.EcosimScenario <= 0 | !_core.LoadEcosimScenario(_configuration.EcosimScenario))
+            if (this.m_configuration.EcosimScenario <= 0 | !this.m_core.LoadEcosimScenario(m_configuration.EcosimScenario))
             {
-                throw new Exception($"EwE - Ecosim scenario {_configuration.EcosimScenario} not loaded");
+                throw new Exception($"EwE - Ecosim scenario {this.m_configuration.EcosimScenario} not loaded");
             }
-            _logger.LogInformation("EwE - Ecosim scenario {0} loaded", _configuration.EcosimScenario);
+            this.m_logger.LogInformation("EwE - Ecosim scenario {0} loaded", this.m_configuration.EcosimScenario);
 
-            if (_configuration.EcosimTimeSeries > 0)
+            if (this.m_configuration.EcosimTimeSeries > 0)
             {
-                if (!_core.LoadTimeSeries(_configuration.EcosimTimeSeries))
+                if (!this.m_core.LoadTimeSeries(m_configuration.EcosimTimeSeries))
                 {
-                    throw new Exception($"EwE - Ecosim time series {_configuration.EcosimTimeSeries} not loaded");
+                    throw new Exception($"EwE - Ecosim time series {this.m_configuration.EcosimTimeSeries} not loaded");
                 }
-                _logger.LogInformation("EwE - Ecosim time series {0} loaded", _configuration.EcosimTimeSeries);
+                this.m_logger.LogInformation("EwE - Ecosim time series {0} loaded", this.m_configuration.EcosimTimeSeries);
             }
 
-            cEcoSimModelParameters parms = _core.EcosimModelParameters;
-            parms.NumberYears = _configuration.MaxRunYears; // No of years apply to both Sim and Space
+            cEcoSimModelParameters parms = this.m_core.EcosimModelParameters;
+            parms.NumberYears = this.m_configuration.MaxRunYears; // No of years apply to both Sim and Space
 
-            if (!_core.RunEcosim())
+            if (!this.m_core.RunEcosim())
             {
                 throw new Exception("EwE - Ecosim failed to run");
             }
-            _logger.LogInformation("EwE - Ecosim run successfully");
+            this.m_logger.LogInformation("EwE - Ecosim run successfully");
 
-            if (_configuration.EcospaceScenario <= 0 | !_core.LoadEcospaceScenario(_configuration.EcospaceScenario))
+            if (this.m_configuration.EcospaceScenario <= 0 | !this.m_core.LoadEcospaceScenario(this.m_configuration.EcospaceScenario))
             {
-                throw new Exception($"EwE - Ecospace scenario {_configuration.EcospaceScenario} not loaded");
+                throw new Exception($"EwE - Ecospace scenario {this.m_configuration.EcospaceScenario} not loaded");
             }
-            _logger.LogInformation("EwE - Ecospace scenario {0} loaded", _configuration.EcospaceScenario);
+            this.m_logger.LogInformation("EwE - Ecospace scenario {0} loaded", this.m_configuration.EcospaceScenario);
 
-            cEcospaceDataStructures ds = _core.EcospaceDataStructures;
-            ds.SpinUpYears = _configuration.SpinupYears;
-            ds.UseSpinUp = (_configuration.SpinupYears > 0);
-            _logger.LogInformation("EwE - Ecospace spin-up {0}", ds.UseSpinUp ? _configuration.SpinupYears.ToString() : "off"); 
+            cEcospaceDataStructures ds = this.m_core.EcospaceDataStructures;
+            ds.SpinUpYears = this.m_configuration.SpinupYears;
+            ds.UseSpinUp = (this.m_configuration.SpinupYears > 0);
+            this.m_logger.LogInformation("EwE - Ecospace spin-up {0}", ds.UseSpinUp ? this.m_configuration.SpinupYears.ToString() : "off"); 
 
             var tcs = new TaskCompletionSource();
 
@@ -180,8 +191,8 @@ namespace Ecopath.EwE
             OnRunStateChanged += Handler;
 
             // Phew, we managed to plow through. Run Ecospace!
-            _thread = new Thread(RunEcospace);
-            _thread.Start();
+            this.m_thread = new Thread(RunEcospace);
+            this.m_thread.Start();
 
             var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMs));
             OnRunStateChanged -= Handler;
@@ -195,7 +206,7 @@ namespace Ecopath.EwE
         /// <returns></returns>
         public async Task<bool> ContinueAsync(int timeoutMs = 60000)
         {
-            if (RunState != RunStates.waiting) return false;
+            if (this.RunState != RunStates.waiting) return false;
     
             // Need to wait for RunState to switch back to Waiting. Only return after
             var tcs = new TaskCompletionSource();
@@ -207,16 +218,16 @@ namespace Ecopath.EwE
                     tcs.TrySetResult();
                 }
             }
-            OnRunStateChanged += Handler;
+            this.OnRunStateChanged += Handler;
 
             // Carry on
-            _core.EcospacePaused = false;
-            RunState = RunStates.running;
+            this.m_core.EcospacePaused = false;
+            this.RunState = RunStates.running;
 
             var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMs));
-            OnRunStateChanged -= Handler;
+            this.OnRunStateChanged -= Handler;
 
-            _logger.LogInformation("EwE - continue");
+            this.m_logger.LogInformation("EwE - continue");
             return true;
         }
 
@@ -236,9 +247,9 @@ namespace Ecopath.EwE
                 }
             }
 
-            OnRunStateChanged += Handler;
+            this.OnRunStateChanged += Handler;
 
-            _core.StopEcospace(); // Initiate graceful shutdown
+            this.m_core.StopEcospace(); // Initiate graceful shutdown
 
             if (this.RunState == RunStates.idle)
             {
@@ -254,130 +265,70 @@ namespace Ecopath.EwE
             }
 
             // Timeout hit: force kill
-            OnRunStateChanged -= Handler;
-            ForceStop();
+            this.OnRunStateChanged -= Handler;
+            this.ForceStop();
             return false;
-        }
-
-        #endregion // Public interaction
-
-        #region Internals
-
-        private void RunEcospace()
-        {
-            cCore.EcoSpaceInterfaceDelegate dgt = new EcoSpaceInterfaceDelegate(EcospaceCallBack);
-            _core.RunEcospace(ref dgt);
-        }
-
-        private void EcospaceCallBack(ref cEcospaceTimestep timestep)
-        {
-            if (RunState == RunStates.stopping) return;
-
-            // Do not halt while in spin-up
-            cEcospaceDataStructures ds = _core.EcospaceDataStructures;
-            if (ds.bInSpinUp) return;
-            if (timestep.TimeStepinYears < _configuration?.StartYear) return; 
-            //if (_core.EcosimFirstYear() + timestep.TimeStepinYears < _configuration?.StartYear) return; // Should use absolute start year instead; is more robust
-
-            _logger.LogInformation(string.Format("EwE - pausing at timestep {0}, {1}", timestep.iTimeStep, _core.EcospaceTimestepToAbsoluteTime(timestep.iTimeStep)));
-
-            RunState = RunStates.waiting;
-            _core.EcospacePaused = true;
-
-            try
-            {
-                // Build relevant biomass grids for the first tmie 
-                BuildBiomassCache(timestep);
-            }
-            catch (Exception ex)
-            {
-                //_logger.LogInformation("EwE - exception ...");
-            }
-        }
-
-        private void OnCoreMessage(ref cMessage msg)
-        {
-            switch (msg.Type)
-            {
-                case eMessageType.EcospaceRunCompleted:
-
-                    // Clear all modifications made by the process
-                    _core.DiscardChanges();
-                    // Correctly reset the state and clean up
-                    RunState = RunStates.idle;
-                    _thread = null;
-                    break;
-            }
-
-        }
-
-        private void ForceStop()
-        {
-            try
-            {
-                if (_thread != null && _thread.IsAlive)
-                    _thread.Interrupt();
-            }
-            catch (Exception ex)
-            {
-                //_logger.LogInformation("EwE - exception ...");
-            }
-
-            RunState = RunStates.idle; // Manually reset to idle if needed
         }
 
         public Task<bool> UpdatePricesAsync(List<SpeciesPrice> speciesPrices)
         {
-            _prices = speciesPrices;
+            this.m_prices = speciesPrices;
             return Task.FromResult(true);
         }
 
         public Task<Biomass> GetBiomassAsync()
         {
-            if (_biomass == null)
-                _biomass = new Biomass() { MeasurementUnit = "kg" }; 
-            return Task.FromResult(_biomass);
+            if (this.m_biomass == null)
+                this.m_biomass = new Biomass() { MeasurementUnit = "kg" };
+            return Task.FromResult(this.m_biomass);
         }
 
         void Clear()
         {
-            _prices = null;
-            _biomass = null;
+            this.m_prices = null;
+            this.m_biomass = null;
         }
 
-        void BuildBiomassCache(cEcospaceTimestep timestep)
+        /// <summary>
+        /// Prepare a snapshot of the biomasses of the current time step.
+        /// </summary>
+        void BuildTimeStepCache()
         {
-            _biomass = new Biomass()
+            // ToDo: add critcal section?
+
+            // Wipe
+            this.m_biomass = new Biomass()
             {
                 MeasurementUnit = "kg"
             };
-            if (_configuration != null)
+            if (m_configuration != null)
             {
-                cEcospaceBasemap bm = _core.EcospaceBasemap;
-                cEcospaceDataStructures ds = _core.EcospaceDataStructures;
+                cEcospaceDataStructures ds = this.m_core.EcospaceDataStructures;
+                cEcospaceBasemap bm = this.m_core.EcospaceBasemap;
 
-                foreach (string spp in _configuration.SpeciesOfInterest())
+                foreach (string spp in m_configuration.SpeciesOfInterest())
                 {
                     BiomassGrid grid = new BiomassGrid()
                     {
                         // Also add projection
                         SpeciesCode = spp
                     };
-                    int iGroup = _configuration.get_SpeciesGroup(spp);
-                    Single scalar = _configuration.get_SpeciesContribution(spp); // Also need to correct for cell area, expected kg
+                    int iGroup = m_configuration.get_SpeciesGroup(spp);
+                    Single sppProp = m_configuration.get_SpeciesContribution(spp); // Also need to correct for cell area, expected kg
 
                     for (int ic = 1; ic <= ds.InCol; ic++)
-                        for (int ir = 1; ir <= ds.InRow; ir++)  
+                        for (int ir = 1; ir <= ds.InRow; ir++)
                             if (bm.IsModelledCell(ir, ic))
                             {
                                 grid.BiomassCells.Add(new BiomassCell()
                                 {
                                     Latitude = bm.RowToLat(ir),
                                     Longitude = bm.ColToLon(ic),
-                                    Biomass = ds.Bcell[ir, ic, iGroup] * scalar
+                                    // Biomass corrected by group proportion, area, and annual -> monthly rates
+                                    Biomass = ds.Bcell[ir, ic, iGroup] * sppProp * ds.CellArea[ir, ic] / cCore.N_MONTHS
                                 });
                             }
-                    _biomass.BiomassGrids.Add(grid);
+                    this.m_biomass.BiomassGrids.Add(grid);
                 }
             }
         }
@@ -499,6 +450,105 @@ namespace Ecopath.EwE
             /// TODO: implement this
             return Task.FromResult(true);
         }
+
+        #endregion // Public interaction
+
+        #region Internals
+
+        private void RunEcospace()
+        {
+            cCore.EcoSpaceInterfaceDelegate dgt = new EcoSpaceInterfaceDelegate(EcospaceCallBack);
+            this.m_core.RunEcospace(ref dgt);
+        }
+
+        private void EcospaceCallBack(ref cEcospaceTimestep timestep)
+        {
+            if (this.RunState == RunStates.stopping) return;
+
+            // Do not halt while in spin-up
+            cEcospaceDataStructures ds = m_core.EcospaceDataStructures;
+            if (ds.bInSpinUp) return;
+            if (timestep.TimeStepinYears < m_configuration?.StartYear) return;
+            //if (_core.EcosimFirstYear() + timestep.TimeStepinYears < _configuration?.StartYear) return; // Should use absolute start year instead; is more robust
+
+            this.m_logger.LogInformation(string.Format("EwE - pausing at timestep {0}, {1}", timestep.iTimeStep, m_core.EcospaceTimestepToAbsoluteTime(timestep.iTimeStep)));
+
+            this.RunState = RunStates.waiting;
+            this.m_core.EcospacePaused = true;
+        }
+
+        private void OnCoreMessage(ref cMessage msg)
+        {
+            switch (msg.Type)
+            {
+                case eMessageType.EcospaceRunCompleted:
+
+                    // Clear all modifications made by the process
+                    this.m_core.DiscardChanges();
+                    // Correctly reset the state and clean up
+                    this.RunState = RunStates.idle;
+                    this.m_thread = null;
+                    break;
+            }
+
+        }
+
+        private void ForceStop()
+        {
+            try
+            {
+                if (this.m_thread != null && m_thread.IsAlive)
+                    this.m_thread.Interrupt();
+            }
+            catch (Exception ex)
+            {
+                //_logger.LogInformation("EwE - exception ...");
+            }
+
+            this.RunState = RunStates.idle; // Manually reset to idle if needed
+        }
+
+        public IPlugin? GetPlugin(Type t)
+        { 
+            cPluginManager pm = this.m_core.PluginManager;
+            List<IPlugin> plugins = (List<IPlugin>)pm.GetPlugins(t);
+            if (plugins.Count > 0)
+                return plugins[0];
+            return null;
+        }
+
+        private void BridgeCallback(cEcospaceBridgePlugin.EventType e, int iTime)
+        {
+            try
+            {
+                switch (e)
+                {
+                    case cEcospaceBridgePlugin.EventType.None:
+                        break; // NOP
+                    case cEcospaceBridgePlugin.EventType.BeginTimeStep:
+                        // Integrate prices
+                        break;
+                    case cEcospaceBridgePlugin.EventType.BeginTimeStepPost:
+                        break;
+                    case cEcospaceBridgePlugin.EventType.EndTimeStep:
+                            // Gather relevant output info
+                            this.BuildTimeStepCache();
+                        break;
+                    case cEcospaceBridgePlugin.EventType.EndTimeStepPost:
+                        break;
+                    case cEcospaceBridgePlugin.EventType.EffortDistrPost:
+                        break;
+                    default:
+                        break; // NOP
+                }
+            }
+            catch (Exception ex)
+            {
+                this.m_logger.LogInformation("EwE - exception {0} on bridgecallback {1}", ex.Message, e.ToString());
+            }
+
+        }
+
         #endregion // Internals
     }
 }

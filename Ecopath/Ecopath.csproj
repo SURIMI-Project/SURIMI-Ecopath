@@ -31,6 +31,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Reference Include="EwEBridgePlugin">
+	    <HintPath>Includes\EwEBridgePlugin.dll</HintPath>
+	  </Reference>
 	  <Reference Include="EwECore">
 	    <HintPath>Includes\EwECore.dll</HintPath>
 	  </Reference>
