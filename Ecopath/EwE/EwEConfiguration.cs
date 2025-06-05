@@ -7,21 +7,21 @@ namespace Ecopath.EwE
         /// <summary>
         /// Mapping of three-letter species code to Ecopath group index
         /// </summary>
-        private Dictionary<string, int> _speciesgroup = new Dictionary<string, int>();
+        private Dictionary<string, int> m_speciesgroup = new Dictionary<string, int>();
         /// <summary>
         /// Amount [0, 1] that three-letter species code contributes to an Ecopath group
         /// </summary>
-        private Dictionary<string, Single> _speciescontribution = new Dictionary<string, Single>();
+        private Dictionary<string, Single> m_speciescontribution = new Dictionary<string, Single>();
 
         /// <summary>
         /// Mapping of gear code to Ecopath fleet index
         /// </summary>
-        private Dictionary<string, int> _gearfleet = new Dictionary<string, int>();
+        private Dictionary<string, int> m_gearfleet = new Dictionary<string, int>();
 
         /// <summary>
         /// A list of gear codes managed externally (e.g., not fishing within EwE).
         /// </summary>
-        private List<string> _externalGears = new List<string>();
+        private List<string> m_externalGears = new List<string>();
 
         public EwEConfiguration() 
         {
@@ -32,8 +32,8 @@ namespace Ecopath.EwE
             SpinupYears = 10;
             StartYear = 5;
 
-            _speciesgroup.Add("PIL", 3);
-            _speciescontribution.Add("PIL", 1);
+            m_speciesgroup.Add("PIL", 3);
+            m_speciescontribution.Add("PIL", 1);
         }
 
         public string ModelName { get; set; } = "";
@@ -46,38 +46,38 @@ namespace Ecopath.EwE
 
         public int get_SpeciesGroup(string speccode)
         {
-            return _speciesgroup.TryGetValue(speccode.ToUpper(), out var group) ? group : 0;
+            return m_speciesgroup.TryGetValue(speccode.ToUpper(), out var group) ? group : 0;
         }
         public void set_SpeciesGroup(string speccode, int iGroup)
         {
-            _speciesgroup.TryAdd(speccode.ToUpper(), iGroup);
+            m_speciesgroup.TryAdd(speccode.ToUpper(), iGroup);
         }
         public Single get_SpeciesContribution(string speccode)
         {
-            return _speciescontribution.TryGetValue(speccode.ToUpper(), out var contribution) ? contribution : 0!;
+            return m_speciescontribution.TryGetValue(speccode.ToUpper(), out var contribution) ? contribution : 0!;
         }
         public void set_SpeciesContribution(string speccode, Single contribution)
         {
-            _speciescontribution.TryAdd(speccode.ToUpper(), contribution);
+            m_speciescontribution.TryAdd(speccode.ToUpper(), contribution);
         }
 
         public string[] SpeciesOfInterest()
         {
-            return [.. _speciesgroup.Keys]; // Gawd! Who invented this syntaxis, and was it really necessary?
+            return [.. m_speciesgroup.Keys]; // Gawd! Who invented this syntaxis, and was it really necessary?
         }
 
         public int get_GearFleet(string gearcode)
         {
-            return _gearfleet.TryGetValue(gearcode.ToUpper(), out var group) ? group : 0;
+            return m_gearfleet.TryGetValue(gearcode.ToUpper(), out var group) ? group : 0;
         }
         public void set_GearFleet(string gearcode, int iFleet)
         {
-            _gearfleet.TryAdd(gearcode.ToUpper(), iFleet);
+            m_gearfleet.TryAdd(gearcode.ToUpper(), iFleet);
         }
 
         public string[] GearsOfInterest()
         {
-            return [.. _gearfleet.Keys]; // Doesn't get any prettier second time around
+            return [.. m_gearfleet.Keys]; // Doesn't get any prettier second time around
         }
 
         public void set_ExternalGear(string gearcode, bool isExternal)
@@ -85,20 +85,20 @@ namespace Ecopath.EwE
             if (string.IsNullOrEmpty(gearcode)) return;
             gearcode = gearcode.ToUpper();
             if (isExternal)
-                _externalGears.Remove(gearcode);
+                m_externalGears.Remove(gearcode);
             else
-                _externalGears.Add(gearcode);
+                m_externalGears.Add(gearcode);
         }
 
         public bool get_ExternalGear(string gearcode)
         {
             if (string.IsNullOrEmpty(gearcode)) return false;
-            return _externalGears.Contains(gearcode.ToUpper());
+            return m_externalGears.Contains(gearcode.ToUpper());
         }
 
         public string[] GearsExternal()
         {
-            return _externalGears.ToArray(); // Ahhh, this is better
+            return m_externalGears.ToArray(); // Ahhh, this is better
         }
 
     }

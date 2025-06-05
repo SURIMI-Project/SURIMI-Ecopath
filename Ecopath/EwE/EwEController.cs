@@ -1,13 +1,22 @@
 ﻿using Ecopath.Models;
+using EwEBridge.Ecospace;
 using EwECore;
 using EwEPlugin;
 using EwEUtils.Core;
-using EwEBridge;
-using static EwECore.cCore;
-using EwEBridge.Ecospace;
 
 namespace Ecopath.EwE
 {
+    // About the flow of Ecospace and this controller:
+    // This code relies on a bridge to respond to EwE plug-in points, and the Ecospace pause mechanism to halt timestepping
+    // It is important to know that the Ecospace Pause mechanism waits at the BEGINNING of a new time step
+    //
+    // This has somewhat counterintuitive consequences:
+    // - Ecospace biomass, catch and other end-of timestep data is gathered at the end of a timestep
+    // - Ecospace then pauses at the beginning of a new timestep for POSEIDON to provide catch dispositions
+    // - The catch dispositions are injected back into Ecospace as soon as the time step resumes: at the start of the next time step
+    // This means that in the interim, Ecospace biomasses are not up to date. That does not matter as no other interactivity with Ecospace is allowed.
+    // We'll be confused plenty later.
+
     // ToDo: devise a mechanism to bridge time step sizes; right now the code assumes that time steps are monthly
 
     public class EwEController : IEwEController
@@ -70,7 +79,7 @@ namespace Ecopath.EwE
             this.m_core.PluginManager = new cPluginManager();
             this.m_logger.LogInformation("EwE loaded {0} plug-in(s)", this.m_core.PluginManager.LoadPlugins());
 
-            IPlugin? pi = GetPlugin(typeof(EwEBridge.Ecospace.cEcospaceBridgePlugin));
+            IPlugin? pi = GetPlugin(typeof(cEcospaceBridgePlugin));
             if (pi != null)
             {
                 cEcospaceBridgePlugin ppt = (cEcospaceBridgePlugin)pi;
@@ -289,32 +298,60 @@ namespace Ecopath.EwE
             this.m_biomass = null;
         }
 
+        void IntegratePrices()
+        {
+            if ((this.m_prices?.Count > 0) && (this.m_configuration != null))
+            {
+                var ds = this.m_core.EcopathDataStructures;
+
+                // EwE does not have port codes. Average price per species (and gear when available)
+                var meanprices = this.m_prices
+                    .GroupBy(p => new {
+                        p.SpeciesCode //, p.GearCode
+                    })
+                    .Select(g => new
+                    {
+                        SpeciesCode = g.Key.SpeciesCode,
+                        GearCode = "?", // g.Key.GearCode,
+                        MeanPrice = g.Average(p => p.Price)
+
+                    })
+                    .ToList();
+                foreach ( var price in meanprices )
+                {
+                    int iFleet = this.m_configuration.get_GearFleet(price.GearCode);
+                    int iGroup = this.m_configuration.get_SpeciesGroup(price.SpeciesCode);
+                    if (iFleet > 0 && iGroup > 0)
+                       ds.Market[iFleet, iGroup] = (float)price.MeanPrice;
+                }
+                this.m_prices.Clear();
+            }
+        }
+
         /// <summary>
         /// Prepare a snapshot of the biomasses of the current time step.
         /// </summary>
-        void BuildTimeStepCache()
+        void CacheTimestepData()
         {
-            // ToDo: add critcal section?
-
             // Wipe
             this.m_biomass = new Biomass()
             {
                 MeasurementUnit = "kg"
             };
-            if (m_configuration != null)
+            if (this.m_configuration != null)
             {
                 cEcospaceDataStructures ds = this.m_core.EcospaceDataStructures;
                 cEcospaceBasemap bm = this.m_core.EcospaceBasemap;
 
-                foreach (string spp in m_configuration.SpeciesOfInterest())
+                foreach (string spp in this.m_configuration.SpeciesOfInterest())
                 {
                     BiomassGrid grid = new BiomassGrid()
                     {
-                        // Also add projection
+                        // Also add projection?
                         SpeciesCode = spp
                     };
-                    int iGroup = m_configuration.get_SpeciesGroup(spp);
-                    Single sppProp = m_configuration.get_SpeciesContribution(spp); // Also need to correct for cell area, expected kg
+                    int iGroup = this.m_configuration.get_SpeciesGroup(spp);
+                    Single sppProp = this.m_configuration.get_SpeciesContribution(spp);
 
                     for (int ic = 1; ic <= ds.InCol; ic++)
                         for (int ir = 1; ir <= ds.InRow; ir++)
@@ -324,8 +361,8 @@ namespace Ecopath.EwE
                                 {
                                     Latitude = bm.RowToLat(ir),
                                     Longitude = bm.ColToLon(ic),
-                                    // Biomass corrected by group proportion, area, and annual -> monthly rates
-                                    Biomass = ds.Bcell[ir, ic, iGroup] * sppProp * ds.CellArea[ir, ic] / cCore.N_MONTHS
+                                    // Biomass converted to from t/km2 to kg, corrected by group proportion and annual -> monthly rates
+                                    Biomass = ds.Bcell[ir, ic, iGroup] * ds.CellArea[ir, ic] * sppProp * 1000 / cCore.N_MONTHS
                                 });
                             }
                     this.m_biomass.BiomassGrids.Add(grid);
@@ -457,24 +494,8 @@ namespace Ecopath.EwE
 
         private void RunEcospace()
         {
-            cCore.EcoSpaceInterfaceDelegate dgt = new EcoSpaceInterfaceDelegate(EcospaceCallBack);
+            cCore.EcoSpaceInterfaceDelegate? dgt = null;
             this.m_core.RunEcospace(ref dgt);
-        }
-
-        private void EcospaceCallBack(ref cEcospaceTimestep timestep)
-        {
-            if (this.RunState == RunStates.stopping) return;
-
-            // Do not halt while in spin-up
-            cEcospaceDataStructures ds = m_core.EcospaceDataStructures;
-            if (ds.bInSpinUp) return;
-            if (timestep.TimeStepinYears < m_configuration?.StartYear) return;
-            //if (_core.EcosimFirstYear() + timestep.TimeStepinYears < _configuration?.StartYear) return; // Should use absolute start year instead; is more robust
-
-            this.m_logger.LogInformation(string.Format("EwE - pausing at timestep {0}, {1}", timestep.iTimeStep, m_core.EcospaceTimestepToAbsoluteTime(timestep.iTimeStep)));
-
-            this.RunState = RunStates.waiting;
-            this.m_core.EcospacePaused = true;
         }
 
         private void OnCoreMessage(ref cMessage msg)
@@ -508,7 +529,7 @@ namespace Ecopath.EwE
             this.RunState = RunStates.idle; // Manually reset to idle if needed
         }
 
-        public IPlugin? GetPlugin(Type t)
+        public IPlugin? GetPlugin(System.Type t)
         { 
             cPluginManager pm = this.m_core.PluginManager;
             List<IPlugin> plugins = (List<IPlugin>)pm.GetPlugins(t);
@@ -519,6 +540,8 @@ namespace Ecopath.EwE
 
         private void BridgeCallback(cEcospaceBridgePlugin.EventType e, int iTime)
         {
+            if (this.RunState == RunStates.stopping) return;
+
             try
             {
                 switch (e)
@@ -526,20 +549,24 @@ namespace Ecopath.EwE
                     case cEcospaceBridgePlugin.EventType.None:
                         break; // NOP
                     case cEcospaceBridgePlugin.EventType.BeginTimeStep:
-                        // Integrate prices
+                        this.IntegratePrices();
                         break;
                     case cEcospaceBridgePlugin.EventType.BeginTimeStepPost:
                         break;
                     case cEcospaceBridgePlugin.EventType.EndTimeStep:
-                            // Gather relevant output info
-                            this.BuildTimeStepCache();
-                        break;
-                    case cEcospaceBridgePlugin.EventType.EndTimeStepPost:
+                        this.CacheTimestepData();
+                        if (this.MustPause(iTime))
+                        {
+                            this.m_logger.LogInformation("EwE - pausing at timestep {0}", iTime);
+                            this.RunState = RunStates.waiting;
+                            this.m_core.EcospacePaused = true;
+                        }
                         break;
                     case cEcospaceBridgePlugin.EventType.EffortDistrPost:
                         break;
                     default:
-                        break; // NOP
+                        // NOP
+                        break; 
                 }
             }
             catch (Exception ex)
@@ -549,6 +576,14 @@ namespace Ecopath.EwE
 
         }
 
+        private bool MustPause(int iTime)
+        {
+            // Do not halt while in spin-up
+            cEcospaceDataStructures ds = m_core.EcospaceDataStructures;
+            if (ds.bInSpinUp) return false;
+            DateTime dt = this.m_core.EcosimTimestepToAbsoluteTime(iTime);
+            return (dt.Year >= m_configuration?.StartYear);
+        }
         #endregion // Internals
     }
 }
