@@ -899,6 +899,9 @@ EwEUtils
 <member name="F:EwEUtils.Core.eVarNameFlags.Energy">
  <summary>Group energy content scalar</summary>
 </member>
+<member name="F:EwEUtils.Core.eVarNameFlags.GroupUsedInIndicators">
+ <summary>Is a group used in the calculation of inidicators</summary>
+</member>
 <member name="F:EwEUtils.Core.eVarNameFlags.EcopathStatsTotalConsumption">
  <summary>Sum of all consumption</summary>
 </member>
@@ -4492,6 +4495,13 @@ EwEUtils
 </member>
 <member name="F:EwEUtils.Core.eExploitationTypes.Recovering">
  <summary>Catches are again increasing after having been depleted</summary>
+</member>
+<member name="T:EwEUtils.Core.eFeedingGuild">
+ -----------------------------------------------------------------------
+ <summary>
+ Enumerated type stating the feeding guild
+</summary>
+ -----------------------------------------------------------------------
 </member>
 <member name="T:EwEUtils.Core.eAutoUpdateTypes">
  -----------------------------------------------------------------------
