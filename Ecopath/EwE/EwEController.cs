@@ -3,6 +3,7 @@ using EwEBridge.Ecospace;
 using EwECore;
 using EwEPlugin;
 using EwEUtils.Core;
+using Microsoft.VisualBasic;
 
 namespace Ecopath.EwE
 {
@@ -38,31 +39,17 @@ namespace Ecopath.EwE
         /// <summary>Event for internal state monitoring.</summary>
         private event Action<RunStates>? OnRunStateChanged;
 
-        // --- Cached run info
-        private List<SpeciesPrice>? m_prices;
-        private Biomass? m_biomass;
-        private SalesSummary? m_salessummary;
+        // --- Data in and out 
+        private List<SpeciesPrice>? m_pricesIn;
+        private CatchDispositionSummary? m_catchIn;
+
+        private Biomass? m_biomassOut;
+        private CatchDispositionSummary? m_catchOut;
+        private List<SalesSummary> m_salesOut = new();
 
         #endregion // Private vars 
 
-        /// <summary>
-        /// Enumerated type, defining the possible run states of the EwEController.
-        /// </summary>
-        public enum RunStates : uint
-        {
-            /// <summary>Ready to be started.</summary>
-            idle = 0,
-            /// <summary>Starting up, not ready yet.</summary>
-            starting,
-            /// <summary>Waiting for external input.</summary>
-            waiting,
-            /// <summary>Busy running simulations.</summary>
-            running,
-            /// <summary>Busy stopping.</summary>
-            stopping
-        }
-
-        public EwEController(ILogger<EwEController> logger)
+         public EwEController(ILogger<EwEController> logger)
         {
 
             this.m_core = new cCore();
@@ -98,7 +85,24 @@ namespace Ecopath.EwE
             this.m_core.Dispose();
         }
 
-        #region Public interaction 
+        #region EwE helpers
+
+        /// <summary>
+        /// Enumerated type, defining the possible run states of the EwEController.
+        /// </summary>
+        public enum RunStates : uint
+        {
+            /// <summary>Ready to be started.</summary>
+            idle = 0,
+            /// <summary>Starting up, not ready yet.</summary>
+            starting,
+            /// <summary>Waiting for external input.</summary>
+            waiting,
+            /// <summary>Busy running simulations.</summary>
+            running,
+            /// <summary>Busy stopping.</summary>
+            stopping
+        }
 
         /// <summary>
         /// The current EwE run state.
@@ -115,11 +119,14 @@ namespace Ecopath.EwE
                 }
             }
         }
-
         /// <summary>
         /// Helper method, returns if Ecospace is waiting for input.
         /// </summary>
         public bool IsWaiting { get { return RunState == RunStates.waiting; } }
+
+        #endregion EwE helpers
+
+        #region Framework interactions
 
         /// <summary>
         /// Start EwE and wait for Ecospace to get ready for simulations
@@ -223,9 +230,7 @@ namespace Ecopath.EwE
             void Handler(RunStates state)
             {
                 if (state == RunStates.waiting)
-                {
                     tcs.TrySetResult();
-                }
             }
             this.OnRunStateChanged += Handler;
 
@@ -281,60 +286,77 @@ namespace Ecopath.EwE
 
         public Task<bool> UpdatePricesAsync(List<SpeciesPrice> speciesPrices)
         {
-            this.m_prices = speciesPrices;
+            this.m_pricesIn = speciesPrices;
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> UpdateCatchDispositionSummaryAsync(CatchDispositionSummary catchDispositionSummary)
+        {
+            this.m_catchIn = catchDispositionSummary;
             return Task.FromResult(true);
         }
 
         public Task<Biomass> GetBiomassAsync()
         {
-            if (this.m_biomass == null)
-                this.m_biomass = new Biomass() { MeasurementUnit = "kg" };
-            return Task.FromResult(this.m_biomass);
+            if (this.m_biomassOut == null)
+                this.m_biomassOut = new Biomass() { MeasurementUnit = "kg" };
+            return Task.FromResult(this.m_biomassOut);
         }
 
-        void Clear()
+        public Task<List<SalesSummary>> GetSalesSummariesAsync(DateTime start, DateTime end)
         {
-            this.m_prices = null;
-            this.m_biomass = null;
+          return Task.FromResult(this.m_salesOut);
         }
 
-        void IntegratePrices()
+        public Task<CatchDispositionSummary> GetCatchDispositionSummaryAsync(DateTime start, DateTime end)
         {
-            if ((this.m_prices?.Count > 0) && (this.m_configuration != null))
+            if (this.m_catchOut == null)
+                this.m_catchOut = new CatchDispositionSummary() { MeasurementUnit = "kg" };
+            return Task.FromResult(this.m_catchOut);
+        }
+
+        #endregion // Public interaction
+
+        #region Data interactions
+
+        private void Clear()
+        {
+            this.m_pricesIn = null;
+            this.m_catchIn = null;
+
+            this.m_catchOut = null;
+            this.m_biomassOut = null;
+        }
+
+        private void IntegratePrices()
+        {
+            if ((this.m_pricesIn?.Count > 0) && (this.m_configuration != null))
             {
                 var ds = this.m_core.EcopathDataStructures;
 
-                // EwE does not have port codes. Average price per species (and gear when available)
-                var meanprices = this.m_prices
-                    .GroupBy(p => new {
-                        p.SpeciesCode //, p.GearCode
-                    })
-                    .Select(g => new
-                    {
-                        SpeciesCode = g.Key.SpeciesCode,
-                        GearCode = "?", // g.Key.GearCode,
-                        MeanPrice = g.Average(p => p.Price)
-
-                    })
-                    .ToList();
-                foreach ( var price in meanprices )
+                foreach (var price in m_pricesIn)
                 {
-                    int iFleet = this.m_configuration.get_GearFleet(price.GearCode);
+                    int iFleet = 42; // this.m_configuration.get_GearFleet(price.GearCode, price.PortCode);
                     int iGroup = this.m_configuration.get_SpeciesGroup(price.SpeciesCode);
                     if (iFleet > 0 && iGroup > 0)
-                       ds.Market[iFleet, iGroup] = (float)price.MeanPrice;
+                        ds.Market[iFleet, iGroup] = (float)price.Price;
+                    else
+                    {
+                        // Somebody may want to know this
+                    }
                 }
-                this.m_prices.Clear();
+                // Done, clear buffer. Prices will remain fixed until the next change
+                this.m_pricesIn.Clear();
             }
         }
 
         /// <summary>
         /// Prepare a snapshot of the biomasses of the current time step.
         /// </summary>
-        void CacheTimestepData()
+        private void CacheBiomassData()
         {
             // Wipe
-            this.m_biomass = new Biomass()
+            this.m_biomassOut = new Biomass()
             {
                 MeasurementUnit = "kg"
             };
@@ -343,7 +365,7 @@ namespace Ecopath.EwE
                 cEcospaceDataStructures ds = this.m_core.EcospaceDataStructures;
                 cEcospaceBasemap bm = this.m_core.EcospaceBasemap;
 
-                foreach (string spp in this.m_configuration.SpeciesOfInterest())
+                foreach (string spp in this.m_configuration.SpeciesCodes())
                 {
                     BiomassGrid grid = new BiomassGrid()
                     {
@@ -355,142 +377,188 @@ namespace Ecopath.EwE
 
                     for (int ic = 1; ic <= ds.InCol; ic++)
                         for (int ir = 1; ir <= ds.InRow; ir++)
-                            if (bm.IsModelledCell(ir, ic))
+                            if (ds.Depth[ir, ic] > 0)
                             {
                                 grid.BiomassCells.Add(new BiomassCell()
                                 {
                                     Latitude = bm.RowToLat(ir),
                                     Longitude = bm.ColToLon(ic),
-                                    // Biomass converted to from t/km2 to kg, corrected by group proportion and annual -> monthly rates
-                                    Biomass = ds.Bcell[ir, ic, iGroup] * ds.CellArea[ir, ic] * sppProp * 1000 / cCore.N_MONTHS
+                                    // Express biomass of group proportion in kg at timestep units (not annual)
+                                    Biomass = DensityToKg(ds.Bcell[ir, ic, iGroup], ir, ic) * sppProp * ds.TimeStep
                                 });
                             }
-                    this.m_biomass.BiomassGrids.Add(grid);
+                    this.m_biomassOut.BiomassGrids.Add(grid);
                 }
             }
         }
 
-        public Task<List<SalesSummary>> GetSalesSummariesAsync(DateTime start, DateTime end)
+        /// <summary>
+        /// Prepare a snapshot of catch data for export. Only include internal gears, e.g., of catches produced by EwE.
+        /// </summary>
+        private void CacheCatchData()
         {
-            // ToDo: validate if the time step falls within the indicated time span
-            var response = new List<SalesSummary>()
-            {
-                new SalesSummary()
-                {
-                    MarketId = "Market1",
-                    MeasurementUnit = "kg",
-                    Currency = "EUR",
-                    Sales = new List<Sale>()
-                    {
-                        new Sale()
-                        {
-                            SpeciesCode = "PIL",
-                            Quantity = 23,
-                            Value = 232.3
-                        },
-                        new Sale()
-                        {
-                            SpeciesCode = "BOG",
-                            Quantity = 12,
-                            Value = 123.4
-                        }
-                    }
-                },
-                new SalesSummary()
-                {
-                    MarketId = "Market2",
-                    MeasurementUnit = "kg",
-                    Currency = "EUR",
-                    Sales = new List<Sale>()
-                    {
-                        new Sale()
-                        {
-                            SpeciesCode = "PIL",
-                            Quantity = 234,
-                            Value = 532.3
-                        },
-                        new Sale()
-                        {
-                            SpeciesCode = "BOG",
-                            Quantity = 132,
-                            Value = 223.4
-                        }
-                    }
-                },
-            };
-            return Task.FromResult(response);
+            if (this.m_catchOut == null)
+                this.m_catchOut = new() { MeasurementUnit = "kg" };
+            else
+                this.m_catchOut.DispositionGrids.Clear();
 
-        }
+            if (this.m_configuration == null) return;
 
-        public Task<CatchDispositionSummary> GetCatchDispositionSummaryAsync(DateTime start, DateTime end)
-        {
-            var response = new CatchDispositionSummary()
-            {
-                MeasurementUnit = "kg",
-                DispositionGrids = new List<DispositionGrid>()
+            cEcopathDataStructures ecopathds = this.m_core.EcopathDataStructures;
+            cEcospaceDataStructures spaceds = this.m_core.EcospaceDataStructures;
+            cEcospaceBasemap bm = this.m_core.EcospaceBasemap;
+            List<int> fished = new();
+
+            for (int iGroup = 1; iGroup <= this.m_core.nGroups; iGroup++)
+                if (this.m_core.get_EcopathGroupInputs(iGroup).IsFished)
+                    fished.Add(iGroup);
+
+            foreach (int iGroup in fished)
+            { 
+                string speccode = this.m_configuration.get_GroupSpecies(iGroup);
+                var sppProp = this.m_configuration.get_SpeciesContribution(speccode);
+
+                foreach (string gearcode in this.m_configuration.GearCodes())
                 {
-                    new DispositionGrid()
+                    // Is fleet managed by EwE?
+                    if (this.m_configuration.get_ExternalGear(gearcode) == false)
                     {
-                        GearCode = "Gear1",
-                        SpeciesCode = "PIL",
-                        DispositionCells = new List<DispositionCell>()
+                        // Tally up the catch dispositions for all the markets this gear code caters to
+                        string[] markets = this.m_configuration.MarketCodes(gearcode);
+
+                        float[,] catches = new float[spaceds.InRow + 1, spaceds.InCol + 1];
+                        float[,] disdead = new float[spaceds.InRow + 1, spaceds.InCol + 1];
+                        float[,] dislive = new float[spaceds.InRow + 1, spaceds.InCol + 1];
+                        bool bHasData = false;
+
+                        foreach (string marketcode in markets)
                         {
-                            new DispositionCell()
-                            {
-                                GrossCatchBiomass = 5000.0f,
-                                LiveDiscardsBiomass = 1000.0f,
-                                DeadDiscardsBiomass = 2000.0f,
-                                Latitude = 40.901618f,
-                                Longitude = 1.6877561f
-                            },
-                            new DispositionCell()
-                            {
-                                GrossCatchBiomass = 3000.0f,
-                                LiveDiscardsBiomass = 500.0f,
-                                DeadDiscardsBiomass = 1000.0f,
-                                Latitude = 40.801618f,
-                                Longitude = 1.6170411f
-                            }
+                            int iFleet = this.m_configuration.get_GearFleet(gearcode, marketcode);
+                            if (ecopathds.Landing[iFleet, iGroup] + ecopathds.Discard[iFleet, iGroup] > 0)
+                                for (int ir = 1; ir <= spaceds.InRow; ir++)
+                                    for (int ic = 1; ic <= spaceds.InCol; ic++)
+                                        if (spaceds.Depth[ir, ic] > 0)
+                                        {
+                                            catches[ir, ic] = spaceds.CatchGroupFleetMap[iFleet, iGroup][ir, ic];
+                                            disdead[ir, ic] = spaceds.DiscardMortGroupFleetMap[iFleet, iGroup][ir, ic];
+                                            dislive[ir, ic] = spaceds.DiscardSurviveGroupFleetMap[iFleet, iGroup][ir, ic];
+                                            bHasData = true;
+                                        }
                         }
-                    },
-                    new DispositionGrid()
-                    {
-                        GearCode = "Gear2",
-                        SpeciesCode = "BOG",
-                        DispositionCells = new List<DispositionCell>()
+
+                        if (bHasData)
                         {
-                            new DispositionCell()
-                            {
-                                GrossCatchBiomass = 7000.0f,
-                                LiveDiscardsBiomass = 1500.0f,
-                                DeadDiscardsBiomass = 2500.0f,
-                                Latitude = 40.901618f,
-                                Longitude = 1.6877561f
-                            },
-                            new DispositionCell()
-                            {
-                                GrossCatchBiomass = 4000.0f,
-                                LiveDiscardsBiomass = 800.0f,
-                                DeadDiscardsBiomass = 1200.0f,
-                                Latitude = 40.801618f,
-                                Longitude = 1.6170411f
-                            }
+                            var grid = new DispositionGrid() { GearCode = gearcode, SpeciesCode = speccode };
+                            for (int ir = 1; ir <= spaceds.InRow; ir++)
+                                for (int ic = 1; ic <= spaceds.InCol; ic++)
+                                    if (spaceds.Depth[ir, ic] > 0)
+                                    {
+                                        grid.DispositionCells.Add(new DispositionCell()
+                                        {
+                                            Latitude = bm.RowToLat(ir),
+                                            Longitude = bm.ColToLon(ic),
+                                            // Express catch stats of group proportion in kg at timestep units (not annual)
+                                            GrossCatchBiomass = DensityToKg(catches[ir, ic], ir, ic) * sppProp * spaceds.TimeStep,
+                                            LiveDiscardsBiomass = DensityToKg(dislive[ir, ic], ir, ic) * sppProp * spaceds.TimeStep,
+                                            DeadDiscardsBiomass = DensityToKg(disdead[ir, ic], ir, ic) * sppProp * spaceds.TimeStep
+                                        });
+                                    }
+                            this.m_catchOut.DispositionGrids.Add(grid);
                         }
                     }
                 }
-            };
-            return Task.FromResult(response);
+            }
         }
 
-        public Task<bool> UpdateCatchDispositionSummaryAsync(CatchDispositionSummary catchDispositionSummary)
+        private void CacheSales()
         {
-            /// TODO: implement this
-            return Task.FromResult(true);
+            //foreach (string market in this.m_configuration.Markets())
+            //{
+            //    var sales = new SalesSummary()
+            //    {
+            //        MarketId = market
+            //            MeasurementUnit = "kg",
+            //        Currency = "EUR",
+            //        Sales = new List<Sale>()
+            //    };
+            //    foreach (int iFleet in this.m_configuration.MarketFleets(market))
+            //    {
+
+            //    }
+            //}
+            //new SalesSummary()
+            //{
+            //    MarketId = "all",
+            //    MeasurementUnit = "kg",
+            //    Currency = "EUR",
+            //    Sales = new List<Sale>()
+            //        {
+            //            new Sale()
+            //            {
+            //                SpeciesCode = "PIL",
+            //                Quantity = 23,
+            //                Value = 232.3
+            //            },
+            //            new Sale()
+            //            {
+            //                SpeciesCode = "BOG",
+            //                Quantity = 12,
+            //                Value = 123.4
+            //            }
+            //        }
+            //},
+            //    new SalesSummary()
+            //    {
+            //        MarketId = "Market2",
+            //        MeasurementUnit = "kg",
+            //        Currency = "EUR",
+            //        Sales = new List<Sale>()
+            //        {
+            //            new Sale()
+            //            {
+            //                SpeciesCode = "PIL",
+            //                Quantity = 234,
+            //                Value = 532.3
+            //            },
+            //            new Sale()
+            //            {
+            //                SpeciesCode = "BOG",
+            //                Quantity = 132,
+            //                Value = 223.4
+            //            }
+            //        }
+            //    },
+            //}
+        }
+        /// <summary>
+        /// Maps Ecospace currency tonnes.km-2 to kg
+        /// </summary>
+        /// <param name="dens"></param>
+        /// <param name="irow"></param>
+        /// <param name="icol"></param>
+        /// <returns></returns>
+        private float DensityToKg(float dens, int irow, int icol)
+        {
+            return dens * 1000 * this.m_core.EcospaceDataStructures.CellArea[irow, icol];
         }
 
-        #endregion // Public interaction
+        /// <summary>
+        /// Maps kg to Ecospace currency tonnes.km-2
+        /// </summary>
+        /// <param name="kg"></param>
+        /// <param name="irow"></param>
+        /// <param name="icol"></param>
+        /// <returns></returns>
+        private float KgToDensity(float kg, int irow, int icol)
+        {
+            float area = this.m_core.EcospaceDataStructures.CellArea[irow, icol];
+            if (area == 0) area = 1; // Can happen
+            return kg / (area * 1000);
+        }
 
-        #region Internals
+        #endregion // Data interactions
+
+        #region Internal - EwE interactions
 
         private void RunEcospace()
         {
@@ -511,7 +579,6 @@ namespace Ecopath.EwE
                     this.m_thread = null;
                     break;
             }
-
         }
 
         private void ForceStop()
@@ -554,7 +621,7 @@ namespace Ecopath.EwE
                     case cEcospaceBridgePlugin.EventType.BeginTimeStepPost:
                         break;
                     case cEcospaceBridgePlugin.EventType.EndTimeStep:
-                        this.CacheTimestepData();
+                        this.CacheBiomassData();
                         if (this.MustPause(iTime))
                         {
                             this.m_logger.LogInformation("EwE - pausing at timestep {0}", iTime);
@@ -584,6 +651,7 @@ namespace Ecopath.EwE
             DateTime dt = this.m_core.EcosimTimestepToAbsoluteTime(iTime);
             return (dt.Year >= m_configuration?.StartYear);
         }
-        #endregion // Internals
+
+        #endregion // Internal - EwE interactions
     }
 }
