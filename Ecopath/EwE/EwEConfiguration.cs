@@ -216,7 +216,7 @@ namespace Ecopath.EwE
             if (!string.IsNullOrEmpty(gearcode))
             {
                 foreach (DualKey keys in this.m_gearfleet.Keys)
-                    if (string.Compare(gearcde, keys.c1, true) ==0 )
+                    if (string.Compare(gearcode, keys.c1, true) ==0 )
                     markets.Add(keys.c2);
             }
             return markets.Distinct().ToArray();

@@ -3,8 +3,6 @@ using EwEBridge.Ecospace;
 using EwECore;
 using EwEPlugin;
 using EwEUtils.Core;
-using Microsoft.AspNetCore.Authorization.Infrastructure;
-using Microsoft.VisualBasic;
 
 namespace Ecopath.EwE
 {
@@ -338,20 +336,27 @@ namespace Ecopath.EwE
                 foreach (var price in m_pricesIn)
                 {
                     // Fleet is identified by gear code + marketcode, not PortCode
+                    
                     // ToDo_JS: activate code below
-
-                    int iFleet = 42; // this.m_configuration.get_GearFleet(price.GearCode, price.PortCode);
+                    int iFleet = 42; // this.m_configuration.get_GearFleet(price.GearCode, price.MarketCode);
                     int iGroup = this.m_configuration.get_SpeciesGroup(price.SpeciesCode);
                     if (iFleet > 0 && iGroup > 0)
                         ds.Market[iFleet, iGroup] = (float)price.Price;
                     else
                     {
-                        // Somebody may want to know this
+                        // ToDo_JS: decide how to respond to a potential EwE misconfiguration.
+                        //this.m_logger.LogWarning("Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.marketCode, price.SpeciesCode), price);
+                        //throw new Exception("Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.marketCode, price.SpeciesCode);
                     }
                 }
                 // Done, clear buffer. Prices will remain fixed until the next change
                 this.m_pricesIn.Clear();
             }
+        }
+
+        private void IntegrateCatchDispositions()
+        {
+
         }
 
         /// <summary>
@@ -399,7 +404,7 @@ namespace Ecopath.EwE
         /// <summary>
         /// Prepare a snapshot of catch data for export. Only include internal gears, e.g., of catches produced by EwE.
         /// </summary>
-        private void CacheCatchAnsSalesData()
+        private void CacheCatchAndSalesData()
         {
             if (this.m_catchOut == null)
                 this.m_catchOut = new() { MeasurementUnit = "kg" };
@@ -468,7 +473,7 @@ namespace Ecopath.EwE
                                             salesValue[dk] += (cellCatchesAbs - cellDeadDiscAbs) * ecopathds.Market[iFleet, iGroup];
 
                                             // Prepare catch deposition. Note that EwE catches do NOT include live discards
-                                            // What is the framework expecting? 
+                                            // ToDo_JS: Decide on the below. What is the framework expecting? 
                                             // cellCatchesAbs += cellLiveDiscAbs;
 
                                             catches[ir, ic] += cellCatchesAbs;
@@ -533,14 +538,15 @@ namespace Ecopath.EwE
                 this.m_salesOut.Add(sales);
             }
 
+            // Sanity check
             if (salesValue.Keys.Count() > 0)
             {
-                // WTF? Should not happen
+                throw new Exception("There are {0} unexpected sales record(s). Please kick the EwE developers.");
             }
         }
 
         /// <summary>
-        /// Maps Ecospace currency tonnes.km-2 to kg
+        /// Maps Ecospace currency tonnes.km-2 to kg.
         /// </summary>
         /// <param name="dens"></param>
         /// <param name="irow"></param>
@@ -548,6 +554,7 @@ namespace Ecopath.EwE
         /// <returns></returns>
         private float DensityToKg(float dens, int irow, int icol)
         {
+            // ToDo_JS: validate model currency unit (And yes, "currency" is biomass unit. Nothing to do with money. Fun times)
             return dens * 1000 * this.m_core.EcospaceDataStructures.CellArea[irow, icol];
         }
 
@@ -560,6 +567,7 @@ namespace Ecopath.EwE
         /// <returns></returns>
         private float KgToDensity(float kg, int irow, int icol)
         {
+            // ToDo_JS: validate actual model currency unit
             float area = this.m_core.EcospaceDataStructures.CellArea[irow, icol];
             if (area == 0) area = 1; // Can happen
             return kg / (area * 1000);
@@ -623,17 +631,23 @@ namespace Ecopath.EwE
                 switch (e)
                 {
                     case cEcospaceBridgePlugin.EventType.None:
-                        break; // NOP
+                        // NOP
+                        break; 
+
                     case cEcospaceBridgePlugin.EventType.BeginTimeStep:
                         this.IntegratePrices();
+                        this.IntegrateCatchDispositions();
                         break;
+
                     case cEcospaceBridgePlugin.EventType.BeginTimeStepPost:
+                        // NOP
                         break;
+
                     case cEcospaceBridgePlugin.EventType.EndTimeStep:
 
                         // Prepare data for sending out
                         this.CacheBiomassData();
-                        this.CacheCatchAnsSalesData();
+                        this.CacheCatchAndSalesData();
 
                         // Handle pause timer
                         if (this.MustPause(iTime))
@@ -643,8 +657,11 @@ namespace Ecopath.EwE
                             this.m_core.EcospacePaused = true;
                         }
                         break;
+
                     case cEcospaceBridgePlugin.EventType.EffortDistrPost:
+                        // NOP
                         break;
+
                     default:
                         // NOP
                         break; 
