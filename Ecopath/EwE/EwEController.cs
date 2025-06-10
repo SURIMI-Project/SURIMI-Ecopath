@@ -329,34 +329,63 @@ namespace Ecopath.EwE
 
         private void IntegratePrices()
         {
-            if ((this.m_pricesIn?.Count > 0) && (this.m_configuration != null))
-            {
-                var ds = this.m_core.EcopathDataStructures;
+            if (this.m_pricesIn == null) return;
+            if (this.m_configuration == null) return;
 
-                foreach (var price in m_pricesIn)
-                {
-                    // Fleet is identified by gear code + marketcode, not PortCode
+            var ds = this.m_core.EcopathDataStructures;
+
+            foreach (var price in m_pricesIn)
+            {
+                // Fleet is identified by gear code + marketcode, not PortCode
                     
-                    // ToDo_JS: activate code below
-                    int iFleet = 42; // this.m_configuration.get_GearFleet(price.GearCode, price.MarketCode);
-                    int iGroup = this.m_configuration.get_SpeciesGroup(price.SpeciesCode);
-                    if (iFleet > 0 && iGroup > 0)
-                        ds.Market[iFleet, iGroup] = (float)price.Price;
-                    else
-                    {
-                        // ToDo_JS: decide how to respond to a potential EwE misconfiguration.
-                        //this.m_logger.LogWarning("Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.marketCode, price.SpeciesCode), price);
-                        //throw new Exception("Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.marketCode, price.SpeciesCode);
-                    }
+                // ToDo_JS: activate code below
+                int iFleet = 42; // this.m_configuration.get_GearFleet(price.GearCode, price.MarketCode);
+                int iGroup = this.m_configuration.get_SpeciesGroup(price.SpeciesCode);
+                if (iFleet > 0 && iGroup > 0)
+                    ds.Market[iFleet, iGroup] = (float)price.Price;
+                else
+                {
+                    // ToDo_JS: decide how to respond to a potential EwE misconfiguration.
+                    //this.m_logger.LogWarning("Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.marketCode, price.SpeciesCode), price);
+                    //throw new Exception("Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.marketCode, price.SpeciesCode);
                 }
-                // Done, clear buffer. Prices will remain fixed until the next change
-                this.m_pricesIn.Clear();
             }
+
+            // Done, clear buffer. Prices within EwE will remain fixed until the next change
+            this.m_pricesIn = null;
         }
 
         private void IntegrateCatchDispositions()
         {
+            if (this.m_catchIn == null) return;
+            if (this.m_configuration == null) return;
 
+            var ds = this.m_core.EcospaceDataStructures;
+            var bm = this.m_core.EcospaceBasemap;
+            
+            foreach (var grid in this.m_catchIn.DispositionGrids)
+            {
+                // Impact standing biomass. This data arrives too late to update Ecospace results.
+                // Only correct standing biomasses for now.
+                int iGroup = this.m_configuration.get_SpeciesGroup(grid.SpeciesCode);
+                foreach (var cell in grid.DispositionCells)
+                {
+                    int ir = (int) bm.LatToRow((float)cell.Latitude);
+                    int ic = (int)bm.LonToCol((float)cell.Longitude);
+                    double loss = cell.GrossCatchBiomass - cell.LiveDiscardsBiomass;
+                    float dens = KgToDensity(loss, ir, ic);
+                    float available = ds.Bcell[ir, ic, iGroup];
+
+                    if (dens > available)
+                    {
+                        // WHoah!! External fishing is catching more than is available in this cell
+                        throw new Exception(string.Format("EwE controller cannot integrate Catch Disposition {0} kg ({1} t/km2), into cell {2}x{3} ({4}x{5}), only {6} available in Ecospace", 
+                            loss, dens, cell.Longitude, cell.Latitude, ic, ir, available));
+                    }
+                    ds.Bcell[ir, ic, iGroup] = (float)Math.Max(0.00000000000001, available - dens);
+                }
+            }
+            this.m_catchIn = null;
         }
 
         /// <summary>
@@ -552,7 +581,7 @@ namespace Ecopath.EwE
         /// <param name="irow"></param>
         /// <param name="icol"></param>
         /// <returns></returns>
-        private float DensityToKg(float dens, int irow, int icol)
+        private double DensityToKg(float dens, int irow, int icol)
         {
             // ToDo_JS: validate model currency unit (And yes, "currency" is biomass unit. Nothing to do with money. Fun times)
             return dens * 1000 * this.m_core.EcospaceDataStructures.CellArea[irow, icol];
@@ -565,12 +594,12 @@ namespace Ecopath.EwE
         /// <param name="irow"></param>
         /// <param name="icol"></param>
         /// <returns></returns>
-        private float KgToDensity(float kg, int irow, int icol)
+        private float KgToDensity(double kg, int irow, int icol)
         {
             // ToDo_JS: validate actual model currency unit
             float area = this.m_core.EcospaceDataStructures.CellArea[irow, icol];
             if (area == 0) area = 1; // Can happen
-            return kg / (area * 1000);
+            return (float) kg / (area * 1000);
         }
 
         #endregion // Data interactions
