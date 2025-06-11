@@ -3,6 +3,7 @@ using EwEBridge.Ecospace;
 using EwECore;
 using EwEPlugin;
 using EwEUtils.Core;
+using System.Diagnostics;
 
 namespace Ecopath.EwE
 {
@@ -341,6 +342,12 @@ namespace Ecopath.EwE
                 // ToDo_JS: activate code below
                 int iFleet = 42; // this.m_configuration.get_GearFleet(price.GearCode, price.MarketCode);
                 int iGroup = this.m_configuration.get_SpeciesGroup(price.SpeciesCode);
+                float pr = (float)price.Price;
+
+                // ToDo: implement unit conversions?
+                Debug.Assert(string.Compare(price.Currency, "eur", true) == 0);
+                Debug.Assert(string.Compare(price.MeasuremenyUnit, "kg", true) == 0);
+
                 if (iFleet > 0 && iGroup > 0)
                     ds.Market[iFleet, iGroup] = (float)price.Price;
                 else
@@ -370,19 +377,33 @@ namespace Ecopath.EwE
                 int iGroup = this.m_configuration.get_SpeciesGroup(grid.SpeciesCode);
                 foreach (var cell in grid.DispositionCells)
                 {
-                    int ir = (int) bm.LatToRow((float)cell.Latitude);
-                    int ic = (int)bm.LonToCol((float)cell.Longitude);
-                    double loss = cell.GrossCatchBiomass - cell.LiveDiscardsBiomass;
-                    float dens = KgToDensity(loss, ir, ic);
-                    float available = ds.Bcell[ir, ic, iGroup];
+                    int ir = (int)Math.Floor(bm.LatToRow((float)cell.Latitude));
+                    int ic = (int)Math.Floor(bm.LonToCol((float)cell.Longitude));
 
-                    if (dens > available)
+                    if (1 <= ir & ir <= ds.InRow & 1 <= ic & ic <= ds.InCol)
                     {
-                        // WHoah!! External fishing is catching more than is available in this cell
-                        throw new Exception(string.Format("EwE controller cannot integrate Catch Disposition {0} kg ({1} t/km2), into cell {2}x{3} ({4}x{5}), only {6} available in Ecospace", 
-                            loss, dens, cell.Longitude, cell.Latitude, ic, ir, available));
+                        double loss = cell.GrossCatchBiomass - cell.LiveDiscardsBiomass;
+                        float dens = KgToDensity(loss, ir, ic);
+                        float available = ds.Bcell[ir, ic, iGroup];
+
+                        Debug.Assert(loss >= 0, "Cannot fish negatively. Would be nice, but sorry, no.");
+                        Debug.Assert(dens > available, "Not enough B in cell to satisfy fishing");
+                        Debug.Assert(ds.Depth[ir, ic] > 0, "Not a modelled cell?!");
+
+                        if (dens > available)
+                        {
+                            // WHoah!! External fishing is catching more than is available in this cell
+                            throw new Exception(string.Format("EwE controller cannot integrate Catch Disposition {0} kg ({1} t/km2), into cell {2}x{3} ({4}x{5}), only {6} t/km2 available in Ecospace",
+                                loss, dens, cell.Longitude, cell.Latitude, ic, ir, available));
+                        }
+
+                        // Leave some tiny biomass in the cell; fisheries cannot catch it all (and Ecospace does not like divisions by zero)
+                        ds.Bcell[ir, ic, iGroup] = (float)Math.Max(1E-10, available - dens);
                     }
-                    ds.Bcell[ir, ic, iGroup] = (float)Math.Max(0.00000000000001, available - dens);
+                    else
+                    {
+                        // Cell out of bounds. Ignore.
+                    }
                 }
             }
             this.m_catchIn = null;
