@@ -20,6 +20,11 @@ namespace Ecopath.EwE
 
     // ToDo: devise a mechanism to bridge time step sizes; right now the code assumes that time steps are monthly
 
+    // ToDo 16 Jun 25 (Nicolas visit)
+    // - MultiStanza: include SpeciesSubCode into FW, spp + optional subcode data exchange, prices, etc
+    // - Properly fish: stop in the middle of the Ecospace time step, wait for Poseidon catch disp. If received, disable fishing on ext fleets
+    //     * How to proceed if ext model does not respond? Quickly proceed as normal and catch up? Currently can't be distinguished from FW messages
+
     public class EwEController : IEwEController
     {
         #region Private vars 
