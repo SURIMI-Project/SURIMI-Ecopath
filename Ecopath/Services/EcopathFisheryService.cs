@@ -7,16 +7,18 @@ namespace Ecopath.Services
     {
         private readonly ILogger<EcopathEcologyService> _logger;
         private readonly SimulationService _simulationService;
+        private readonly CheckSimulationService _checkSimulationService;
 
-        public EcopathFisheryService(ILogger<EcopathEcologyService> logger, SimulationService simulationService)
+        public EcopathFisheryService(ILogger<EcopathEcologyService> logger, SimulationService simulationService, CheckSimulationService checkSimulationService)
         {
             _logger = logger;
             _simulationService = simulationService;
+            _checkSimulationService = checkSimulationService;
         }
 
         public override async Task<GetSalesSummaryResponse> GetSalesSummary(GetSalesSummaryRequest request, ServerCallContext context)
         {
-            GrpcValidation.ArgumentNotNullOrEmpty(request.SimulationId);
+            await _checkSimulationService.CheckIfCorrectSimulationAsync("GetSalesSummary", request.SimulationId, context);
             _logger.LogInformation($"Ecopath GetSalesSummary for {request.SimulationId}...");
 
             var salesSummaries = await _simulationService.GetSalesSummariesAsync(request.SimulationId, request.StartDateTime.ToDateTime(), request.EndDateTime.ToDateTime());
@@ -51,7 +53,7 @@ namespace Ecopath.Services
 
         public override async Task<GetCatchDispositionSummaryResponse> GetCatchDispositionSummary(GetCatchDispositionSummaryRequest request, ServerCallContext context)
         {
-            GrpcValidation.ArgumentNotNullOrEmpty(request.SimulationId);
+            await _checkSimulationService.CheckIfCorrectSimulationAsync("GetCatchDispositionSummary", request.SimulationId, context);
             _logger.LogInformation($"Ecopath GetCatchDispositionSummary for {request.SimulationId}...");
 
             var catchDispositionSummary = await _simulationService.GetCatchDispositionSummaryAsync(
