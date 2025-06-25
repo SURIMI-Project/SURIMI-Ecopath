@@ -38,7 +38,7 @@ namespace Ecopath.Services
             }
 
             var res = await _controllers[simulationId].UpdatePricesAsync(speciesPrices);
-            _logger.LogInformation($"Simulation with ID {simulationId} added.");
+            _logger.LogInformation($"UpdatePricesAsync called on Simulation '{simulationId}'.");
             return true;
         }
 

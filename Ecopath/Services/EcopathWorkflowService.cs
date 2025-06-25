@@ -6,19 +6,21 @@ namespace Ecopath.Services;
 public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
 {
     private readonly ILogger<EcopathWorkflowService> _logger;
+    private readonly CheckSimulationService _checkSimulationService;
     private readonly SimulationService _simulationService;
 
-    public EcopathWorkflowService(ILogger<EcopathWorkflowService> logger, SimulationService simulationService)
+    public EcopathWorkflowService(ILogger<EcopathWorkflowService> logger, SimulationService simulationService, CheckSimulationService checkSimulationService)
     {
         _logger = logger;
         _simulationService = simulationService;
+        _checkSimulationService = checkSimulationService;
     }
 
     public override async Task<InitResponse> Init(InitRequest request, ServerCallContext context)
     {
         GrpcValidation.ArgumentNotNullOrEmpty(request.ScenarioId);
-        GrpcValidation.ArgumentNotNullOrEmpty(request.SimulationId);
-        _logger.LogInformation($"Ecopath Initializing scenario {request.ScenarioId}...");
+        await _checkSimulationService.ReserveSimulationAsync(request.SimulationId, context);
+        _logger.LogInformation($"Initializing simulation {request.SimulationId}, scenario {request.ScenarioId}...");
 
         try
         {
@@ -35,9 +37,31 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
         }
     }
 
+    public override Task<FinalizeResponse> Finalize(FinalizeRequest request, ServerCallContext context)
+    {
+        _checkSimulationService.ReleaseSimulation(request.SimulationId);
+        _logger.LogInformation($"Finalizing simulation {request.SimulationId}");
+
+        try
+        {
+            // TODO
+
+            //var result = await _simulationService.FinalizeAsync(request.SimulationId, request.ScenarioId, request.StartDateTime.ToDateTime(), request.StepSize);
+            //if (result == false)
+            //{
+            //    throw new RpcException(new Status(StatusCode.Internal, "Failed to finalize Ecopath"));
+            //}
+            return Task.FromResult(new FinalizeResponse());
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+    }
+
     public override async Task<UpdatePricesResponse> UpdatePrices(UpdatePricesRequest request, ServerCallContext context)
     {
-        GrpcValidation.ArgumentNotNullOrEmpty(request.SimulationId);
+        await _checkSimulationService.CheckIfCorrectSimulationAsync("UpdatePrices", request.SimulationId, context);
         _logger.LogInformation($"Updating prices for {request.Prices.Count} species...");
 
         var speciesPrices = request.Prices
@@ -58,7 +82,7 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
 
     public override async Task<SimulateStepResponse> SimulateStep(SimulateStepRequest request, ServerCallContext context)
     {
-        GrpcValidation.ArgumentNotNullOrEmpty(request.SimulationId);
+        await _checkSimulationService.CheckIfCorrectSimulationAsync("SimulateStep", request.SimulationId, context);
         _logger.LogInformation($"Simulate step for simulation {request.SimulationId}");
 
         var res = await _simulationService.ContinueAsync(request.SimulationId);

@@ -7,17 +7,18 @@ public class EcopathEcologyService : EcologyService.EcologyServiceBase
 {
     private readonly ILogger<EcopathEcologyService> _logger;
     private readonly SimulationService _simulationService;
+    private readonly CheckSimulationService _checkSimulationService;
 
-    public EcopathEcologyService(ILogger<EcopathEcologyService> logger, SimulationService simulationService)
+    public EcopathEcologyService(ILogger<EcopathEcologyService> logger, SimulationService simulationService, CheckSimulationService checkSimulationService)
     {
         _logger = logger;
         _simulationService = simulationService;
+        _checkSimulationService = checkSimulationService;
     }
 
     public override async Task<GetBiomassResponse> GetBiomass(GetBiomassRequest request, ServerCallContext context)
     {
-        GrpcValidation.ArgumentNotNullOrEmpty(request.SimulationId);
-        _logger.LogInformation($"Ecopath Getting biomass for simulation {request.SimulationId}...");
+        await _checkSimulationService.CheckIfCorrectSimulationAsync("GetBiomass", request.SimulationId, context);
 
         var biomass = await _simulationService.GetBiomassAsync(request.SimulationId);
 
@@ -47,7 +48,7 @@ public class EcopathEcologyService : EcologyService.EcologyServiceBase
 
     public override async Task<UpdateCatchDispositionSummaryResponse> UpdateCatchDispositionSummary(UpdateCatchDispositionSummaryRequest request, ServerCallContext context)
     {
-        GrpcValidation.ArgumentNotNullOrEmpty(request.SimulationId);
+        await _checkSimulationService.CheckIfCorrectSimulationAsync("UpdateCatchDispositionSummary", request.SimulationId, context);
         GrpcValidation.ArgumentNotNullOrEmpty(request.MeasurementUnit);
 
         var catchDispositionSummary = new Ecopath.Models.CatchDispositionSummary
