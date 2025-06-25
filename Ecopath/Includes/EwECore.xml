@@ -8401,19 +8401,6 @@ Note that for unexploited top-predators it may not be possible to estimate P/B (
  <returns>True if the model was loaded successfully. False otherwise</returns>
  -----------------------------------------------------------------------
 </member>
-<member name="M:EwECore.cCore.LoadModel(EwECore.DataSources.IEwEDataSource)">
- -----------------------------------------------------------------------
- <summary>
- Load the Ecopath model from a given Datasource.
- </summary>
- <param name="ds">A <see cref="T:EwECore.DataSources.IEwEDataSource">IEwEDataSource</see>-derived
- object that provides access to the model. Note that the datasource must
- already be <see cref="M:EwECore.DataSources.IEwEDataSource.Open(System.String,EwECore.cCore,EwEUtils.Core.eDataSourceTypes,System.Boolean)">opened</see>.</param>
- <returns>True if the model was loaded successfully. False otherwise</returns>
- <remarks>The given data source will be remembered here for subsequent 
- <see cref="M:EwECore.cCore.SaveModel">SaveModel</see> and SaveEcosimScenario calls.</remarks>
- -----------------------------------------------------------------------
-</member>
 <member name="M:EwECore.cCore.CanSave(System.Boolean)">
  -----------------------------------------------------------------------
  <summary>
@@ -8998,29 +8985,6 @@ Note that for unexploited top-predators it may not be possible to estimate P/B (
  Clear excluded cells.
  </summary>
  -----------------------------------------------------------------------
-</member>
-<member name="M:EwECore.cCore.EcosimTimestepToAbsoluteTime(System.Int32)">
- -------------------------------------------------------------------
- <summary>
- Convert an Ecospace time step to absolute time.
- </summary>
- <param name="iTime">The Ecospace time step to convert.</param>
- <returns>The absolute time represented by a time step.</returns>
- <remarks>The absolute time is based on the <see cref="M:EwECore.cCore.EcosimFirstYear"/>, to
- which the time represented by a given time step is added. The resulting 
- date is rounded to the first day of the month.</remarks>
- -------------------------------------------------------------------
-</member>
-<member name="M:EwECore.cCore.AbsoluteTimeToEcosimTimestep(System.DateTime)">
- -------------------------------------------------------------------
- <summary>
- Convert an absolute time to an Ecospace time step.
- </summary>
- <param name="dt">The date to convert to a time step.</param>
- <returns></returns>
- <remarks>The resulting time step is calculated from difference in time steps,
- rounded to months, between the given time and the <see cref="M:EwECore.cCore.EcosimFirstYear"/>.</remarks>
- -------------------------------------------------------------------
 </member>
 <member name="M:EwECore.cCore.EcospaceTimestepToAbsoluteTime(System.Int32)">
  -------------------------------------------------------------------
@@ -11027,6 +10991,19 @@ Note that for unexploited top-predators it may not be possible to estimate P/B (
  <summary>
  Selected biodiversity index to display in the UI
  </summary>
+</member>
+<member name="T:EwECore.eScaleType">
+ -------------------------------------------------------------------
+ <summary>
+ Supported value conversion modes for spatial data.
+ </summary>
+ -------------------------------------------------------------------
+</member>
+<member name="F:EwECore.eScaleType.Absolute">
+ <summary>Values are applied as-is: no scaling is performed.</summary>
+</member>
+<member name="F:EwECore.eScaleType.Relative">
+ <summary>Value are scaled before being applied.</summary>
 </member>
 <member name="T:EwECore.ValueWrapper.eValueTypes">
  <summary>
@@ -19718,17 +19695,12 @@ Note that for unexploited top-predators it may not be possible to estimate P/B (
  <inheritdocs cref="M:EwECore.DataSources.IEcospaceDatasource.AddEcospaceDriverLayer(System.String,System.String,System.String,System.Int32@)" />"
  -------------------------------------------------------------------
 </member>
-<member name="P:EwECore.DataSources.cDBDataSource.getLayerIDs(EwEUtils.Core.eVarNameFlags)">
- -------------------------------------------------------------------
+<member name="M:EwECore.DataSources.cDBDataSource.SaveEcospaceDataConnections(EwECore.DataSources.cDBDataSource.cIDMappings)">
  <summary>
- Obtain a layer DBID for any varname and index.
+ This also saves the layer disabled state
  </summary>
- <param name="varname"></param>
- <remarks>
- This method is robust to any type of abuse; non-registered <paramref name="varname">variables</paramref>
- are dealt with properly.
- </remarks>
- -------------------------------------------------------------------
+ <param name="idm"></param>
+ <returns></returns>
 </member>
 <member name="M:EwECore.DataSources.cDBDataSource.IsEcotracerModified">
  -------------------------------------------------------------------
@@ -21754,6 +21726,9 @@ Note that for unexploited top-predators it may not be possible to estimate P/B (
 </member>
 <member name="F:EwECore.cEcopathDataStructures.DietsModified">
  <summary>Flag stating whether diets have been modified since the last time Ecopath has ran.</summary>
+</member>
+<member name="F:EwECore.cEcopathDataStructures.UsedInIndicators">
+ <summary>Is group used for indicator calculations</summary>
 </member>
 <member name="F:EwECore.cEcopathDataStructures.fCatch">
  <summary>Sum (per <see cref="F:EwECore.cEcopathDataStructures.NumGroups">NumGroups</see>) of landings + discards.</summary>
@@ -27255,12 +27230,6 @@ min_B_QB: minimum B*QB.
  WKT projection string for the Ecospace coordinate system
  </summary>
 </member>
-<member name="P:EwECore.cEcospaceDataStructures.PreserveLayerData">
- <summary>
- Flag to disable preserving and restoring layer data when working with external data.
- This flag can save timne when running Ecospace experiments without saving the model.
- </summary>
-</member>
 <member name="F:EwECore.cEcospaceDataStructures.TimeNow">
  <summary>Current model time step in years. Incremented by <see cref="F:EwECore.cEcospaceDataStructures.TimeStep">TimeStep</see> at the end of the timestep.</summary>
  <remarks>This is the time in years, not the array index.</remarks>
@@ -27385,8 +27354,16 @@ min_B_QB: minimum B*QB.
  <summary>Catch by Row, Col, Fleet.</summary>
 </member>
 <member name="F:EwECore.cEcospaceDataStructures.DiscardsMap">
- <summary>Discards (all? mortality?) by Row, Col, Group.</summary>
- <remarks>This is not exposed by the interface at this time. It was included for the Biodiversity plugin and can only be accessed via code.</remarks>
+ <summary>All discards by Row, Col, Group.</summary>
+</member>
+<member name="F:EwECore.cEcospaceDataStructures.CatchGroupFleetMap">
+ <summary>Catch by (Fleet, Group)(row, col)</summary>
+</member>
+<member name="F:EwECore.cEcospaceDataStructures.DiscardMortGroupFleetMap">
+ <summary>Discard mortality by (Fleet, Group)(row, col)</summary>
+</member>
+<member name="F:EwECore.cEcospaceDataStructures.DiscardSurviveGroupFleetMap">
+ <summary>Discard survival by (Fleet, Group)(row, col)</summary>
 </member>
 <member name="F:EwECore.cEcospaceDataStructures.DepthInput">
  <summary>User-entered depth map</summary>
@@ -28161,7 +28138,7 @@ min_B_QB: minimum B*QB.
  <returns></returns>
  <remarks></remarks>
 </member>
-<member name="M:EwECore.cEcospaceDataStructures.getLayerID(EwEUtils.Core.eVarNameFlags,System.Int32)">
+<member name="M:EwECore.cEcospaceDataStructures.GetLayerID(EwEUtils.Core.eVarNameFlags,System.Int32)">
  -------------------------------------------------------------------
  <summary>
  Return the <see cref="P:EwECore.cCoreInputOutputBase.DBID">unique database ID</see>
@@ -28177,7 +28154,7 @@ min_B_QB: minimum B*QB.
  </remarks>
  -------------------------------------------------------------------
 </member>
-<member name="P:EwECore.cEcospaceDataStructures.getLayerIDs(EwEUtils.Core.eVarNameFlags)">
+<member name="P:EwECore.cEcospaceDataStructures.GetLayerIDs(EwEUtils.Core.eVarNameFlags)">
  -------------------------------------------------------------------
  <summary>
  Obtain a layer DBID for any varname and index.
@@ -30637,7 +30614,7 @@ pass in params that this method needs instead of obtaining them from the manager
 <member name="F:EwECore.MSE.cMSEDataStructures.sumEmployVal">
  <summary>sum of employment value over all the completed trials</summary>
 </member>
-<member name="F:EwECore.MSE.cMSEDataStructures.SumTotVal">
+<member name="F:EwECore.MSE.cMSEDataStructures.SumProfit">
  <summary>sum of economic over all the completed trials</summary>
 </member>
 <member name="F:EwECore.MSE.cMSEDataStructures.sumManVal">
@@ -32869,23 +32846,22 @@ pass in params that this method needs instead of obtaining them from the manager
  The Fishing Policy Search needs Ecosim to run for an additional 20 years
  </summary>
 </member>
-<member name="M:EwECore.cSearchDatastructures.setDefaultOptimizationValues">
+<member name="M:EwECore.cSearchDatastructures.SetDefaultOptimizationValues">
  <summary>
  Set default values for the optimiation. These are values that are set the same for every run.
  </summary>
  <remarks>from frmOptF.Load_Form() </remarks>
 </member>
-<member name="M:EwECore.cSearchDatastructures.setMinSearchBlocks">
+<member name="M:EwECore.cSearchDatastructures.SetMinSearchBlocks">
  <summary>
  Sets the search blocks to the minimum number needed to have the search turned on
  </summary>
  <remarks>Used when the search blocks need to be dimensioned but not used e.g. Ecoseed</remarks>
 </member>
-<member name="M:EwECore.cSearchDatastructures.setDefaultFBlockCodes">
+<member name="M:EwECore.cSearchDatastructures.SetDefaultFBlockCodes">
  <summary>
  Set default FBlockCodes to a unique code for each fleet
  </summary>
- <remarks></remarks>
 </member>
 <member name="M:EwECore.cSearchDatastructures.saveInitialFishingRate(EwECore.cEcosimDatastructures@)">
  <summary>
@@ -36087,7 +36063,7 @@ Passed into the Constructor
  <seealso cref="M:EwECore.SpatialData.cSpatialScalarDataAdapterBase.CalculateScalar(System.Double,System.Double)" />
  -------------------------------------------------------------------
 </member>
-<member name="M:EwECore.SpatialData.cAdvectionAdapter.InitRun(System.Boolean)">
+<member name="M:EwECore.SpatialData.cAdvectionAdapter.InitRun">
  -------------------------------------------------------------------
  <summary>
  Initialize the run, overridden to disable some core logic if 
@@ -36309,9 +36285,9 @@ Passed into the Constructor
  <inheritdocs cref="M:EwECore.SpatialData.cSpatialDataAdapter.Initialize"/>.
  -------------------------------------------------------------------
 </member>
-<member name="M:EwECore.SpatialData.cRelPPDataAdapter.InitRun(System.Boolean)">
+<member name="M:EwECore.SpatialData.cRelPPDataAdapter.InitRun">
  -------------------------------------------------------------------
- <inheritdocs cref="M:EwECore.SpatialData.cSpatialDataAdapter.InitRun(System.Boolean)"/>
+ <inheritdocs cref="M:EwECore.SpatialData.cSpatialDataAdapter.InitRun"/>
  <remarks>
  Overridden to clear the PP scale factor.
  </remarks>
@@ -36428,7 +36404,7 @@ Passed into the Constructor
  <returns>True if successful.</returns>
  -------------------------------------------------------------------
 </member>
-<member name="M:EwECore.SpatialData.cSpatialDataAdapter.InitRun(System.Boolean)">
+<member name="M:EwECore.SpatialData.cSpatialDataAdapter.InitRun">
  -------------------------------------------------------------------
  <summary>
  Perform pre-run initializations for all adapters such as preserving
@@ -36539,22 +36515,9 @@ Passed into the Constructor
  Derived spatial data adapter to insert scaled external spatial/temporal map data into
  the Ecospace data structures at any given moment. This adapter maintains a scale
  for every map layer attached to the adapter, and will translate map values
- to relative values when <see cref="T:EwECore.SpatialData.cSpatialScalarDataAdapterBase.eScaleType"/> is set to
- <see cref="F:EwECore.SpatialData.cSpatialScalarDataAdapterBase.eScaleType.Relative">relative</see>.
+ to relative values when <see cref="!:cSpatialScalarDataAdapter.eScaleType"/> is set to
+ <see cref="!:cSpatialScalarDataAdapter.eScaleType.Relative">relative</see>.
  </summary>
-</member>
-<member name="T:EwECore.SpatialData.cSpatialScalarDataAdapterBase.eScaleType">
- -------------------------------------------------------------------
- <summary>
- Supported value conversion modes for a <see cref="T:EwECore.SpatialData.cSpatialScalarDataAdapter"/>.
- </summary>
- -------------------------------------------------------------------
-</member>
-<member name="F:EwECore.SpatialData.cSpatialScalarDataAdapterBase.eScaleType.Absolute">
- <summary>Values are applied as-is: no scaling is performed.</summary>
-</member>
-<member name="F:EwECore.SpatialData.cSpatialScalarDataAdapterBase.eScaleType.Relative">
- <summary>Value are scaled before being applied.</summary>
 </member>
 <member name="M:EwECore.SpatialData.cSpatialScalarDataAdapterBase.CanCalculateScalar">
  -------------------------------------------------------------------
@@ -37452,6 +37415,12 @@ Passed into the Constructor
  <summary>
  
  </summary>
+</member>
+<member name="F:EwECore.SpatialData.cSpatialDataStructures.m_pathDS">
+ <summary>Defined just in case ever needed</summary>
+</member>
+<member name="F:EwECore.SpatialData.cSpatialDataStructures.m_spaceDS">
+ <summary>Defined just in case ever needed</summary>
 </member>
 <member name="F:EwECore.SpatialData.cSpatialDataStructures.DataAdapters">
  <summary>Availalable data adapters</summary>
