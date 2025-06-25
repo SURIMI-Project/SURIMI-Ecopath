@@ -16,61 +16,30 @@ namespace Ecopath.Services
             _checkSimulationService = checkSimulationService;
         }
 
-        public override async Task<GetSalesSummaryResponse> GetSalesSummary(GetSalesSummaryRequest request, ServerCallContext context)
+        public override async Task<GetCatchDispositionResponse> GetCatchDisposition(GetCatchDispositionRequest request, ServerCallContext context)
         {
-            await _checkSimulationService.CheckIfCorrectSimulationAsync("GetSalesSummary", request.SimulationId, context);
-            _logger.LogInformation($"Ecopath GetSalesSummary for {request.SimulationId}...");
+            await _checkSimulationService.CheckIfCorrectSimulationAsync("GetCatchDisposition", request.SimulationId, context);
+            _logger.LogInformation($"Ecopath GetCatchDisposition for {request.SimulationId}...");
 
-            var salesSummaries = await _simulationService.GetSalesSummariesAsync(request.SimulationId, request.StartDateTime.ToDateTime(), request.EndDateTime.ToDateTime());
-
-            var response = new GetSalesSummaryResponse();
-            response.SalesSummaries.AddRange(
-                salesSummaries.Select(summary =>
-                {
-                    var grpcSummary = new SalesSummary
-                    {
-                        MarketCode = summary.MarketId,
-                        MeasurementUnit = summary.MeasurementUnit,
-                        Currency = summary.Currency
-                    };
-
-                    if (summary.Sales != null)
-                    {
-                        grpcSummary.Sales.AddRange(summary.Sales.Select(sale => new Sale
-                        {
-                            SpeciesCode = sale.SpeciesCode,
-                            Quantity = sale.Quantity,
-                            Value = sale.Value,
-                        }));
-                    }
-
-                    return grpcSummary;
-                })
-            );
-
-            return response;
-        }
-
-        public override async Task<GetCatchDispositionSummaryResponse> GetCatchDispositionSummary(GetCatchDispositionSummaryRequest request, ServerCallContext context)
-        {
-            await _checkSimulationService.CheckIfCorrectSimulationAsync("GetCatchDispositionSummary", request.SimulationId, context);
-            _logger.LogInformation($"Ecopath GetCatchDispositionSummary for {request.SimulationId}...");
-
-            var catchDispositionSummary = await _simulationService.GetCatchDispositionSummaryAsync(
+            var catchDisposition = await _simulationService.GetCatchDispositionAsync(
                 request.SimulationId,
                 request.StartDateTime.ToDateTime(),
                 request.EndDateTime.ToDateTime()
             );
 
-            var response = new GetCatchDispositionSummaryResponse
+            var response = new GetCatchDispositionResponse
             {
-                MeasurementUnit = catchDispositionSummary?.MeasurementUnit
+                CatchDispositionSummary = new CatchDispositionSummary
+                {
+                    MeasurementUnit = catchDisposition?.MeasurementUnit ?? string.Empty
+                },
+                SimulationId = request.SimulationId
             };
 
-            if (catchDispositionSummary?.DispositionGrids != null)
+            if (catchDisposition?.DispositionGrids != null)
             {
-                response.DispositionGrids.AddRange(
-                    catchDispositionSummary.DispositionGrids.Select(grid =>
+                response.CatchDispositionSummary.DispositionGrids.AddRange(
+                    catchDisposition.DispositionGrids.Select(grid =>
                     {
                         var dispositionGrid = new DispositionGrid
                         {
@@ -96,6 +65,38 @@ namespace Ecopath.Services
             }
 
             return response;
+        }
+
+        public override async Task<UpdateCatchDispositionResponse> UpdateCatchDisposition(UpdateCatchDispositionRequest request, ServerCallContext context)
+        {
+            await _checkSimulationService.CheckIfCorrectSimulationAsync("UpdateCatchDisposition", request.SimulationId, context);
+            GrpcValidation.ArgumentNotNullOrEmpty(request.CatchDispositionSummary.MeasurementUnit);
+
+            var catchDisposition = new Ecopath.Models.CatchDispositionSummary
+            {
+                MeasurementUnit = request.CatchDispositionSummary.MeasurementUnit,
+                DispositionGrids = request.CatchDispositionSummary.DispositionGrids
+                .Select(grpcGrid => new Ecopath.Models.DispositionGrid
+                {
+                    GearCode = grpcGrid.GearCode,
+                    SpeciesCode = grpcGrid.SpeciesCode,
+                    DispositionCells = grpcGrid.DispositionCells
+                        .Select(grpcCell => new Models.DispositionCell
+                        {
+                            GrossCatchBiomass = grpcCell.GrossCatch,
+                            LiveDiscardsBiomass = grpcCell.LiveDiscards,
+                            DeadDiscardsBiomass = grpcCell.DeadDiscards,
+                            Latitude = grpcCell.Latitude,
+                            Longitude = grpcCell.Longitude
+                        })
+                        .ToList()
+                })
+                .ToList()
+            };
+
+            var res = await _simulationService.UpdateCatchDisposition(request.SimulationId, catchDisposition);
+
+            return new UpdateCatchDispositionResponse() { SimulationId = request.SimulationId };
         }
     }
 }

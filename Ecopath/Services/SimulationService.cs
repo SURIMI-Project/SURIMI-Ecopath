@@ -73,7 +73,7 @@ namespace Ecopath.Services
             return await _controllers[simulationId].GetSalesSummariesAsync(start, end);
         }
 
-        public async Task<CatchDispositionSummary> GetCatchDispositionSummaryAsync(string simulationId, DateTime start, DateTime end)
+        public async Task<CatchDispositionSummary> GetCatchDispositionAsync(string simulationId, DateTime start, DateTime end)
         {
             if (!_controllers.ContainsKey(simulationId))
             {
@@ -83,7 +83,7 @@ namespace Ecopath.Services
             return await _controllers[simulationId].GetCatchDispositionSummaryAsync(start, end);
         }
 
-        public async Task<bool> UpdateCatchDispositionSummary(string simulationId, CatchDispositionSummary catchDispositionSummary)
+        public async Task<bool> UpdateCatchDisposition(string simulationId, CatchDispositionSummary catchDispositionSummary)
         {
             if (!_controllers.ContainsKey(simulationId))
             {

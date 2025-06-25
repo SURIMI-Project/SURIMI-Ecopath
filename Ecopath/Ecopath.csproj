@@ -25,6 +25,7 @@
 		<Protobuf Include="..\proto\surimi\v1\species_price.proto" ProtoRoot="..\proto\" />
 		<Protobuf Include="..\proto\surimi\v1\ecology.proto" ProtoRoot="..\proto\" />
 		<Protobuf Include="..\proto\surimi\v1\workflow.proto" ProtoRoot="..\proto\" GrpcServices="Server" />
+		<Protobuf Include="..\proto\surimi\v1\market.proto" ProtoRoot="..\proto\" GrpcServices="Server" />
 		<Protobuf Include="..\proto\surimi\v1\fishery.proto" ProtoRoot="..\proto\" />
 		<Protobuf Include="..\proto\surimi\v1\sales.proto" ProtoRoot="..\proto\" />
 		<Protobuf Include="..\proto\surimi\v1\disposition.proto" ProtoRoot="..\proto\" />
