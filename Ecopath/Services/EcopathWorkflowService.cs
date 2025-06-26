@@ -16,7 +16,7 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
         _checkSimulationService = checkSimulationService;
     }
 
-    public override async Task<InitResponse> Init(InitRequest request, ServerCallContext context)
+    public override async Task<InitialiseResponse> Initialise(InitialiseRequest request, ServerCallContext context)
     {
         GrpcValidation.ArgumentNotNullOrEmpty(request.ScenarioId);
         await _checkSimulationService.ReserveSimulationAsync(request.SimulationId, context);
@@ -27,9 +27,9 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
             var result = await _simulationService.InitAsync(request.SimulationId, request.ScenarioId, request.StartDateTime.ToDateTime(), request.StepSize);
             if (result == false)
             {
-                throw new RpcException(new Status(StatusCode.Internal, "Failed to initialize Ecopath"));
+                throw new RpcException(new Status(StatusCode.Internal, "Failed to initialise Ecopath"));
             }
-            return new InitResponse();
+            return new InitialiseResponse() { SimulationId = request.SimulationId };
         }
         catch (Exception ex)
         {
@@ -37,7 +37,7 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
         }
     }
 
-    public override Task<FinalizeResponse> Finalize(FinalizeRequest request, ServerCallContext context)
+    public override Task<FinaliseResponse> Finalise(FinaliseRequest request, ServerCallContext context)
     {
         _checkSimulationService.ReleaseSimulation(request.SimulationId);
         _logger.LogInformation($"Finalizing simulation {request.SimulationId}");
@@ -46,38 +46,17 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
         {
             // TODO
 
-            //var result = await _simulationService.FinalizeAsync(request.SimulationId, request.ScenarioId, request.StartDateTime.ToDateTime(), request.StepSize);
+            //var result = await _simulationService.FinaliseAsync(request.SimulationId, request.ScenarioId, request.StartDateTime.ToDateTime(), request.StepSize);
             //if (result == false)
             //{
-            //    throw new RpcException(new Status(StatusCode.Internal, "Failed to finalize Ecopath"));
+            //    throw new RpcException(new Status(StatusCode.Internal, "Failed to finalise Ecopath"));
             //}
-            return Task.FromResult(new FinalizeResponse());
+            return Task.FromResult(new FinaliseResponse() { SimulationId = request.SimulationId });
         }
         catch (Exception ex)
         {
             throw;
         }
-    }
-
-    public override async Task<UpdatePricesResponse> UpdatePrices(UpdatePricesRequest request, ServerCallContext context)
-    {
-        await _checkSimulationService.CheckIfCorrectSimulationAsync("UpdatePrices", request.SimulationId, context);
-        _logger.LogInformation($"Updating prices for {request.Prices.Count} species...");
-
-        var speciesPrices = request.Prices
-            .Select(p => new Models.SpeciesPrice { 
-                SpeciesCode = p.SpeciesCode, 
-                Price = p.Price, 
-                Currency = p.Currency, 
-                MeasuremenyUnit = p.MeasurementUnit,
-                PortCode = p.PortCode,
-                Timestamp = p.Timestamp.ToDateTime()
-            }) 
-            .ToList();
-
-        var res = await _simulationService.UpdatePricesAsync(request.SimulationId, speciesPrices);
-
-        return new UpdatePricesResponse();
     }
 
     public override async Task<SimulateStepResponse> SimulateStep(SimulateStepRequest request, ServerCallContext context)
@@ -87,6 +66,15 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
 
         var res = await _simulationService.ContinueAsync(request.SimulationId);
 
-        return new SimulateStepResponse();
+        return new SimulateStepResponse() { SimulationId = request.SimulationId };
+    }
+
+    public override async Task<CancelResponse> Cancel(CancelRequest request, ServerCallContext context)
+    {
+        await _checkSimulationService.CheckIfCorrectSimulationAsync("Cancel", request.SimulationId, context);
+        _logger.LogInformation($"Cancel step for simulation {request.SimulationId}");
+
+
+        return new CancelResponse() { SimulationId = request.SimulationId };
     }
 }
