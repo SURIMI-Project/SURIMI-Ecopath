@@ -59,7 +59,6 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
         }
     }
 
-
     public override async Task<SimulateStepResponse> SimulateStep(SimulateStepRequest request, ServerCallContext context)
     {
         await _checkSimulationService.CheckIfCorrectSimulationAsync("SimulateStep", request.SimulationId, context);
@@ -67,6 +66,15 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
 
         var res = await _simulationService.ContinueAsync(request.SimulationId);
 
-        return new SimulateStepResponse();
+        return new SimulateStepResponse() { SimulationId = request.SimulationId };
+    }
+
+    public override async Task<CancelResponse> Cancel(CancelRequest request, ServerCallContext context)
+    {
+        await _checkSimulationService.CheckIfCorrectSimulationAsync("Cancel", request.SimulationId, context);
+        _logger.LogInformation($"Cancel step for simulation {request.SimulationId}");
+
+
+        return new CancelResponse() { SimulationId = request.SimulationId };
     }
 }
