@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BSR.Surimi.Surimi-Protocol.Grpc.Csharp" Version="1.73.10101.7+d9c7c394022e" />
     <PackageReference Include="Google.Api.CommonProtos" Version="2.16.0" />
     <PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
     <PackageReference Include="Grpc.StatusProto" Version="2.71.0" />
@@ -19,17 +20,6 @@
   <ItemGroup>
     <ProjectReference Include="..\SURIMI.ServiceDefaults\SURIMI.ServiceDefaults.csproj" />
   </ItemGroup>
-
-	<ItemGroup>
-		<Protobuf Include="..\proto\surimi\v1\biomass.proto" ProtoRoot="..\proto\" />
-		<Protobuf Include="..\proto\surimi\v1\species_price.proto" ProtoRoot="..\proto\" />
-		<Protobuf Include="..\proto\surimi\v1\ecology.proto" ProtoRoot="..\proto\" />
-		<Protobuf Include="..\proto\surimi\v1\workflow.proto" ProtoRoot="..\proto\" GrpcServices="Server" />
-		<Protobuf Include="..\proto\surimi\v1\market.proto" ProtoRoot="..\proto\" GrpcServices="Server" />
-		<Protobuf Include="..\proto\surimi\v1\fishery.proto" ProtoRoot="..\proto\" />
-		<Protobuf Include="..\proto\surimi\v1\sales.proto" ProtoRoot="..\proto\" />
-		<Protobuf Include="..\proto\surimi\v1\disposition.proto" ProtoRoot="..\proto\" />
-	</ItemGroup>
 
 	<ItemGroup>
 	  <Reference Include="EwEBridgePlugin">
