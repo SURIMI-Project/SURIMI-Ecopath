@@ -8,13 +8,13 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
 {
     private readonly ILogger<EcopathWorkflowService> _logger;
     private readonly CheckSimulationService _checkSimulationService;
-    private readonly IEwEController _ewEController;
+    private readonly IEwEController m_controller;
 
     public EcopathWorkflowService(ILogger<EcopathWorkflowService> logger, CheckSimulationService checkSimulationService, IEwEController ewEController)
     {
         _logger = logger;
         _checkSimulationService = checkSimulationService;
-        _ewEController = ewEController;
+        m_controller = ewEController;
     }
 
     public override async Task<InitialiseResponse> Initialise(InitialiseRequest request, ServerCallContext context)
@@ -27,7 +27,7 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
 
         try
         {
-            var result = await _ewEController.StartAsync(new EwEConfiguration());
+            var result = await m_controller.StartAsync(new EwEConfiguration());
             if (result != 1)
             {
                 throw new RpcException(new Status(StatusCode.Internal, "Failed to initialise Ecopath"));
@@ -47,7 +47,7 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
 
         try
         {
-            var result = await _ewEController.StopAsync();
+            var result = await m_controller.StopAsync();
             if (result == false)
             {
                 throw new RpcException(new Status(StatusCode.Internal, "Failed to finalise Ecopath"));
@@ -67,7 +67,7 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
 
         try
         {
-            var result = await _ewEController.StopAsync();
+            var result = await m_controller.StopAsync();
             if (result == false)
             {
                 throw new RpcException(new Status(StatusCode.Internal, "Failed to cancel Ecopath"));
@@ -85,7 +85,7 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
         await _checkSimulationService.CheckIfCorrectSimulationAsync("SimulateStep", request.SimulationId, context);
         _logger.LogInformation($"Simulate step for simulation {request.SimulationId}");
 
-        var res = await _ewEController.ContinueAsync();
+        var res = await m_controller.ContinueAsync();
 
         return new SimulateStepResponse() { SimulationId = request.SimulationId };
     }
