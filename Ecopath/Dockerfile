@@ -16,6 +16,7 @@ ENV OTEL_SERVICE_NAME=Ecopath
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+COPY ["NuGet.config", "Ecopath/"]
 COPY ["Ecopath/Ecopath.csproj", "Ecopath/"]
 RUN dotnet restore "./Ecopath/Ecopath.csproj"
 COPY . .
