@@ -1,3 +1,4 @@
+using Ecopath.EwE;
 using Grpc.Core;
 using Grpc.Surimi;
 
@@ -6,21 +7,22 @@ namespace Ecopath.Services;
 public class EcopathEcologyService : EcologyService.EcologyServiceBase
 {
     private readonly ILogger<EcopathEcologyService> _logger;
-    private readonly SimulationService _simulationService;
     private readonly CheckSimulationService _checkSimulationService;
+    private readonly IEwEController _ewEController;
 
-    public EcopathEcologyService(ILogger<EcopathEcologyService> logger, SimulationService simulationService, CheckSimulationService checkSimulationService)
+    public EcopathEcologyService(ILogger<EcopathEcologyService> logger, CheckSimulationService checkSimulationService, IEwEController ewEController)
     {
         _logger = logger;
-        _simulationService = simulationService;
         _checkSimulationService = checkSimulationService;
+        _ewEController = ewEController;
     }
 
     public override async Task<GetBiomassResponse> GetBiomass(GetBiomassRequest request, ServerCallContext context)
     {
         await _checkSimulationService.CheckIfCorrectSimulationAsync("GetBiomass", request.SimulationId, context);
+        _logger.LogInformation($"GetBiomass for simulation {request.SimulationId}");
 
-        var biomass = await _simulationService.GetBiomassAsync(request.SimulationId);
+        var biomass = await _ewEController.GetBiomassAsync();
 
         var grpcBiomass = new GetBiomassResponse
         {
