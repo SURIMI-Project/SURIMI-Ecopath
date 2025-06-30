@@ -1,5 +1,16 @@
 # SURIMI
 
+## Contents:
+- [SURIMI](#surimi)
+  - [Contents:](#contents)
+  - [gRPC interface in Buf Schema Registry](#grpc-interface-in-buf-schema-registry)
+  - [Add BSR to your global NuGet.config](#add-bsr-to-your-global-nugetconfig)
+  - [Update the BSR packages and the SURIMI protobuf interface](#update-the-bsr-packages-and-the-surimi-protobuf-interface)
+  - [Visual package manager doesnt't work](#visual-package-manager-doesntt-work)
+  - [More info on Buf, BSR and NuGet](#more-info-on-buf-bsr-and-nuget)
+  - [How to create a docker image, run it and push it](#how-to-create-a-docker-image-run-it-and-push-it)
+	- [Create and Push](#create-and-push)
+	- [Run](#run)
 
 ## gRPC interface in Buf Schema Registry
 The gRPC interface is descibed by  protobuf files that are stored in https://github.com/Official-EwE/SURIMI-protocol
@@ -10,13 +21,20 @@ The proto files are also stored in  https://buf.build/surimi/surimi-protocol
 ## Add BSR to your global NuGet.config
 
 
-Edit your %AppData%\NuGet\NuGet.config
+TODO!!!!!
+At the moment the NuGet.config contains a token to access the BSR.
+I don't know why this is needed, but it is.
 
-And past the corresponding parts from the model NuGet.Config from https://buf.build/surimi/surimi-protocol/sdks/main:grpc/csharp
+For now, I added the NuGet.config to the root of the project, so you can use it. But we have to find a way to remove the clear text token in it.
+
+Because this file is stored in the Git repo, the token is visible to everyone who has access to the repo.
+
+Which means potentially EVERYONE!!!
+
+The NuGet.Config is created from https://buf.build/surimi/surimi-protocol/sdks/main:grpc/csharp
 
 Part of this is configuring an auth token. This token will last a maximum of a year. So when you have forgotten about it, you will have to generate it again.
 
-Don't install the NuGet.config in the solution because the token is funerable data. That you don't want in your Git repo.
 
 ## Update the BSR packages and the SURIMI protobuf interface
 
@@ -46,3 +64,15 @@ The visual package manager in Visual Studio does not work for the Buf packages.
 ## More info on Buf, BSR and NuGet
 
 https://buf.build/blog/bsr-generated-sdks-for-csharp
+
+## How to create a docker image, run it and push it
+
+### Create and Push
+Start Docker Desktop and make sure it is running. Then right click the Ecopath project and select "Publish".
+
+In the Publish window click on "Publish"
+
+
+### Run
+To run it, you can select "Container (docker file)" in the Start menu of Visual Studio.
+
