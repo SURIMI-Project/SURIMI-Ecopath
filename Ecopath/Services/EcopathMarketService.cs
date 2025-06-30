@@ -1,4 +1,5 @@
-﻿using Grpc.Core;
+﻿using Ecopath.EwE;
+using Grpc.Core;
 using Grpc.Surimi;
 
 namespace Ecopath.Services
@@ -6,14 +7,14 @@ namespace Ecopath.Services
     public class EcopathMarketService : MarketService.MarketServiceBase
     {
         private readonly ILogger<EcopathEcologyService> _logger;
-        private readonly SimulationService _simulationService;
         private readonly CheckSimulationService _checkSimulationService;
+        private readonly IEwEController _ewEController;
 
-        public EcopathMarketService(ILogger<EcopathEcologyService> logger, SimulationService simulationService, CheckSimulationService checkSimulationService)
+        public EcopathMarketService(ILogger<EcopathEcologyService> logger, CheckSimulationService checkSimulationService, IEwEController ewEController)
         {
             _logger = logger;
-            _simulationService = simulationService;
             _checkSimulationService = checkSimulationService;
+            _ewEController = ewEController;
         }
 
         public override async Task<UpdateSpeciesPricesResponse> UpdateSpeciesPrices(UpdateSpeciesPricesRequest request, ServerCallContext context)
@@ -33,7 +34,7 @@ namespace Ecopath.Services
                 })
                 .ToList();
 
-            var res = await _simulationService.UpdatePricesAsync(request.SimulationId, speciesPrices);
+            var res = await _ewEController.UpdatePricesAsync(speciesPrices);
 
             return new UpdateSpeciesPricesResponse() { SimulationId = request.SimulationId };
         }
@@ -43,7 +44,7 @@ namespace Ecopath.Services
             await _checkSimulationService.CheckIfCorrectSimulationAsync("GetSales", request.SimulationId, context);
             _logger.LogInformation($"Ecopath GetSales for {request.SimulationId}...");
 
-            var salesSummaries = await _simulationService.GetSalesSummariesAsync(request.SimulationId, request.StartDateTime.ToDateTime(), request.EndDateTime.ToDateTime());
+            var salesSummaries = await _ewEController.GetSalesSummariesAsync(request.StartDateTime.ToDateTime(), request.EndDateTime.ToDateTime());
 
             var response = new GetSalesResponse() { SimulationId = request.SimulationId };
             response.SalesSummaries.AddRange(

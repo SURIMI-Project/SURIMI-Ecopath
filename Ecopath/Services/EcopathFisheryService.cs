@@ -1,4 +1,5 @@
-﻿using Grpc.Core;
+﻿using Ecopath.EwE;
+using Grpc.Core;
 using Grpc.Surimi;
 
 namespace Ecopath.Services
@@ -6,14 +7,14 @@ namespace Ecopath.Services
     public class EcopathFisheryService : FisheryService.FisheryServiceBase
     {
         private readonly ILogger<EcopathEcologyService> _logger;
-        private readonly SimulationService _simulationService;
         private readonly CheckSimulationService _checkSimulationService;
+        private readonly IEwEController _ewEController;
 
-        public EcopathFisheryService(ILogger<EcopathEcologyService> logger, SimulationService simulationService, CheckSimulationService checkSimulationService)
+        public EcopathFisheryService(ILogger<EcopathEcologyService> logger, CheckSimulationService checkSimulationService, IEwEController ewEController)
         {
             _logger = logger;
-            _simulationService = simulationService;
             _checkSimulationService = checkSimulationService;
+            _ewEController = ewEController;
         }
 
         public override async Task<GetCatchDispositionResponse> GetCatchDisposition(GetCatchDispositionRequest request, ServerCallContext context)
@@ -21,8 +22,7 @@ namespace Ecopath.Services
             await _checkSimulationService.CheckIfCorrectSimulationAsync("GetCatchDisposition", request.SimulationId, context);
             _logger.LogInformation($"Ecopath GetCatchDisposition for {request.SimulationId}...");
 
-            var catchDisposition = await _simulationService.GetCatchDispositionAsync(
-                request.SimulationId,
+            var catchDisposition = await _ewEController.GetCatchDispositionSummaryAsync(
                 request.StartDateTime.ToDateTime(),
                 request.EndDateTime.ToDateTime()
             );
@@ -94,7 +94,7 @@ namespace Ecopath.Services
                 .ToList()
             };
 
-            var res = await _simulationService.UpdateCatchDisposition(request.SimulationId, catchDisposition);
+            var res = await _ewEController.UpdateCatchDispositionSummaryAsync(catchDisposition);
 
             return new UpdateCatchDispositionResponse() { SimulationId = request.SimulationId };
         }

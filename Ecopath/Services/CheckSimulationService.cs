@@ -46,10 +46,12 @@ namespace Ecopath.Services
         public void ReleaseSimulation(string simulationId)
         {
             GrpcValidation.ArgumentNotNullOrEmpty(simulationId);
-            if (_currentSimulationId == simulationId)
+            if (_currentSimulationId != simulationId)
             {
-                _currentSimulationId = string.Empty;
+                _logger.LogInformation($"Attempted to release simulation '{simulationId}', but current simulation is '{_currentSimulationId}'. No action taken.");
+                return;
             }
+            _currentSimulationId = string.Empty;
         }
 
         public async Task CheckIfCorrectSimulationAsync(string methodName, string simulationId, ServerCallContext context)
