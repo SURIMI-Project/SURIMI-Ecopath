@@ -690,8 +690,8 @@ namespace Ecopath.EwE
                         break; 
 
                     case cEcospaceBridgePlugin.EventType.BeginTimeStep:
+                        // Prices need to be integerated into the start of a time step for EwE effort distributions
                         this.IntegratePrices();
-                        this.IntegrateCatchDispositions();
                         break;
 
                     case cEcospaceBridgePlugin.EventType.BeginTimeStepPost:
@@ -714,7 +714,11 @@ namespace Ecopath.EwE
                         break;
 
                     case cEcospaceBridgePlugin.EventType.EffortDistrPost:
-                        // NOP
+                        // THIS IS WHERE TO PAUSE
+                        // EwE effort + biomass -> POSEDON
+                        // [ pause and wait for a framework trigger to continue ]
+                        // POSEIDON catch disp -> EwE
+                        this.IntegrateCatchDispositions();
                         break;
 
                     default:
