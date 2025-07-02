@@ -674,6 +674,14 @@ namespace Ecopath.EwE
             return null;
         }
 
+        /// -------------------------------------------------------------------
+        /// <summary>
+        /// Plug-in callback that triggers all logic to extract data from, and 
+        /// inject data into, the running Ecospace model.
+        /// </summary>
+        /// <param name="e"></param>
+        /// <param name="iTime"></param>
+        /// -------------------------------------------------------------------
         private void BridgeCallback(cEcospaceBridgePlugin.EventType e, int iTime)
         {
             if (this.RunState == RunStates.stopping) return;
