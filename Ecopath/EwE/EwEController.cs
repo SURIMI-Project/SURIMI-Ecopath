@@ -3,6 +3,7 @@ using EwEBridge.Ecospace;
 using EwECore;
 using EwEPlugin;
 using EwEUtils.Core;
+using System.ComponentModel.Design;
 using System.Diagnostics;
 
 namespace Ecopath.EwE
@@ -33,10 +34,9 @@ namespace Ecopath.EwE
         private readonly cCore m_core;
         /// <summary>The Ecospace run thread, if any.</summary>
         private Thread? m_thread;
-        /// <summary>Core message handler for tracking EwE execution flow.</summary>
-        private cMessageHandler? m_mh;
-
+        /// <summary>The framework logger. Very pretty.</summary>
         private readonly ILogger<EwEController> m_logger;
+        /// <summary>EwE configuration that defines how EwE entities relate to common concepts (species, fishing, markets, etc).</summary>
         private EwEConfiguration? m_configuration;
 
         private RunStates m_runstate = RunStates.idle;
@@ -61,9 +61,6 @@ namespace Ecopath.EwE
             cLog.VerboseLevel = eVerboseLevel.Disabled; // Turn off all internal event logging
             this.RunState = RunStates.idle;
 
-            this.m_mh = new cMessageHandler(OnCoreMessage, eCoreComponentType.Ecospace, eMessageType.EcospaceRunCompleted, SynchronizationContext.Current);
-            this.m_core.Messages.AddMessageHandler(m_mh);
-
             // To make sure we can find local resources. This is rather hack.
             Directory.SetCurrentDirectory(System.AppDomain.CurrentDomain.BaseDirectory);
             this.m_logger = logger;
@@ -81,9 +78,6 @@ namespace Ecopath.EwE
 
         ~EwEController()
         {
-            this.m_core.Messages.RemoveMessageHandler(m_mh);
-            this.m_mh = null;
-
             this.ForceStop();
 
             this.m_core.CloseModel();
@@ -139,75 +133,64 @@ namespace Ecopath.EwE
         /// <returns></returns>
         public async Task<int> StartAsync(EwEConfiguration config, int timeoutMs = 60000)
         {
+            // Check readiness
             if (RunState != RunStates.idle)
-            {
                 throw new Exception("EwE controller already busy, aborting");
-            }
 
+            // Commence configuration
             this.RunState = RunStates.starting;
             this.m_configuration = config;
 
+            // Load model
             if (!File.Exists(this.m_configuration.ModelName))
-            {
                 throw new FileNotFoundException("EwE model file '{0}' cannot be found", this.m_configuration.ModelName); 
-            }
-
             if (!this.m_core.LoadModel(m_configuration.ModelName))
-            {
                 throw new Exception($"EwE could not load model '{this.m_configuration.ModelName}'");
-            }
             this.m_logger.LogInformation("EwE - Ecopath loaded model '{0}'", this.m_configuration.ModelName);
 
+            // Check Ecopath balancing
             bool bIsBalanced = false;
             if (!this.m_core.RunEcopath(ref bIsBalanced) | !bIsBalanced)
-            {
                 throw new Exception("EwE - Ecopath does not balance");
-            }
             this.m_logger.LogInformation("EwE - Ecopath does balance");
 
+            // Check and load Ecosim
             if (this.m_configuration.EcosimScenario <= 0 | !this.m_core.LoadEcosimScenario(m_configuration.EcosimScenario))
-            {
                 throw new Exception($"EwE - Ecosim scenario {this.m_configuration.EcosimScenario} not loaded");
-            }
             this.m_logger.LogInformation("EwE - Ecosim scenario {0} loaded", this.m_configuration.EcosimScenario);
-
             if (this.m_configuration.EcosimTimeSeries > 0)
             {
                 if (!this.m_core.LoadTimeSeries(m_configuration.EcosimTimeSeries))
-                {
                     throw new Exception($"EwE - Ecosim time series {this.m_configuration.EcosimTimeSeries} not loaded");
-                }
                 this.m_logger.LogInformation("EwE - Ecosim time series {0} loaded", this.m_configuration.EcosimTimeSeries);
             }
 
+            // Configure Ecosim
             cEcoSimModelParameters parms = this.m_core.EcosimModelParameters;
             parms.NumberYears = this.m_configuration.MaxRunYears; // No of years apply to both Sim and Space
 
+            // Run Ecosim
             if (!this.m_core.RunEcosim())
-            {
                 throw new Exception("EwE - Ecosim failed to run");
-            }
             this.m_logger.LogInformation("EwE - Ecosim run successfully");
 
+            // Check and load Ecospace
             if (this.m_configuration.EcospaceScenario <= 0 | !this.m_core.LoadEcospaceScenario(this.m_configuration.EcospaceScenario))
-            {
                 throw new Exception($"EwE - Ecospace scenario {this.m_configuration.EcospaceScenario} not loaded");
-            }
             this.m_logger.LogInformation("EwE - Ecospace scenario {0} loaded", this.m_configuration.EcospaceScenario);
 
+            // Configure Ecospace
             cEcospaceDataStructures ds = this.m_core.EcospaceDataStructures;
             ds.SpinUpYears = this.m_configuration.SpinupYears;
             ds.UseSpinUp = (this.m_configuration.SpinupYears > 0);
-            this.m_logger.LogInformation("EwE - Ecospace spin-up {0}", ds.UseSpinUp ? this.m_configuration.SpinupYears.ToString() : "off"); 
+            this.m_logger.LogInformation("EwE - Ecospace spin-up {0}", ds.UseSpinUp ? this.m_configuration.SpinupYears.ToString() : "off");
 
+            // Start running Ecospace up to the point where intended simulations begin
             var tcs = new TaskCompletionSource();
-
             void Handler(RunStates state)
             {
                 if (state == RunStates.waiting)
-                {
                     tcs.TrySetResult();
-                }
             }
             OnRunStateChanged += Handler;
 
@@ -218,13 +201,13 @@ namespace Ecopath.EwE
             var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMs));
             OnRunStateChanged -= Handler;
 
+            // Ready when running Ecospace is waiting for further instructions
             return (RunState == RunStates.waiting) ? 1 : -1;
         }
 
         /// <summary>
-        /// We might as well make this an async method too, even though there won't be any waiting
+        /// Asynchronousely execute a month
         /// </summary>
-        /// <returns></returns>
         public async Task<bool> ContinueAsync(int timeoutMs = 60000)
         {
             if (this.RunState != RunStates.waiting) return false;
@@ -240,13 +223,13 @@ namespace Ecopath.EwE
             this.OnRunStateChanged += Handler;
 
             // Carry on
-            this.m_core.EcospacePaused = false;
+            this.m_logger.LogInformation("EwE - Continue with time step " + this.m_core.EcospaceDataStructures.TimeNow);
             this.RunState = RunStates.running;
+            this.m_core.EcospacePaused = false;
 
             var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMs));
             this.OnRunStateChanged -= Handler;
 
-            this.m_logger.LogInformation("EwE - continue");
             return true;
         }
 
@@ -261,9 +244,7 @@ namespace Ecopath.EwE
             void Handler(RunStates state)
             {
                 if (state == RunStates.idle)
-                {
                     tcs.TrySetResult();
-                }
             }
 
             this.OnRunStateChanged += Handler;
@@ -279,9 +260,7 @@ namespace Ecopath.EwE
             var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMs));
 
             if (completedTask == tcs.Task)
-            {
                 return true; // All good
-            }
 
             // Timeout hit: force kill
             this.OnRunStateChanged -= Handler;
@@ -291,26 +270,32 @@ namespace Ecopath.EwE
 
         public Task<bool> UpdatePricesAsync(List<SpeciesPrice> speciesPrices)
         {
+            // Make prices up for grabs
             this.m_pricesIn = speciesPrices;
             return Task.FromResult(true);
         }
 
         public Task<bool> UpdateCatchDispositionSummaryAsync(CatchDispositionSummary catchDispositionSummary)
         {
+            // Make catch dispositions up for grabs
             this.m_catchIn = catchDispositionSummary;
             return Task.FromResult(true);
         }
 
         public Task<Biomass> GetBiomassAsync()
         {
+            // Return a dummy if not available
             if (this.m_biomassOut == null)
                 this.m_biomassOut = new Biomass() { MeasurementUnit = "kg" };
+
+            // ToDo: need to clear out biomass once dispatched?
             return Task.FromResult(this.m_biomassOut);
         }
 
         public Task<List<SalesSummary>> GetSalesSummariesAsync(DateTime start, DateTime end)
         {
-          return Task.FromResult(this.m_salesOut);
+            // ToDo: need to clear out sales once dispatched?
+            return Task.FromResult(this.m_salesOut);
         }
 
         public Task<CatchDispositionSummary> GetCatchDispositionSummaryAsync(DateTime start, DateTime end)
@@ -367,7 +352,7 @@ namespace Ecopath.EwE
             this.m_pricesIn = null;
         }
 
-        private void IntegrateCatchDispositions()
+        private void IntegrateCatchDispositions(int iTime)
         {
             if (this.m_catchIn == null) return;
             if (this.m_configuration == null) return;
@@ -377,38 +362,50 @@ namespace Ecopath.EwE
             
             foreach (var grid in this.m_catchIn.DispositionGrids)
             {
-                // Impact standing biomass. This data arrives too late to update Ecospace results.
-                // Only correct standing biomasses for now.
                 int iGroup = this.m_configuration.get_SpeciesGroup(grid.SpeciesCode);
+                int iFleet = this.m_configuration.get_GearFleet(grid.GearCode, "???");
+
+                // Conceptual issue here:
+                // - Market code is not specified here because it is not relevant for POSEIDON, EwE needs it to ID the fleet
+
+                // ToDo: validate group and fleet codes
+
                 foreach (var cell in grid.DispositionCells)
                 {
                     int ir = (int)Math.Floor(bm.LatToRow((float)cell.Latitude));
                     int ic = (int)Math.Floor(bm.LonToCol((float)cell.Longitude));
 
                     if (1 <= ir & ir <= ds.InRow & 1 <= ic & ic <= ds.InCol)
-                    {
-                        double loss = cell.GrossCatchBiomass - cell.LiveDiscardsBiomass;
-                        float dens = KgToDensity(loss, ir, ic);
-                        float available = ds.Bcell[ir, ic, iGroup];
-
-                        Debug.Assert(loss >= 0, "Cannot fish negatively. Would be nice, but sorry, no.");
-                        Debug.Assert(dens > available, "Not enough B in cell to satisfy fishing");
-                        Debug.Assert(ds.Depth[ir, ic] > 0, "Not a modelled cell?!");
-
-                        if (dens > available)
+                        if (ds.Depth[ir, ic] > 0)
                         {
-                            // WHoah!! External fishing is catching more than is available in this cell
-                            throw new Exception(string.Format("EwE controller cannot integrate Catch Disposition {0} kg ({1} t/km2), into cell {2}x{3} ({4}x{5}), only {6} t/km2 available in Ecospace",
-                                loss, dens, cell.Longitude, cell.Latitude, ic, ir, available));
-                        }
+                            // Stop this Ecospace fleet from fishing in this cell - should in fact not fish anywhere anymore for this time step!
+                            ds.EffortSpace[iFleet, ir, ic] = 0;
+                            ds.PAreaFished[iFleet][ir, ic] = 0;
 
-                        // Leave some tiny biomass in the cell; fisheries cannot catch it all (and Ecospace does not like divisions by zero)
-                        ds.Bcell[ir, ic, iGroup] = (float)Math.Max(1E-10, available - dens);
-                    }
-                    else
-                    {
-                        // Cell out of bounds. Ignore.
-                    }
+                            float @catch = KgToDensity(cell.GrossCatchBiomass - cell.LiveDiscardsBiomass, ir, ic);
+                            float deaddisc = KgToDensity(cell.DeadDiscardsBiomass, ir, ic);
+                            float available = ds.Bcell[ir, ic, iGroup];
+
+                            Debug.Assert(@catch >= 0, "Cannot fish negatively. Would be nice, but sorry, no.");
+                            Debug.Assert(ds.Depth[ir, ic] > 0, "Not a modelled cell?!");
+
+                            if (@catch > available)
+                            {
+                                // WHoah!! External fishing is catching more than is available in this cell
+                                throw new Exception(string.Format("EwE controller cannot integrate Catch Disposition {0} kg ({1} t/km2), into cell {2}x{3} ({4}x{5}), only {6} t/km2 available in Ecospace",
+                                    (cell.GrossCatchBiomass - cell.LiveDiscardsBiomass), @catch, cell.Longitude, cell.Latitude, ic, ir, available));
+                            }
+
+                            // Leave some tiny biomass in the cell; fisheries cannot catch it all (and Ecospace does not like divisions by zero)
+                            @catch = (float)Math.Max(1E-10, available - @catch);
+
+                            ds.Bcell[ir, ic, iGroup] = @catch;
+                            ds.CatchMap[ir, ic, iGroup] += @catch;
+                            ds.CatchFleetMap[ir, ic, iFleet] += @catch;
+                            ds.Landings[iFleet, iGroup] += @catch;
+                            ds.DiscardsMap[ir, ic, iFleet] += deaddisc;
+                            ds.ResultsByFleetGroup[(int)eSpaceResultsFleetsGroups.CatchBio, iFleet, iGroup, iTime] += @catch;
+                        }
                 }
             }
             this.m_catchIn = null;
@@ -687,7 +684,11 @@ namespace Ecopath.EwE
                 {
                     case cEcospaceBridgePlugin.EventType.None:
                         // NOP
-                        break; 
+                        break;
+
+                    case cEcospaceBridgePlugin.EventType.BeginRun:
+                        // NOP
+                        break;
 
                     case cEcospaceBridgePlugin.EventType.BeginTimeStep:
                         // Prices need to be integerated into the start of a time step for EwE effort distributions
@@ -704,21 +705,27 @@ namespace Ecopath.EwE
                         this.CacheBiomassData();
                         this.CacheCatchAndSalesData();
 
-                        // Handle pause timer
-                        if (this.MustPause(iTime))
+                        // Do we need to pause at the start of the next time step?
+                        if (this.MustPause(iTime + 1))
                         {
-                            this.m_logger.LogInformation("EwE - pausing at timestep {0}", iTime);
+                            this.m_logger.LogInformation("EwE - pausing at timestep {0}", iTime + 1);
                             this.RunState = RunStates.waiting;
                             this.m_core.EcospacePaused = true;
                         }
                         break;
 
                     case cEcospaceBridgePlugin.EventType.EffortDistrPost:
-                        // THIS IS WHERE TO PAUSE
-                        // EwE effort + biomass -> POSEDON
-                        // [ pause and wait for a framework trigger to continue ]
-                        // POSEIDON catch disp -> EwE
-                        this.IntegrateCatchDispositions();
+                        // Effort has been distributed, and Ecospace is about to calculate ecosystem dynamics and fishing
+                        // This is the perfect moment to integrate any remotely calculated catch dispositions into the running core
+                        this.IntegrateCatchDispositions(iTime);
+                        break;
+
+                    case cEcospaceBridgePlugin.EventType.EndRun:
+                        // Clear all modifications made to core data, if any
+                        this.m_core.DiscardChanges();
+                        // Correctly reset the state and clean up
+                        this.RunState = RunStates.idle;
+                        this.m_thread = null;
                         break;
 
                     default:
@@ -730,7 +737,6 @@ namespace Ecopath.EwE
             {
                 this.m_logger.LogInformation("EwE - exception {0} on bridgecallback {1}", ex.Message, e.ToString());
             }
-
         }
 
         private bool MustPause(int iTime)
