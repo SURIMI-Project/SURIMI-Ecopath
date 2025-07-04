@@ -52,6 +52,9 @@
 	  <None Update="Includes\EwEUtils.pdb">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
+	  <None Update="Includes\GSA0607EwENBS.eiixml">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	  <None Update="Includes\System.Drawing.Common.dll">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
