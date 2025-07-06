@@ -3,28 +3,33 @@ using EwEBridge.Ecospace;
 using EwECore;
 using EwEPlugin;
 using EwEUtils.Core;
-using System.ComponentModel.Design;
 using System.Diagnostics;
 
 namespace Ecopath.EwE
 {
     // About the flow of Ecospace and this controller:
-    // This code relies on a bridge to respond to EwE plug-in points, and the Ecospace pause mechanism to halt timestepping
-    // It is important to know that the Ecospace Pause mechanism waits at the BEGINNING of a new time step
+    // - The aim was to insert agent-based fisheries into EwE with a minimal code changes
+    // - EwE needs to account for this fishing in the running model data, but also in the various result arrays
     //
-    // This has somewhat counterintuitive consequences:
-    // - Ecospace biomass, catch and other end-of timestep data is gathered at the end of a timestep
+    // This implementation relies on a plug-in bridge (to supercharge EwE interop) and the 'off-the-shelf' Ecospace pause mechanism
+    // * It is important to know that the Ecospace Pause mechanism waits at the BEGINNING of a time step
+    // - Ecospace biomass, catch, sales and other end-of timestep data is gathered at the end of a timestep
     // - Ecospace then pauses at the beginning of a new timestep for POSEIDON to provide catch dispositions
-    // - The catch dispositions are injected back into Ecospace as soon as the time step resumes: at the start of the next time step
-    // This means that in the interim, Ecospace biomasses are not up to date. That does not matter as no other interactivity with Ecospace is allowed.
-    // We'll be confused plenty later.
+    // - The catch dispositions are injected back into Ecospace in the middle of a time step, when effort has been distributed and before EwE starts fishing
+    //
+    // This was achieved with minimal interference in the EwE code:
+    // - The ONLY changes made to the EwE core entailed clearing out time step results BEFORE the 
+    // * This means that EwE fishes after POSEIDON (EwE fishes on the left-overs). EwE and POSEIDON currently do not fish together
 
-    // ToDo: devise a mechanism to bridge time step sizes; right now the code assumes that time steps are monthly
+    // 16 Jun 25 (Nicolas visit)
+    // V MultiStanza: properly encode fish sizes, gear nationalities, and other refinements. The current coding system is not up to par
+    // V We now properly fish! Data integration performed in the middle of the Ecospace time step, using catch dispositions received earlier
 
-    // ToDo 16 Jun 25 (Nicolas visit)
-    // - MultiStanza: include SpeciesSubCode into FW, spp + optional subcode data exchange, prices, etc
-    // - Properly fish: stop in the middle of the Ecospace time step, wait for Poseidon catch disp. If received, disable fishing on ext fleets
-    //     * How to proceed if ext model does not respond? Quickly proceed as normal and catch up? Currently can't be distinguished from FW messages
+    // General things to do:
+    // ! devise a mechanism to bridge time step sizes; right now the code assumes that time steps are monthly
+    // ! expand entity matching logic
+    // ! devise system to order up the same scenario across all participating models
+    // ! user stories in GitHub!!!
 
     public class EwEController : IEwEController
     {
