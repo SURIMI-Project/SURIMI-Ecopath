@@ -48,6 +48,8 @@ public static class Extensions
             logging.IncludeScopes = true;
         });
 
+        var useOtlpExporter = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
+
         builder.Services.AddOpenTelemetry()
             .WithMetrics(metrics =>
             {
@@ -61,9 +63,16 @@ public static class Extensions
                     .AddAspNetCoreInstrumentation()
                     .AddGrpcClientInstrumentation()
                     .AddHttpClientInstrumentation();
+                if (!string.IsNullOrEmpty(useOtlpExporter))
+                {
+                    tracing.AddOtlpExporter(otlpOptions =>
+                    {
+                        otlpOptions.Endpoint = new Uri(useOtlpExporter);
+                    });
+                }
             });
 
-        builder.AddOpenTelemetryExporters();
+//        builder.AddOpenTelemetryExporters();
 
         return builder;
     }
