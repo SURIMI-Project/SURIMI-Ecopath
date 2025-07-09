@@ -367,8 +367,8 @@ namespace Ecopath.EwE
             
             foreach (var grid in this.m_catchIn.DispositionGrids)
             {
-                int iGroup = this.m_configuration.get_SpeciesGroup(grid.SpeciesCode);
-                int iFleet = this.m_configuration.get_GearFleet(grid.GearCode, "???");
+                int iGroup = this.m_configuration.get_SpeciesGroup(grid.Species.SpeciesCode);
+                int iFleet = this.m_configuration.get_GearFleet(grid.FleetSegment.GearCode, "???");
 
                 // Conceptual issue here:
                 // - Market code is not specified here because it is not relevant for POSEIDON, EwE needs it to ID the fleet
@@ -544,7 +544,7 @@ namespace Ecopath.EwE
                         if (bHasData)
                         {
                             // Prepare disposition grid
-                            var grid = new DispositionGrid() { GearCode = gearcode, SpeciesCode = speccode };
+                            var grid = new DispositionGrid() { FleetSegment = new FleetSegment() { GearCode = gearcode, flag = "TODO" }, Species = new Species() { SpeciesCode = speccode } };
                             for (int ir = 1; ir <= spaceds.InRow; ir++)
                                 for (int ic = 1; ic <= spaceds.InCol; ic++)
                                     if (spaceds.Depth[ir, ic] > 0)

@@ -25,7 +25,7 @@ namespace Ecopath.Services
             var speciesPrices = request.Prices
                 .Select(p => new Models.SpeciesPrice
                 {
-                    SpeciesCode = p.SpeciesCode,
+                    SpeciesCode = p.Species.SpeciesCode,
                     Price = p.Price,
                     Currency = p.Currency,
                     MeasuremenyUnit = p.MeasurementUnit,
@@ -61,7 +61,10 @@ namespace Ecopath.Services
                     {
                         grpcSummary.Sales.AddRange(summary.Sales.Select(sale => new Sale
                         {
-                            SpeciesCode = sale.SpeciesCode,
+                            Species = new Species
+                            {
+                                SpeciesCode = sale.SpeciesCode
+                            },
                             Quantity = sale.Quantity,
                             Value = sale.Value,
                         }));

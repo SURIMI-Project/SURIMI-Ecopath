@@ -28,7 +28,7 @@ namespace Ecopath.Services
 
             if (!string.IsNullOrEmpty(_currentSimulationId))
             {
-                throw new RpcException(new Status(StatusCode.Unavailable, $"Cannot reserve for simulation '{simulationId}' on host {hostHeader}. Ecopath already reserved for simulation '{_currentSimulationId}'."));
+                throw new RpcException(new Status(StatusCode.Unavailable, $"Cannot reserve for simulation '{simulationId}' on host {hostHeader}. DnsName: {System.Net.Dns.GetHostName()}. Ecopath already reserved for simulation '{_currentSimulationId}'."));
             }
             _currentSimulationId = simulationId;
 

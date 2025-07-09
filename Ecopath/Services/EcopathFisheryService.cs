@@ -43,8 +43,15 @@ namespace Ecopath.Services
                     {
                         var dispositionGrid = new DispositionGrid
                         {
-                            SpeciesCode = grid.SpeciesCode,
-                            GearCode = grid.GearCode,
+                            Species = new Species
+                            {
+                                SpeciesCode = grid.Species.SpeciesCode ?? string.Empty
+                            },
+                            FleetSegment = new FleetSegment
+                            {
+                                GearCode = grid.FleetSegment.GearCode ?? string.Empty,
+                                Flag = grid.FleetSegment.flag ?? string.Empty
+                            }
                         };
                         if (grid.DispositionCells != null)
                         {
@@ -78,8 +85,15 @@ namespace Ecopath.Services
                 DispositionGrids = request.CatchDispositionSummary.DispositionGrids
                 .Select(grpcGrid => new Ecopath.Models.DispositionGrid
                 {
-                    GearCode = grpcGrid.GearCode,
-                    SpeciesCode = grpcGrid.SpeciesCode,
+                    FleetSegment = new Ecopath.Models.FleetSegment
+                    {
+                        GearCode = grpcGrid.FleetSegment.GearCode,
+                        flag = grpcGrid.FleetSegment.Flag
+                    },
+                    Species = new Ecopath.Models.Species
+                    {
+                        SpeciesCode = grpcGrid.Species.SpeciesCode
+                    },
                     DispositionCells = grpcGrid.DispositionCells
                         .Select(grpcCell => new Models.DispositionCell
                         {
