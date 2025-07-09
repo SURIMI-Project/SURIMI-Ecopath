@@ -332,7 +332,6 @@ namespace Ecopath.EwE
 
             foreach (var price in m_pricesIn)
             {
-                // Fleet is identified by gear code + marketcode, not PortCode
                     
                 // ToDo_JS: activate code below
                 int iFleet = 42; // this.m_configuration.get_GearFleet(price.GearCode, price.MarketCode);

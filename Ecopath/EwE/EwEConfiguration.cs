@@ -5,6 +5,16 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Ecopath.EwE
 {
+    // This code is going to have to change
+    // Use multi-level keys to identify groups
+    // Do not use ontologies; hard code keys to the SURIMI standard
+    // However, use reflection to map between EwE items and SURIMI entities
+    //
+    // Species: datatype+DBID = "Species.SpeciesCode=<value>{;Species.Stage=<value>};Proportion=[0,1]"
+    // Fleet: datatype+DBID = "FleetSegment.GearCode=<value>;FleetSegment.Flag=<value>" OR
+    // Fleet: datatype+DBID = "FleetSegment.GearCode=<value>;MarketCode=<value>" (for market)
+    //
+
     public partial class EwEConfiguration : IEwEConfiguration
     {
         /// <summary>
