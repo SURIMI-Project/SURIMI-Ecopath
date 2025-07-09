@@ -38,7 +38,10 @@ public class EcopathEcologyService : EcologyService.EcologyServiceBase
             grpcBiomass.BiomassSummary.BiomassGrids.AddRange(
                 biomass.BiomassGrids.Select(grid => new Grpc.Surimi.BiomassGrid
                 {
-                    SpeciesCode = grid.SpeciesCode ?? string.Empty,
+                    Species = new Species
+                    {
+                        SpeciesCode = grid.SpeciesCode ?? string.Empty
+                    },
                     BiomassCells = { grid.BiomassCells?.Select(cell => new Grpc.Surimi.BiomassCell
                     {
                         Biomass = cell.Biomass,
