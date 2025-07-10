@@ -6,24 +6,24 @@ namespace Ecopath.Services;
 
 public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
 {
-    private readonly ILogger<EcopathWorkflowService> _logger;
-    private readonly CheckSimulationService _checkSimulationService;
+    private readonly ILogger<EcopathWorkflowService> m_logger;
+    private readonly CheckSimulationService m_checksimulationservice;
     private readonly IEwEController m_controller;
 
-    public EcopathWorkflowService(ILogger<EcopathWorkflowService> logger, CheckSimulationService checkSimulationService, IEwEController ewEController)
+    public EcopathWorkflowService(ILogger<EcopathWorkflowService> logger, CheckSimulationService service, IEwEController controller)
     {
-        _logger = logger;
-        _checkSimulationService = checkSimulationService;
-        m_controller = ewEController;
+        m_logger = logger;
+        m_checksimulationservice = service;
+        m_controller = controller;
     }
 
     public override async Task<InitialiseResponse> Initialise(InitialiseRequest request, ServerCallContext context)
     {
         GrpcValidation.ArgumentNotNullOrEmpty(request.ScenarioId);
-        await _checkSimulationService.ReserveSimulationAsync(request.SimulationId, context);
+        await m_checksimulationservice.ReserveSimulationAsync(request.SimulationId, context);
 
 
-        _logger.LogInformation($"Initializing simulation {request.SimulationId}, scenario {request.ScenarioId}...");
+        m_logger.LogInformation($"Initializing simulation {request.SimulationId}, scenario {request.ScenarioId}...");
 
         try
         {
@@ -42,8 +42,8 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
 
     public override async Task<FinaliseResponse> Finalise(FinaliseRequest request, ServerCallContext context)
     {
-        _checkSimulationService.ReleaseSimulation(request.SimulationId);
-        _logger.LogInformation($"Finalizing simulation {request.SimulationId}");
+        m_checksimulationservice.ReleaseSimulation(request.SimulationId);
+        m_logger.LogInformation($"Finalizing simulation {request.SimulationId}");
 
         try
         {
@@ -62,8 +62,8 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
 
     public override async Task<CancelResponse> Cancel(CancelRequest request, ServerCallContext context)
     {
-        _checkSimulationService.ReleaseSimulation(request.SimulationId);
-        _logger.LogInformation($"Cancel simulation {request.SimulationId}");
+        m_checksimulationservice.ReleaseSimulation(request.SimulationId);
+        m_logger.LogInformation($"Cancel simulation {request.SimulationId}");
 
         try
         {
@@ -82,8 +82,8 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
 
     public override async Task<SimulateStepResponse> SimulateStep(SimulateStepRequest request, ServerCallContext context)
     {
-        await _checkSimulationService.CheckIfCorrectSimulationAsync("SimulateStep", request.SimulationId, context);
-        _logger.LogInformation($"Simulate step for simulation {request.SimulationId}");
+        await m_checksimulationservice.CheckIfCorrectSimulationAsync("SimulateStep", request.SimulationId, context);
+        m_logger.LogInformation($"Simulate step for simulation {request.SimulationId}");
 
         var res = await m_controller.ContinueAsync();
 

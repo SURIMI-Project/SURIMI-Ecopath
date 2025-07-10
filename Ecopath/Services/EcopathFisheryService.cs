@@ -6,23 +6,23 @@ namespace Ecopath.Services
 {
     public class EcopathFisheryService : FisheryService.FisheryServiceBase
     {
-        private readonly ILogger<EcopathEcologyService> _logger;
-        private readonly CheckSimulationService _checkSimulationService;
-        private readonly IEwEController _ewEController;
+        private readonly ILogger<EcopathEcologyService> m_logger;
+        private readonly CheckSimulationService m_checksimulationservice;
+        private readonly IEwEController m_ewecontroller;
 
-        public EcopathFisheryService(ILogger<EcopathEcologyService> logger, CheckSimulationService checkSimulationService, IEwEController ewEController)
+        public EcopathFisheryService(ILogger<EcopathEcologyService> logger, CheckSimulationService service, IEwEController controller)
         {
-            _logger = logger;
-            _checkSimulationService = checkSimulationService;
-            _ewEController = ewEController;
+            m_logger = logger;
+            m_checksimulationservice = service;
+            m_ewecontroller = controller;
         }
 
         public override async Task<GetCatchDispositionResponse> GetCatchDisposition(GetCatchDispositionRequest request, ServerCallContext context)
         {
-            await _checkSimulationService.CheckIfCorrectSimulationAsync("GetCatchDisposition", request.SimulationId, context);
-            _logger.LogInformation($"Ecopath GetCatchDisposition for {request.SimulationId}...");
+            await m_checksimulationservice.CheckIfCorrectSimulationAsync("GetCatchDisposition", request.SimulationId, context);
+            m_logger.LogInformation($"Ecopath GetCatchDisposition for {request.SimulationId}...");
 
-            var catchDisposition = await _ewEController.GetCatchDispositionSummaryAsync(
+            var catchDisposition = await m_ewecontroller.GetCatchDispositionSummaryAsync(
                 request.StartDateTime.ToDateTime(),
                 request.EndDateTime.ToDateTime()
             );
@@ -79,25 +79,28 @@ namespace Ecopath.Services
 
         public override async Task<UpdateCatchDispositionResponse> UpdateCatchDisposition(UpdateCatchDispositionRequest request, ServerCallContext context)
         {
-            await _checkSimulationService.CheckIfCorrectSimulationAsync("UpdateCatchDisposition", request.SimulationId, context);
+            await m_checksimulationservice.CheckIfCorrectSimulationAsync("UpdateCatchDisposition", request.SimulationId, context);
             GrpcValidation.ArgumentNotNullOrEmpty(request.CatchDispositionSummary.MeasurementUnit);
 
             var catchDisposition = new Ecopath.Models.CatchDispositionSummary
             {
                 MeasurementUnit = request.CatchDispositionSummary.MeasurementUnit,
                 DispositionGrids = request.CatchDispositionSummary.DispositionGrids
-                .Select(grpcGrid => new Ecopath.Models.DispositionGrid
+                .Select(grid => new Ecopath.Models.DispositionGrid
                 {
                     FleetSegment = new Ecopath.Models.FleetSegment
                     {
-                        GearCode = grpcGrid.FleetSegment.GearCode,
-                        flag = grpcGrid.FleetSegment.Flag
+                        GearCode = grid.FleetSegment.GearCode,
+                        flag = grid.FleetSegment.Flag
                     },
                     Species = new Ecopath.Models.Species
                     {
-                        SpeciesCode = grpcGrid.Species.SpeciesCode
+                        SpeciesCode = grid.Species.SpeciesCode,
+                        Length = grid.Species.LengthClass ?? string.Empty,
+                        Age = grid.Species.Age ?? string.Empty,
+                        Stage = grid.Species.Stage ?? string.Empty
                     },
-                    DispositionCells = grpcGrid.DispositionCells
+                    DispositionCells = grid.DispositionCells
                         .Select(grpcCell => new Models.DispositionCell
                         {
                             GrossCatchBiomass = grpcCell.GrossCatch,
@@ -111,7 +114,7 @@ namespace Ecopath.Services
                 .ToList()
             };
 
-            var res = await _ewEController.UpdateCatchDispositionSummaryAsync(catchDisposition);
+            var res = await m_ewecontroller.UpdateCatchDispositionSummaryAsync(catchDisposition);
 
             return new UpdateCatchDispositionResponse() { SimulationId = request.SimulationId };
         }
