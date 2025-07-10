@@ -6,45 +6,47 @@ namespace Ecopath.Services
 {
     public class EcopathMarketService : MarketService.MarketServiceBase
     {
-        private readonly ILogger<EcopathEcologyService> _logger;
-        private readonly CheckSimulationService _checkSimulationService;
-        private readonly IEwEController _ewEController;
+        private readonly ILogger<EcopathEcologyService> m_logger;
+        private readonly CheckSimulationService m_checksimulationservice;
+        private readonly IEwEController m_controller;
 
-        public EcopathMarketService(ILogger<EcopathEcologyService> logger, CheckSimulationService checkSimulationService, IEwEController ewEController)
+        public EcopathMarketService(ILogger<EcopathEcologyService> logger, CheckSimulationService service, IEwEController controller)
         {
-            _logger = logger;
-            _checkSimulationService = checkSimulationService;
-            _ewEController = ewEController;
+            m_logger = logger;
+            m_checksimulationservice = service;
+            m_controller = controller;
         }
 
         public override async Task<UpdateSpeciesPricesResponse> UpdateSpeciesPrices(UpdateSpeciesPricesRequest request, ServerCallContext context)
         {
-            await _checkSimulationService.CheckIfCorrectSimulationAsync("UpdateSpeciesPrices", request.SimulationId, context);
-            _logger.LogInformation($"Updating prices for {request.Prices.Count} species...");
+            await m_checksimulationservice.CheckIfCorrectSimulationAsync("UpdateSpeciesPrices", request.SimulationId, context);
+            m_logger.LogInformation($"Updating prices for {request.Prices.Count} species...");
 
             var speciesPrices = request.Prices
                 .Select(p => new Models.SpeciesPrice
                 {
+                    // Note that the market does not distinguish species sizes, ages and lengths. This is by design but may have to be revisited
+                    // It feels as an oversight not at least facilitating this detail
                     SpeciesCode = p.Species.SpeciesCode,
                     Price = p.Price,
                     Currency = p.Currency,
                     MeasuremenyUnit = p.MeasurementUnit,
-                    PortCode = p.MarketCode,
+                    MarketCode = p.MarketCode,
                     Timestamp = p.Timestamp.ToDateTime()
                 })
                 .ToList();
 
-            var res = await _ewEController.UpdatePricesAsync(speciesPrices);
+            var res = await m_controller.UpdatePricesAsync(speciesPrices);
 
             return new UpdateSpeciesPricesResponse() { SimulationId = request.SimulationId };
         }
 
         public override async Task<GetSalesResponse> GetSales(GetSalesRequest request, ServerCallContext context)
         {
-            await _checkSimulationService.CheckIfCorrectSimulationAsync("GetSales", request.SimulationId, context);
-            _logger.LogInformation($"Ecopath GetSales for {request.SimulationId}...");
+            await m_checksimulationservice.CheckIfCorrectSimulationAsync("GetSales", request.SimulationId, context);
+            m_logger.LogInformation($"Ecopath GetSales for {request.SimulationId}...");
 
-            var salesSummaries = await _ewEController.GetSalesSummariesAsync(request.StartDateTime.ToDateTime(), request.EndDateTime.ToDateTime());
+            var salesSummaries = await m_controller.GetSalesSummariesAsync(request.StartDateTime.ToDateTime(), request.EndDateTime.ToDateTime());
 
             var response = new GetSalesResponse() { SimulationId = request.SimulationId };
             response.SalesSummaries.AddRange(
@@ -63,7 +65,8 @@ namespace Ecopath.Services
                         {
                             Species = new Species
                             {
-                                // Note that the market no longer distinguishes species sizes, ages and lengths. This is by design
+                                // Note that the market does not distinguish species sizes, ages and lengths. This is by design but may have to be revisited
+                                // It feels as an oversight not at least facilitating this detail
                                 SpeciesCode = sale.SpeciesCode
                             },
                             Quantity = sale.Quantity,
