@@ -63,6 +63,7 @@ namespace Ecopath.Services
                         {
                             Species = new Species
                             {
+                                // Note that the market no longer distinguishes species sizes, ages and lengths. This is by design
                                 SpeciesCode = sale.SpeciesCode
                             },
                             Quantity = sale.Quantity,

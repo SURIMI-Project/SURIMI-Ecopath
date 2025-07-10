@@ -45,7 +45,10 @@ namespace Ecopath.Services
                         {
                             Species = new Species
                             {
-                                SpeciesCode = grid.Species.SpeciesCode ?? string.Empty
+                                SpeciesCode = grid.Species.SpeciesCode ?? string.Empty,
+                                LengthClass = grid.Species.Length ?? string.Empty,
+                                Age = grid.Species.Age ?? string.Empty,
+                                Stage = grid.Species.Stage ?? string.Empty
                             },
                             FleetSegment = new FleetSegment
                             {

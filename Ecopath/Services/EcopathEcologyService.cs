@@ -40,7 +40,10 @@ public class EcopathEcologyService : EcologyService.EcologyServiceBase
                 {
                     Species = new Species
                     {
-                        SpeciesCode = grid.SpeciesCode ?? string.Empty
+                        SpeciesCode = grid.Species.SpeciesCode ?? string.Empty,
+                        LengthClass = grid.Species.Length ?? string.Empty,
+                        Age = grid.Species.Age ?? string.Empty,
+                        Stage = grid.Species.Stage ?? string.Empty
                     },
                     BiomassCells = { grid.BiomassCells?.Select(cell => new Grpc.Surimi.BiomassCell
                     {
