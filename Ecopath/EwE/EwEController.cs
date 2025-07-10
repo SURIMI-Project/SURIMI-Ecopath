@@ -434,8 +434,13 @@ namespace Ecopath.EwE
                 {
                     BiomassGrid grid = new BiomassGrid()
                     {
-                        // Also add projection?
-                        SpeciesCode = spp
+                        Species = new()
+                        {
+                            SpeciesCode = spp,
+                            Length = "",
+                            Age = "",
+                            Stage = ""
+                        }
                     };
                     int iGroup = this.m_configuration.get_SpeciesGroup(spp);
                     Single sppProp = this.m_configuration.get_SpeciesContribution(spp);
