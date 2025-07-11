@@ -1,7 +1,11 @@
-﻿using Grpc.Net.Client.Balancer;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Security.Cryptography.X509Certificates;
+﻿using EwECore;
+using EwECore.Auxiliary;
+using EwEUtils.Core;
+using Grpc.Net.Client.Balancer;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using System.Diagnostics;
+using System.Net.Sockets;
+using System.Text;
 
 namespace Ecopath.EwE
 {
@@ -10,51 +14,44 @@ namespace Ecopath.EwE
     // Do not use ontologies; hard code keys to the SURIMI standard
     // However, use reflection to map between EwE items and SURIMI entities
     //
-    // Species: datatype+DBID = "Species.SpeciesCode=<value>{;Species.Stage=<value>};Proportion=[0,1]"
-    // Fleet: datatype+DBID = "FleetSegment.GearCode=<value>;FleetSegment.Flag=<value>" OR
-    // Fleet: datatype+DBID = "FleetSegment.GearCode=<value>;MarketCode=<value>" (for market)
     //
 
     public partial class EwEConfiguration : IEwEConfiguration
     {
+        #region Data
+
+
+        //private readonly MatcherRegistry m_registry = new(); // Overkill for now
+
         /// <summary>
-        /// Mapping of species code -> Ecopath iGroup
+        /// MultiLevelKey -> EwE item mapping
         /// </summary>
         /// <remarks>
-        /// A group can represent multiple species; a species belongs to only one group.
+        /// <list type="bullet">
+        /// <item>"Species.SpeciesCode=<value>{;Species.Stage=<value>}" -> iGroup + proportion"</item>
+        /// <item>"FleetSegment.GearCode=<value>;FleetSegment.Flag=<value>" -> iFleet</item>
+        /// <item>"GearCode=<value>;MarketCode=<value>" -> iFleet</item>
+        /// </list>
         /// </remarks>
-        private readonly Dictionary<string, int> m_speciesgroup = new();
+        private readonly List<MultiLevelKey> m_mappings = new();
 
-        /// <summary>
-        /// Mapping of species code -> Amount [0, 1] of <seealso cref="m_speciesgroup"/>.
-        /// </summary>
-        /// <remarks>
-        /// A group can represent multiple species; a species belongs to only one group.
-        /// </remarks>
-        private readonly Dictionary<string, float> m_speciescontribution = new();
+        // The EwE indices of externally managed fleets.
+        private readonly HashSet<int> m_externalFleets = new();
+        // The EwE indices of fished groups
+        private readonly HashSet<int> m_fishedGroups = new();
 
-        /// <summary>
-        /// Mapping of gear code + market -> Ecopath iFleet
-        /// </summary>
-        private readonly Dictionary<DualKey, int> m_gearfleet = new();
+        #endregion // Data
 
-        /// <summary>
-        /// A list of gear codes managed externally (e.g., not fishing within EwE).
-        /// </summary>
-        private readonly List<string> m_externalGears = new List<string>();
-
-        public EwEConfiguration() 
+        public EwEConfiguration()
         {
-            ModelName = @"Includes/Anchovy Bay Spatial.eiixml";
+            ModelName = @"Includes/GSA0607EwENBS.eiixml";
             EcosimScenario = 1;
             EcosimTimeSeries = 0;
             EcospaceScenario = 1;
             SpinupYears = 10;
-            StartYear = 5;
-
-            m_speciesgroup.Add("PIL", 3);
-            m_speciescontribution.Add("PIL", 1);
+            StartYear = 13;
         }
+
 
         public string ModelName { get; set; } = "";
         public int EcosimScenario { get; set; } = 0;
@@ -64,201 +61,130 @@ namespace Ecopath.EwE
         public int StartYear { get; set; } = 0;
         public int MaxRunYears { get; set; } = 400;
 
-        /// <summary>
-        /// Get the single Ecopath functional group that corresponds to the given Species Code.
-        /// </summary>
-        /// <param name="speccode"></param>
-        /// <returns></returns>
-        /// <remarks>
-        /// This mapping should be connected to the EwE taxonomy tables.
-        /// </remarks>
-        public int get_SpeciesGroup(string speccode)
+
+        #region Consulting the registry
+
+        public IEnumerable<(int index, int score, float propertion)> ResolveGroups(string speciescode)
         {
-            if (string.IsNullOrEmpty(speccode)) return 0;
-            return m_speciesgroup.TryGetValue(speccode.ToUpper(), out var group) ? group : 0;
+            MultiLevelKey key = new();
+            key.Fields.Add("SpeciesCode", speciescode);
+
+            return ResolveGroups(key);
+        }
+
+        public IEnumerable<(int index, int score, float propertion)> ResolveGroups(Ecopath.Models.Species species)
+        {
+            return ResolveGroups(MultiLevelKey.FromObject(species));
+        }
+
+
+        public IEnumerable<(int index, int score, float propertion)> ResolveGroups(MultiLevelKey key)
+        {
+            StaticKeyResolver resolver = new StaticKeyResolver(this.m_mappings);
+            return resolver.FindAllMatches(key, KeyDomain.Species);
+        }
+
+        public (int index, int score, float propertion) ResolveFleet(Ecopath.Models.FleetSegment fleetsegment)
+        {
+            StaticKeyResolver resolver = new StaticKeyResolver(this.m_mappings);
+            return resolver.FindAllMatches(MultiLevelKey.FromObject(fleetsegment), KeyDomain.FleetSegment).First();
+        }
+
+        public (int index, int score, float propertion) ResolveFleet(string gearcode, string marketcode)
+        {
+            MultiLevelKey key = new();
+            key.Fields.Add("GearCode", gearcode);
+            key.Fields.Add("MarketCode", marketcode);
+
+            StaticKeyResolver resolver = new StaticKeyResolver(this.m_mappings);
+            return resolver.FindAllMatches(key, KeyDomain.FleetSegment).First();
+        }
+
+        public MultiLevelKey? Find(int iIndex, KeyDomain domain)
+        {
+            StaticKeyResolver resolver = new StaticKeyResolver(this.m_mappings);
+            return resolver.GetKey(iIndex, domain);
+        }
+
+        #endregion // Consulting the registry
+
+        #region Persistence
+
+        public bool Load(cCore core)
+        {
+            m_mappings.Clear();
+            m_fishedGroups.Clear();
+            m_externalFleets.Clear();
+
+            string cfgtext = GetConfigBucket(core).Remark;
+
+            m_mappings.Add(MultiLevelKey.Parse("species=SAR", KeyDomain.Species, 5));
+            m_mappings.Add(MultiLevelKey.Parse("species=HKE; stage=juvenile", KeyDomain.Species, 6));
+            m_mappings.Add(MultiLevelKey.Parse("species=HKE; stage=adult", KeyDomain.Species, 7));
+
+            m_mappings.Add(MultiLevelKey.Parse("gearcode=LLN; flag=ES", KeyDomain.FleetSegment, 2));
+
+            m_mappings.Add(MultiLevelKey.Parse("gearcode=LLN; marketcode=ES", KeyDomain.Market, 2));
+
+            for (int iGroup = 1; iGroup <= core.nGroups; iGroup++)
+                if (core.get_EcopathGroupInputs(iGroup).IsFished)
+                    m_fishedGroups.Add(iGroup);
+
+            return true;
+        }
+
+        public bool Save(cCore core)
+        {
+            return true;
+        }
+
+        private cAuxiliaryData GetConfigBucket(cCore core)
+        {
+            cEcospaceModelParameters parms = core.EcospaceModelParameters;
+            return core.get_AuxillaryData("SURIMI_link_" + parms.DBID);
+        }
+
+        #endregion // Persistence
+
+        #region Mappings
+
+        /// <summary>
+        /// Get all item mappings for a specific domain
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <returns></returns>
+        public IEnumerable<MultiLevelKey> Mappings(KeyDomain domain)
+        {
+            foreach (var kvp in m_mappings.Where(n => n.Domain == domain))
+               yield return kvp;
+        }
+
+         /// <summary>
+        /// Set whether fishing by a given gear fleet is managed outside the EwE software.
+        /// </summary>
+        public void SetExternalFleet(int iFleet, bool isExternal)
+        {
+            if (iFleet <= 0) return;
+
+            // Add or remove without needing to check IsExternalFleet first. Also, mind the inconspicious black hole of oblivion '_'
+            _ = isExternal ? m_externalFleets.Add(iFleet) : m_externalFleets.Remove(iFleet);
         }
 
         /// <summary>
-        /// Set the single Ecopath functional group that corresponds to a Species Code.
+        /// Get whether fishing by a given gear fleet is managed outside the EwE software.
         /// </summary>
-        /// <param name="speccode"></param>
-        /// <returns></returns>
-        /// <remarks>
-        /// This mapping should be connected to the EwE taxonomy tables.
-        /// </remarks>
-        public void set_SpeciesGroup(string speccode, int iGroup)
-        {
-            if (string.IsNullOrEmpty(speccode)) return;
-            m_speciesgroup.TryAdd(speccode.ToUpper(), iGroup);
-        }
+        public bool IsExternalFleet(int iFleet) => iFleet > 0 && m_externalFleets.Contains(iFleet);
 
         /// <summary>
-        /// Get the single Species Code that corresponds to an Ecopath functional group.
+        /// Get all externally managed fleets.
         /// </summary>
-        /// <param name="speccode"></param>
-        /// <returns></returns>
-        /// <remarks>
-        /// This mapping should be connected to the EwE taxonomy tables.
-        /// </remarks>
-        /// <seealso cref="get_SpeciesGroup(string)"/>
-        /// <seealso cref="set_SpeciesGroup(string, int)"/>
-        public string get_GroupSpecies(int iGroup)
-        {
-            foreach (string speccode in this.m_speciesgroup.Keys)
-                if (this.m_speciesgroup[speccode] == iGroup)
-                    return speccode;
-            return string.Empty;
-        }
+        public int[] ExternalFleets() => m_externalFleets.ToArray();
 
         /// <summary>
-        /// Get the biomass proportion that a species code contributes to the functional group;
-        /// there may be other species present.
+        /// Get all fished groups.
         /// </summary>
-        /// <param name="speccode"></param>
-        /// <returns></returns>
-        /// <remarks>
-        /// This mapping should be connected to the EwE taxonomy tables - biomass proportion.
-        /// </remarks>
-        public Single get_SpeciesContribution(string speccode)
-        {
-            if (string.IsNullOrEmpty(speccode)) return 0;
-            return m_speciescontribution.TryGetValue(speccode.ToUpper(), out var contribution) ? contribution : 0!;
-        }
+        public int[] FishedGroups() => m_fishedGroups.ToArray();
 
-        /// <summary>
-        /// Set the biomass proportion that a species code contributes to the functional group;
-        /// there may be other species present.
-        /// </summary>
-        /// <param name="speccode"></param>
-        /// <returns></returns>
-        /// <remarks>
-        /// This mapping should be connected to the EwE taxonomy tables - biomass proportion.
-        /// </remarks>
-        public void set_SpeciesContribution(string speccode, Single contribution)
-        {
-            if (string.IsNullOrEmpty(speccode)) return;
-            m_speciescontribution.TryAdd(speccode.ToUpper(), contribution);
-        }
-
-        /// <summary>
-        /// Get an array of all species codes mapped to EwE functional groups.
-        /// </summary>
-        /// <returns></returns>
-        public string[] SpeciesCodes()
-        {
-            //return [.. m_speciesgroup.Keys]; // This is just too ugly. I ain't using this. Bwech.
-            return this.m_speciesgroup.Keys.ToArray();
-        }
-
-        /// <summary>
-        /// Get the Ecopath fleet code assigned to a specific gear code and market code.
-        /// </summary>
-        /// <returns></returns>
-        public int get_GearFleet(string gearcode, string marketcode)
-        {
-            return this.m_gearfleet.TryGetValue(DualKey.Make(gearcode, marketcode), out var group) ? group : 0;
-        }
-
-        /// <summary>
-        /// Set the Ecopath fleet index assigned to a specific gear code and market code.
-        /// </summary>
-        /// <returns></returns>
-        public void set_GearFleet(string gearcode, string marketcode, int iFleet)
-        {
-            m_gearfleet.TryAdd(DualKey.Make(gearcode, marketcode), iFleet);
-        }
-
-        /// <summary>
-        /// Get the gear code assigned to a specific Ecopath fleet index. There can be only one.
-        /// </summary>
-        /// <returns></returns>
-        public string get_FleetGear(int iFleet)
-        {
-            foreach (DualKey k in this.m_gearfleet.Keys)
-                if (this.m_gearfleet[k] == iFleet)
-                    return k.c1;
-            return string.Empty;
-        }
-
-        /// <summary>
-        /// Get the market code assigned to a specific Ecopath fleet index. There can be only one.
-        /// </summary>
-        /// <returns></returns>
-        public string get_FleetMarket(int iFleet)
-        {
-            foreach (DualKey k in this.m_gearfleet.Keys)
-                if (this.m_gearfleet[k] == iFleet)
-                    return k.c2;
-            return string.Empty;
-        }
-
-        /// <summary>
-        /// Get an array of gear codes assigned to Ecopath fleets.
-        /// </summary>
-        /// <returns></returns>
-        public string[] GearCodes()
-        {
-            List<string> gears = new();
-            foreach (DualKey keys in this.m_gearfleet.Keys)
-                gears.Add(keys.c1);
-            return gears.Distinct().ToArray();
-        }
-
-        /// <summary>
-        /// Get an array of market codes assigned to EwE fleets.
-        /// </summary>
-        /// <returns></returns>
-        public string[] MarketCodes()
-        {
-            List<string> markets = new();
-            foreach (DualKey keys in this.m_gearfleet.Keys)
-                markets.Add(keys.c2);
-            return markets.Distinct().ToArray();
-        }
-
-        /// <summary>
-        /// Get an array of market codes that a given gear code sells to.
-        /// </summary>
-        /// <returns></returns>
-        public string[] MarketCodes(string gearcode)
-        {
-            List<string> markets = new();
-            if (!string.IsNullOrEmpty(gearcode))
-            {
-                foreach (DualKey keys in this.m_gearfleet.Keys)
-                    if (string.Compare(gearcode, keys.c1, true) ==0 )
-                    markets.Add(keys.c2);
-            }
-            return markets.Distinct().ToArray();
-        }
-
-        /// <summary>
-        /// Set whether fishing by a given gear code is managed outside the EwE software.
-        /// </summary>
-        /// <returns></returns>
-        public void set_ExternalGear(string gearcode, bool isExternal)
-        { 
-            if (string.IsNullOrEmpty(gearcode)) return;
-            gearcode = gearcode.ToUpper();
-            if (isExternal)
-                this.m_externalGears.Remove(gearcode);
-            else
-                this.m_externalGears.Add(gearcode);
-        }
-
-        /// <summary>
-        /// Get whether fishing by a given gear code is managed outside the EwE software.
-        /// </summary>
-        /// <returns></returns>
-        public bool get_ExternalGear(string gearcode)
-        {
-            if (string.IsNullOrEmpty(gearcode)) return false;
-            return this.m_externalGears.Contains(gearcode.ToUpper());
-        }
-
-        public string[] ExternalGearCodes()
-        {
-            return this.m_externalGears.ToArray(); 
-        }
+        #endregion // Mappings
     }
 }

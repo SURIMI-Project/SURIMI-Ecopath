@@ -1,6 +1,7 @@
 ﻿using Ecopath.Models;
 using EwEBridge.Ecospace;
 using EwECore;
+using EwECore.Auxiliary;
 using EwEPlugin;
 using EwEUtils.Core;
 using System.Diagnostics;
@@ -184,6 +185,9 @@ namespace Ecopath.EwE
                 throw new Exception($"EwE - Ecospace scenario {this.m_configuration.EcospaceScenario} not loaded");
             this.m_logger.LogInformation("EwE - Ecospace scenario {0} loaded", this.m_configuration.EcospaceScenario);
 
+            // Now load the configuration
+            this.m_configuration.Load(this.m_core);
+
             // Configure Ecospace
             cEcospaceDataStructures ds = this.m_core.EcospaceDataStructures;
             ds.SpinUpYears = this.m_configuration.SpinupYears;
@@ -331,24 +335,25 @@ namespace Ecopath.EwE
             var ds = this.m_core.EcopathDataStructures;
 
             foreach (var price in m_pricesIn)
-            {
-                    
-                // ToDo_JS: activate code below
-                int iFleet = 42; // this.m_configuration.get_GearFleet(price.GearCode, price.MarketCode);
-                int iGroup = this.m_configuration.get_SpeciesGroup(price.SpeciesCode);
-                float pr = (float)price.Price;
+            { 
+                int iFleet = m_configuration.ResolveFleet(price.GearCode, price.MarketCode).index;
 
-                // ToDo: implement unit conversions?
-                Debug.Assert(string.Compare(price.Currency, "eur", true) == 0);
-                Debug.Assert(string.Compare(price.MeasuremenyUnit, "kg", true) == 0);
-
-                if (iFleet > 0 && iGroup > 0)
-                    ds.Market[iFleet, iGroup] = (float)price.Price;
-                else
+                foreach (var info in m_configuration.ResolveGroups(price.SpeciesCode))
                 {
-                    // ToDo_JS: decide how to respond to a potential EwE misconfiguration.
-                    //this.m_logger.LogWarning("Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.marketCode, price.SpeciesCode), price);
-                    //throw new Exception("Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.marketCode, price.SpeciesCode);
+                    float pr = (float)price.Price;
+
+                    // ToDo: implement unit conversions?
+                    Debug.Assert(string.Compare(price.Currency, "eur", true) == 0);
+                    Debug.Assert(string.Compare(price.MeasuremenyUnit, "kg", true) == 0);
+
+                    if (iFleet > 0 && info.index > 0)
+                        ds.Market[iFleet, info.index] = (float)price.Price;
+                    else
+                    {
+                        // ToDo_JS: decide how to respond to a potential EwE misconfiguration.
+                        //this.m_logger.LogWarning("Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.marketCode, price.SpeciesCode), price);
+                        //throw new Exception("Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.marketCode, price.SpeciesCode);
+                    }
                 }
             }
 
@@ -363,53 +368,53 @@ namespace Ecopath.EwE
 
             var ds = this.m_core.EcospaceDataStructures;
             var bm = this.m_core.EcospaceBasemap;
-            
+
             foreach (var grid in this.m_catchIn.DispositionGrids)
             {
-                int iGroup = this.m_configuration.get_SpeciesGroup(grid.Species.SpeciesCode);
-                int iFleet = this.m_configuration.get_GearFleet(grid.FleetSegment.GearCode, "???");
-
-                // Conceptual issue here:
-                // - Market code is not specified here because it is not relevant for POSEIDON, EwE needs it to ID the fleet
-
-                // ToDo: validate group and fleet codes
-
-                foreach (var cell in grid.DispositionCells)
+                foreach (var groupinfo in m_configuration.ResolveGroups(grid.Species))
                 {
-                    int ir = (int)Math.Floor(bm.LatToRow((float)cell.Latitude));
-                    int ic = (int)Math.Floor(bm.LonToCol((float)cell.Longitude));
+                    int iGroup = groupinfo.index;
+                    int iFleet = m_configuration.ResolveFleet(grid.FleetSegment).index;
 
-                    if (1 <= ir & ir <= ds.InRow & 1 <= ic & ic <= ds.InCol)
-                        if (ds.Depth[ir, ic] > 0)
-                        {
-                            // Stop this Ecospace fleet from fishing in this cell - should in fact not fish anywhere anymore for this time step!
-                            ds.EffortSpace[iFleet, ir, ic] = 0;
-                            ds.PAreaFished[iFleet][ir, ic] = 0;
+                    // ToDo: validate group and fleet codes
 
-                            float @catch = KgToDensity(cell.GrossCatchBiomass - cell.LiveDiscardsBiomass, ir, ic);
-                            float deaddisc = KgToDensity(cell.DeadDiscardsBiomass, ir, ic);
-                            float available = ds.Bcell[ir, ic, iGroup];
+                    foreach (var cell in grid.DispositionCells)
+                    {
+                        int ir = (int)Math.Floor(bm.LatToRow((float)cell.Latitude));
+                        int ic = (int)Math.Floor(bm.LonToCol((float)cell.Longitude));
 
-                            Debug.Assert(@catch >= 0, "Cannot fish negatively. Would be nice, but sorry, no.");
-                            Debug.Assert(ds.Depth[ir, ic] > 0, "Not a modelled cell?!");
-
-                            if (@catch > available)
+                        if (1 <= ir & ir <= ds.InRow & 1 <= ic & ic <= ds.InCol)
+                            if (ds.Depth[ir, ic] > 0)
                             {
-                                // WHoah!! External fishing is catching more than is available in this cell
-                                throw new Exception(string.Format("EwE controller cannot integrate Catch Disposition {0} kg ({1} t/km2), into cell {2}x{3} ({4}x{5}), only {6} t/km2 available in Ecospace",
-                                    (cell.GrossCatchBiomass - cell.LiveDiscardsBiomass), @catch, cell.Longitude, cell.Latitude, ic, ir, available));
+                                // Stop this Ecospace fleet from fishing in this cell - should in fact not fish anywhere anymore for this time step!
+                                ds.EffortSpace[iFleet, ir, ic] = 0;
+                                ds.PAreaFished[iFleet][ir, ic] = 0;
+
+                                float @catch = KgToDensity(cell.GrossCatchBiomass - cell.LiveDiscardsBiomass, ir, ic);
+                                float deaddisc = KgToDensity(cell.DeadDiscardsBiomass, ir, ic);
+                                float available = ds.Bcell[ir, ic, iGroup];
+
+                                Debug.Assert(@catch >= 0, "Cannot fish negatively. Would be nice, but sorry, no.");
+                                Debug.Assert(ds.Depth[ir, ic] > 0, "Not a modelled cell?!");
+
+                                if (@catch > available)
+                                {
+                                    // WHoah!! External fishing is catching more than is available in this cell
+                                    throw new Exception(string.Format("EwE controller cannot integrate Catch Disposition {0} kg ({1} t/km2), into cell {2}x{3} ({4}x{5}), only {6} t/km2 available in Ecospace",
+                                        (cell.GrossCatchBiomass - cell.LiveDiscardsBiomass), @catch, cell.Longitude, cell.Latitude, ic, ir, available));
+                                }
+
+                                // Leave some tiny biomass in the cell; fisheries cannot catch it all (and Ecospace does not like divisions by zero)
+                                @catch = (float)Math.Max(1E-10, available - @catch);
+
+                                ds.Bcell[ir, ic, iGroup] = @catch;
+                                ds.CatchMap[ir, ic, iGroup] += @catch;
+                                ds.CatchFleetMap[ir, ic, iFleet] += @catch;
+                                ds.Landings[iFleet, iGroup] += @catch;
+                                ds.DiscardsMap[ir, ic, iFleet] += deaddisc;
+                                ds.ResultsByFleetGroup[(int)eSpaceResultsFleetsGroups.CatchBio, iFleet, iGroup, iTime] += @catch;
                             }
-
-                            // Leave some tiny biomass in the cell; fisheries cannot catch it all (and Ecospace does not like divisions by zero)
-                            @catch = (float)Math.Max(1E-10, available - @catch);
-
-                            ds.Bcell[ir, ic, iGroup] = @catch;
-                            ds.CatchMap[ir, ic, iGroup] += @catch;
-                            ds.CatchFleetMap[ir, ic, iFleet] += @catch;
-                            ds.Landings[iFleet, iGroup] += @catch;
-                            ds.DiscardsMap[ir, ic, iFleet] += deaddisc;
-                            ds.ResultsByFleetGroup[(int)eSpaceResultsFleetsGroups.CatchBio, iFleet, iGroup, iTime] += @catch;
-                        }
+                    }
                 }
             }
             this.m_catchIn = null;
@@ -430,34 +435,32 @@ namespace Ecopath.EwE
                 cEcospaceDataStructures ds = this.m_core.EcospaceDataStructures;
                 cEcospaceBasemap bm = this.m_core.EcospaceBasemap;
 
-                foreach (string spp in this.m_configuration.SpeciesCodes())
+                foreach (MultiLevelKey key in this.m_configuration.Mappings(KeyDomain.Species))
                 {
-                    BiomassGrid grid = new BiomassGrid()
+                    Species? species = key.ToObject<Ecopath.Models.Species>();
+                    if (species != null)
                     {
-                        Species = new()
+                        BiomassGrid grid = new BiomassGrid()
                         {
-                            SpeciesCode = spp,
-                            Length = "",
-                            Age = "",
-                            Stage = ""
-                        }
-                    };
-                    int iGroup = this.m_configuration.get_SpeciesGroup(spp);
-                    Single sppProp = this.m_configuration.get_SpeciesContribution(spp);
+                            Species = species
+                        };
+                        int iGroup = key.Index;
+                        float sppProp = key.Propertion;
 
-                    for (int ic = 1; ic <= ds.InCol; ic++)
-                        for (int ir = 1; ir <= ds.InRow; ir++)
-                            if (ds.Depth[ir, ic] > 0)
-                            {
-                                grid.BiomassCells.Add(new BiomassCell()
+                        for (int ic = 1; ic <= ds.InCol; ic++)
+                            for (int ir = 1; ir <= ds.InRow; ir++)
+                                if (ds.Depth[ir, ic] > 0)
                                 {
-                                    Latitude = bm.RowToLat(ir),
-                                    Longitude = bm.ColToLon(ic),
-                                    // Express biomass of group proportion in kg at timestep units (not annual)
-                                    Biomass = DensityToKg(ds.Bcell[ir, ic, iGroup], ir, ic) * sppProp * ds.TimeStep
-                                });
-                            }
-                    this.m_biomassOut.BiomassGrids.Add(grid);
+                                    grid.BiomassCells.Add(new BiomassCell()
+                                    {
+                                        Latitude = bm.RowToLat(ir),
+                                        Longitude = bm.ColToLon(ic),
+                                        // Express biomass of group proportion in kg at timestep units (not annual)
+                                        Biomass = DensityToKg(ds.Bcell[ir, ic, iGroup], ir, ic) * sppProp * ds.TimeStep
+                                    });
+                                }
+                        this.m_biomassOut.BiomassGrids.Add(grid);
+                    }
                 }
             }
         }
@@ -479,76 +482,74 @@ namespace Ecopath.EwE
 
             if (this.m_configuration == null) return;
 
-            // For summing up sales
-            Dictionary<DualKey, double> salesVolume = new();
-            Dictionary<DualKey, double> salesValue = new();
-
             cEcopathDataStructures ecopathds = this.m_core.EcopathDataStructures;
             cEcospaceDataStructures spaceds = this.m_core.EcospaceDataStructures;
             cEcospaceBasemap bm = this.m_core.EcospaceBasemap;
-            List<int> fished = new();
 
-            for (int iGroup = 1; iGroup <= this.m_core.nGroups; iGroup++)
-                if (this.m_core.get_EcopathGroupInputs(iGroup).IsFished)
-                    fished.Add(iGroup);
+            // Tally absolute sales over all catch dispositions
+            Dictionary<(int Group, int Fleet), (double Volume, double Value)> TotalSales = new();
+            HashSet<int> markets = new();
 
-            foreach (int iGroup in fished)
+            foreach (int iGroup in this.m_configuration.FishedGroups())
             {
-                string speccode = this.m_configuration.get_GroupSpecies(iGroup);
-                var sppProp = this.m_configuration.get_SpeciesContribution(speccode);
+                MultiLevelKey? mlkGroup = this.m_configuration.Find(iGroup, KeyDomain.Species);
+                float sppProp = mlkGroup?.Propertion ?? 0;
 
-                foreach (string gearcode in this.m_configuration.GearCodes())
+                for (int iFleet = 1; iFleet <= this.m_core.nFleets; iFleet++)
                 {
-                    // Is fleet managed by EwE?
-                    if (this.m_configuration.get_ExternalGear(gearcode) == false)
+                    // Only report fleets fished by EwE
+                    if (!this.m_configuration.IsExternalFleet(iFleet))
                     {
                         // Tally up the catch dispositions for all the markets this gear code caters to
-                        string[] markets = this.m_configuration.MarketCodes(gearcode);
+                        MultiLevelKey? mlkFleet = this.m_configuration.Find(iFleet, KeyDomain.FleetSegment);
+                        MultiLevelKey? mlkMarket = this.m_configuration.Find(iFleet, KeyDomain.Market);
+
+                        string market = mlkMarket?.Fields["marketcode"] ?? string.Empty;
 
                         double[,] catches = new double[spaceds.InRow + 1, spaceds.InCol + 1];
                         double[,] deaddisc = new double[spaceds.InRow + 1, spaceds.InCol + 1];
                         double[,] livedisc = new double[spaceds.InRow + 1, spaceds.InCol + 1];
                         bool bHasData = false;
 
-                        foreach (string marketcode in markets)
-                        {
-                            int iFleet = this.m_configuration.get_GearFleet(gearcode, marketcode);
-                            if (ecopathds.Landing[iFleet, iGroup] + ecopathds.Discard[iFleet, iGroup] > 0)
-                                for (int ir = 1; ir <= spaceds.InRow; ir++)
-                                    for (int ic = 1; ic <= spaceds.InCol; ic++)
-                                        if (spaceds.Depth[ir, ic] > 0)
-                                        {
-                                            // Convert EwE annual densities to monthly absolutes
-                                            double cellCatchesAbs = DensityToKg(spaceds.CatchGroupFleetMap[iFleet, iGroup][ir, ic], ir, ic) * sppProp * spaceds.TimeStep;
-                                            double cellLiveDiscAbs = DensityToKg(spaceds.DiscardSurviveGroupFleetMap[iFleet, iGroup][ir, ic], ir, ic) * sppProp * spaceds.TimeStep;
-                                            double cellDeadDiscAbs = DensityToKg(spaceds.DiscardMortGroupFleetMap[iFleet, iGroup][ir, ic], ir, ic) * sppProp * spaceds.TimeStep;
+                        if (ecopathds.Landing[iFleet, iGroup] + ecopathds.Discard[iFleet, iGroup] > 0)
+                            for (int ir = 1; ir <= spaceds.InRow; ir++)
+                                for (int ic = 1; ic <= spaceds.InCol; ic++)
+                                    if (spaceds.Depth[ir, ic] > 0)
+                                    {
+                                        // Convert EwE annual densities to monthly absolutes
+                                        double cellCatchesAbs = DensityToKg(spaceds.CatchGroupFleetMap[iFleet, iGroup][ir, ic], ir, ic) * sppProp * spaceds.TimeStep;
+                                        double cellLiveDiscAbs = DensityToKg(spaceds.DiscardSurviveGroupFleetMap[iFleet, iGroup][ir, ic], ir, ic) * sppProp * spaceds.TimeStep;
+                                        double cellDeadDiscAbs = DensityToKg(spaceds.DiscardMortGroupFleetMap[iFleet, iGroup][ir, ic], ir, ic) * sppProp * spaceds.TimeStep;
 
-                                            // Tally sales
-                                            DualKey dk = DualKey.Make(marketcode, speccode);
-                                            if (!salesVolume.ContainsKey(dk))
-                                            {
-                                                salesVolume[dk] = 0;
-                                                salesValue[dk] = 0;
-                                            }
-                                            salesVolume[dk] += (cellCatchesAbs - cellDeadDiscAbs);
-                                            salesValue[dk] += (cellCatchesAbs - cellDeadDiscAbs) * ecopathds.Market[iFleet, iGroup];
+                                        // Tally sales. I'm sure this can be done more elegantly but hey
+                                        (int Group, int Fleet) salekey = new();
+                                        (double Volume, double Value) saleTot = new(0, 0);
+                                        if (TotalSales.ContainsKey(salekey))
+                                            saleTot = TotalSales[salekey];
+                                        else
+                                            TotalSales[salekey] = saleTot;
+                                        saleTot.Volume += (cellCatchesAbs - cellDeadDiscAbs);
+                                        saleTot.Value += (cellCatchesAbs - cellDeadDiscAbs) * ecopathds.Market[iFleet, iGroup];
 
-                                            // Prepare catch deposition. Note that EwE catches do NOT include live discards
-                                            // ToDo_JS: Decide on the below. What is the framework expecting? 
-                                            // cellCatchesAbs += cellLiveDiscAbs;
+                                        // Prepare catch deposition. Note that EwE catches do NOT include live discards
+                                        // ToDo_JS: Decide on the below. What is the framework expecting? 
+                                        // cellCatchesAbs += cellLiveDiscAbs;
 
-                                            catches[ir, ic] += cellCatchesAbs;
-                                            livedisc[ir, ic] += cellLiveDiscAbs;
-                                            deaddisc[ir, ic] += cellDeadDiscAbs;
-                                            bHasData = true;
-                                        }
-                        }
+                                        catches[ir, ic] += cellCatchesAbs;
+                                        livedisc[ir, ic] += cellLiveDiscAbs;
+                                        deaddisc[ir, ic] += cellDeadDiscAbs;
+                                        bHasData = true;
+                                    }
 
                         // Finally prepare data for the framework
                         if (bHasData)
                         {
                             // Prepare disposition grid
-                            var grid = new DispositionGrid() { FleetSegment = new FleetSegment() { GearCode = gearcode, flag = "TODO" }, Species = new Species() { SpeciesCode = speccode } };
+                            var grid = new DispositionGrid()
+                            {
+                                FleetSegment = mlkMarket?.ToObject<Ecopath.Models.FleetSegment>() ,
+                                Species = mlkGroup?.ToObject<Ecopath.Models.Species>()
+                            };
                             for (int ir = 1; ir <= spaceds.InRow; ir++)
                                 for (int ic = 1; ic <= spaceds.InCol; ic++)
                                     if (spaceds.Depth[ir, ic] > 0)
@@ -557,7 +558,6 @@ namespace Ecopath.EwE
                                         {
                                             Latitude = bm.RowToLat(ir),
                                             Longitude = bm.ColToLon(ic),
-                                            // Express catch stats of group proportion in kg at timestep units (not annual)
 
                                             GrossCatchBiomass = catches[ir, ic],
                                             LiveDiscardsBiomass = livedisc[ir, ic],
@@ -571,38 +571,43 @@ namespace Ecopath.EwE
             }
 
             // Prepare sales
-            foreach (string marketcode in this.m_configuration.MarketCodes())
+            for (int iFleet = 1; iFleet <= this.m_core.nFleets; iFleet++)
             {
-                var sales = new SalesSummary()
+                // Only report fleets fished by EwE
+                if (!this.m_configuration.IsExternalFleet(iFleet))
                 {
-                    MarketId = marketcode,
-                    MeasurementUnit = "kg",
-                    Currency = "EUR", // No conversion here
-                    Sales = new List<Sale>()
-                };
-                foreach (string speccode in this.m_configuration.SpeciesCodes())
-                {
-                    DualKey dk = DualKey.Make(marketcode, speccode);
-                    if (salesVolume.ContainsKey(dk))
+                    MultiLevelKey? mlkFleet = this.m_configuration.Find(iFleet, KeyDomain.FleetSegment);
+                    MultiLevelKey? mlkMarket = this.m_configuration.Find(iFleet, KeyDomain.Market);
+                    var sales = new SalesSummary()
                     {
-                        Sale s = new Sale()
+                        MarketId = mlkMarket?.Fields["marketcode"] ?? string.Empty,
+                        MeasurementUnit = "kg",
+                        Currency = "EUR", // No conversion here
+                        Sales = new List<Sale>()
+                    };
+                    foreach ((int Group, int Fleet) saleKey in TotalSales.Keys.Where(k => k.Fleet == iFleet))
+                    {
+                        MultiLevelKey? mlkSpecies = this.m_configuration.Find(saleKey.Group, KeyDomain.Species);
+                        if (TotalSales.TryGetValue(saleKey, out var saleTot))
                         {
-                            SpeciesCode = speccode,
-                            Quantity = salesVolume[dk],
-                            Value = salesValue[dk]
-                        };
-                        salesVolume.Remove(dk);
-                        salesValue.Remove(dk);
-                        sales.Sales.Add(s);
+                            Sale s = new Sale()
+                            {
+                                GearCode = mlkFleet?.Fields["gearcode"] ?? string.Empty,
+                                SpeciesCode = mlkSpecies?.Fields["speciescde"] ?? string.Empty,
+                                Quantity = saleTot.Volume,
+                                Value = saleTot.Value
+                            };
+                            sales.Sales.Add(s);
+                        }
                     }
+                    this.m_salesOut.Add(sales);
                 }
-                this.m_salesOut.Add(sales);
-            }
 
-            // Sanity check
-            if (salesValue.Keys.Count() > 0)
-            {
-                throw new Exception("There are {0} unexpected sales record(s). Please kick the EwE developers.");
+                //// Sanity check
+                //if (salesValue.Keys.Count() > 0)
+                //{
+                //    throw new Exception("There are {0} unexpected sales record(s). Please kick the EwE developers.");
+                //}
             }
         }
 
@@ -766,5 +771,6 @@ namespace Ecopath.EwE
         }
 
         #endregion // Internal - EwE interactions
+
     }
 }

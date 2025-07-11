@@ -25,9 +25,10 @@ namespace Ecopath.Services
             var speciesPrices = request.Prices
                 .Select(p => new Models.SpeciesPrice
                 {
-                    // Note that the market does not distinguish species sizes, ages and lengths. This is by design but may have to be revisited
-                    // It feels as an oversight not at least facilitating this detail
+                    // Note that the market does not distinguish species sizes, ages and lengths, and ignores gear specifics other than gearcode.
+                    // Although this is by design but may have to be revisited; the limitations seem like an oversight.
                     SpeciesCode = p.Species.SpeciesCode,
+                    GearCode = p.GearCode,
                     Price = p.Price,
                     Currency = p.Currency,
                     MeasuremenyUnit = p.MeasurementUnit,
@@ -56,18 +57,23 @@ namespace Ecopath.Services
                     {
                         MarketCode = summary.MarketId,
                         MeasurementUnit = summary.MeasurementUnit,
-                        Currency = summary.Currency
+                        Currency = summary.Currency,
                     };
 
                     if (summary.Sales != null)
                     {
                         grpcSummary.Sales.AddRange(summary.Sales.Select(sale => new Sale
                         {
+                            // WHY DO WE DEFINE NEAR EMPTY OBJECTS HERE, WHILE ONLY CODES IN UpdateSpeciesPrices? THIS SHOULD FOLLW THE SAME LOGIC
                             Species = new Species
                             {
-                                // Note that the market does not distinguish species sizes, ages and lengths. This is by design but may have to be revisited
-                                // It feels as an oversight not at least facilitating this detail
+                                // Note that the market does not distinguish species sizes, ages and lengths, and ignores gear specifics other than gearcode.
+                                // Although this is by design but may have to be revisited; the limitations seem like an oversight.
                                 SpeciesCode = sale.SpeciesCode
+                            },
+                            FleetSegment = new FleetSegment()
+                            {
+                                GearCode = sale.GearCode,
                             },
                             Quantity = sale.Quantity,
                             Value = sale.Value,
