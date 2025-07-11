@@ -49,7 +49,8 @@ namespace Ecopath.EwE
             EcosimTimeSeries = 0;
             EcospaceScenario = 1;
             SpinupYears = 10;
-            StartYear = 13;
+            StartYear = 2013; // The year that the simulation starts
+            MaxRunYears = 25;
         }
 
 
@@ -61,6 +62,60 @@ namespace Ecopath.EwE
         public int StartYear { get; set; } = 0;
         public int MaxRunYears { get; set; } = 400;
 
+        #region Persistence
+
+        public bool Load(cCore core)
+        {
+            m_mappings.Clear();
+            m_fishedGroups.Clear();
+            m_externalFleets.Clear();
+
+            string cfgtext = GetConfigBucket(core).Remark;
+
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:MTS", KeyDomain.Species, 10));                         // Spottail mantis shrimp
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:NEP", KeyDomain.Species, 5));                          // Norway lobster
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:ARS", KeyDomain.Species, 5));                          // Spanish red shrimp
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=EwE:OtherShrimp", KeyDomain.Species, 6));                    // !! Must decide how to expose. Only most important, eg Red Shrimp?
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=EwE:Crabs", KeyDomain.Species, 7));                          // !! Must decide how to expose. Only most important?
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=EwE:MUT; stage=juvenile", KeyDomain.Species, 22));           // Mullet (j)
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=EwE:MUT; stage=adult", KeyDomain.Species, 23));              // Mullet (a)
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:WHB", KeyDomain.Species, 24));                         // Blue Whting
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:HKE; stage=DwC:juvenile", KeyDomain.Species, 26));     // European Hake (j)
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:HKE; stage=DwC:adult", KeyDomain.Species, 27));        // European Hake (a)
+
+            m_mappings.Add(MultiLevelKey.Parse("gearcode=TB; flag=ESP", KeyDomain.FleetSegment, 1));
+            m_mappings.Add(MultiLevelKey.Parse("gearcode=PS; flag=ESP", KeyDomain.FleetSegment, 2));
+            m_mappings.Add(MultiLevelKey.Parse("gearcode=LL; flag=ESP", KeyDomain.FleetSegment, 3));
+            m_mappings.Add(MultiLevelKey.Parse("gearcode=EwE:Artisanal; flag=ESP", KeyDomain.FleetSegment, 4));
+            m_mappings.Add(MultiLevelKey.Parse("gearcode=PS; flag=ESP", KeyDomain.FleetSegment, 2));
+
+            m_mappings.Add(MultiLevelKey.Parse("gearcode=TB; flag=FRA", KeyDomain.FleetSegment, 5));
+            m_mappings.Add(MultiLevelKey.Parse("gearcode=TM; flag=FRA", KeyDomain.FleetSegment, 6));
+            m_mappings.Add(MultiLevelKey.Parse("gearcode=PS; flag=FRA", KeyDomain.FleetSegment, 7));
+            m_mappings.Add(MultiLevelKey.Parse("gearcode==EwE:Artisanal; flag=FRA", KeyDomain.FleetSegment, 8));
+            m_mappings.Add(MultiLevelKey.Parse("gearcode==EwE:Recreational; flag=FRA", KeyDomain.FleetSegment, 9));
+
+            m_mappings.Add(MultiLevelKey.Parse("gearcode=LLN; marketcode=ES", KeyDomain.Market, 2));
+
+            for (int iGroup = 1; iGroup <= core.nGroups; iGroup++)
+                if (core.get_EcopathGroupInputs(iGroup).IsFished)
+                    m_fishedGroups.Add(iGroup);
+
+            return true;
+        }
+
+        public bool Save(cCore core)
+        {
+            return true;
+        }
+
+        private cAuxiliaryData GetConfigBucket(cCore core)
+        {
+            cEcospaceModelParameters parms = core.EcospaceModelParameters;
+            return core.get_AuxillaryData("SURIMI_link_" + parms.DBID);
+        }
+
+        #endregion // Persistence
 
         #region Consulting the registry
 
@@ -107,44 +162,6 @@ namespace Ecopath.EwE
         }
 
         #endregion // Consulting the registry
-
-        #region Persistence
-
-        public bool Load(cCore core)
-        {
-            m_mappings.Clear();
-            m_fishedGroups.Clear();
-            m_externalFleets.Clear();
-
-            string cfgtext = GetConfigBucket(core).Remark;
-
-            m_mappings.Add(MultiLevelKey.Parse("species=SAR", KeyDomain.Species, 5));
-            m_mappings.Add(MultiLevelKey.Parse("species=HKE; stage=juvenile", KeyDomain.Species, 6));
-            m_mappings.Add(MultiLevelKey.Parse("species=HKE; stage=adult", KeyDomain.Species, 7));
-
-            m_mappings.Add(MultiLevelKey.Parse("gearcode=LLN; flag=ES", KeyDomain.FleetSegment, 2));
-
-            m_mappings.Add(MultiLevelKey.Parse("gearcode=LLN; marketcode=ES", KeyDomain.Market, 2));
-
-            for (int iGroup = 1; iGroup <= core.nGroups; iGroup++)
-                if (core.get_EcopathGroupInputs(iGroup).IsFished)
-                    m_fishedGroups.Add(iGroup);
-
-            return true;
-        }
-
-        public bool Save(cCore core)
-        {
-            return true;
-        }
-
-        private cAuxiliaryData GetConfigBucket(cCore core)
-        {
-            cEcospaceModelParameters parms = core.EcospaceModelParameters;
-            return core.get_AuxillaryData("SURIMI_link_" + parms.DBID);
-        }
-
-        #endregion // Persistence
 
         #region Mappings
 

@@ -1,7 +1,6 @@
 ﻿using Ecopath.Models;
 using EwEBridge.Ecospace;
 using EwECore;
-using EwECore.Auxiliary;
 using EwEPlugin;
 using EwEUtils.Core;
 using System.Diagnostics;
@@ -57,6 +56,10 @@ namespace Ecopath.EwE
         private Biomass? m_biomassOut;
         private CatchDispositionSummary? m_catchOut;
         private List<SalesSummary> m_salesOut = new();
+
+        // --- Internal tracking
+        private int m_nSpinUpSteps = 0;
+        private int m_iSpinUpStep = 0;
 
         #endregion // Private vars 
 
@@ -119,6 +122,7 @@ namespace Ecopath.EwE
             {
                 if (this.m_runstate != value)
                 {
+                    Console.WriteLine("Run state set to " + value.ToString());
                     this.m_runstate = value;
                     this.OnRunStateChanged?.Invoke(this.m_runstate);
                 }
@@ -137,7 +141,7 @@ namespace Ecopath.EwE
         /// Start EwE and wait for Ecospace to get ready for simulations
         /// </summary>
         /// <returns></returns>
-        public async Task<int> StartAsync(EwEConfiguration config, int timeoutMs = 60000)
+        public async Task<int> StartAsync(EwEConfiguration config, int timeoutMs = 60 * 10 * 1000)
         {
             // Check readiness
             if (RunState != RunStates.idle)
@@ -152,7 +156,7 @@ namespace Ecopath.EwE
                 throw new FileNotFoundException("EwE model file '{0}' cannot be found", this.m_configuration.ModelName); 
             if (!this.m_core.LoadModel(m_configuration.ModelName))
                 throw new Exception($"EwE could not load model '{this.m_configuration.ModelName}'");
-            this.m_logger.LogInformation("EwE - Ecopath loaded model '{0}'", this.m_configuration.ModelName);
+            this.m_logger.LogInformation("EwE - Ecopath loaded file '{0}', model '{1}'", this.m_configuration.ModelName, this.m_core.EcopathDataStructures.ModelName);
 
             // Check Ecopath balancing
             bool bIsBalanced = false;
@@ -176,6 +180,7 @@ namespace Ecopath.EwE
             parms.NumberYears = this.m_configuration.MaxRunYears; // No of years apply to both Sim and Space
 
             // Run Ecosim
+            this.m_logger.LogInformation("EwE - Going to run Ecosim for {0} years", parms.NumberYears);
             if (!this.m_core.RunEcosim())
                 throw new Exception("EwE - Ecosim failed to run");
             this.m_logger.LogInformation("EwE - Ecosim run successfully");
@@ -187,6 +192,10 @@ namespace Ecopath.EwE
 
             // Now load the configuration
             this.m_configuration.Load(this.m_core);
+            this.m_logger.LogInformation("EwE - exposed {0} group(s), {1} fleet(s) and {2} market(s) to gRPC",
+                this.m_configuration.Mappings(KeyDomain.Species).Count(), 
+                this.m_configuration.Mappings(KeyDomain.FleetSegment).Count(), 
+                this.m_configuration.Mappings(KeyDomain.Market).Count());
 
             // Configure Ecospace
             cEcospaceDataStructures ds = this.m_core.EcospaceDataStructures;
@@ -207,9 +216,19 @@ namespace Ecopath.EwE
             this.m_thread = new Thread(RunEcospace);
             this.m_thread.Start();
 
-            var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMs));
+            // Set spin-up period trackers. Needed because we need to look one time step ahead for pausing
+            this.m_nSpinUpSteps = ds.UseSpinUp ? (int)(ds.SpinUpYears / ds.TimeStep) : 0;
+            this.m_iSpinUpStep = 0;
+
+            var completedTask = await Task.WhenAny(tcs.Task); //, Task.Delay(timeoutMs ));
             OnRunStateChanged -= Handler;
 
+            if (completedTask != tcs.Task)
+            {
+                // We hit a timeout; need to log that
+                this.m_logger.LogInformation("EwE - Ecospace initialization timed out; this run is dead in the water");
+                this.ForceStop();
+            }
             // Ready when running Ecospace is waiting for further instructions
             return (RunState == RunStates.waiting) ? 1 : -1;
         }
@@ -709,10 +728,11 @@ namespace Ecopath.EwE
                         break;
 
                     case cEcospaceBridgePlugin.EventType.BeginRun:
-                        // NOP
                         break;
 
                     case cEcospaceBridgePlugin.EventType.BeginTimeStep:
+                        // Tick
+                        this.m_iSpinUpStep += 1;
                         // Prices need to be integerated into the start of a time step for EwE effort distributions
                         this.IntegratePrices();
                         break;
@@ -723,13 +743,13 @@ namespace Ecopath.EwE
 
                     case cEcospaceBridgePlugin.EventType.EndTimeStep:
 
-                        // Prepare data for sending out
-                        this.CacheBiomassData();
-                        this.CacheCatchAndSalesData();
-
                         // Do we need to pause at the start of the next time step?
-                        if (this.MustPause(iTime + 1))
+                        if (this.MustPauseNext(iTime + 1))
                         {
+                            // Prepare data for sending out
+                            this.CacheBiomassData();
+                            this.CacheCatchAndSalesData();
+
                             this.m_logger.LogInformation("EwE - pausing at timestep {0}", iTime + 1);
                             this.RunState = RunStates.waiting;
                             this.m_core.EcospacePaused = true;
@@ -761,11 +781,11 @@ namespace Ecopath.EwE
             }
         }
 
-        private bool MustPause(int iTime)
+        private bool MustPauseNext(int iTime)
         {
             // Do not halt while in spin-up
             cEcospaceDataStructures ds = m_core.EcospaceDataStructures;
-            if (ds.bInSpinUp) return false;
+            if (m_iSpinUpStep + 1 < m_nSpinUpSteps) return false;
             DateTime dt = this.m_core.EcospaceTimestepToAbsoluteTime(iTime);
             return (dt.Year >= m_configuration?.StartYear);
         }

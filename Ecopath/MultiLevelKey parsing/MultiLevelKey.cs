@@ -12,6 +12,9 @@ public enum KeyDomain
 /// </summary>
 public class MultiLevelKey
 {
+
+    // ToDo: enforce lowercase field names through property access; hide dictionary
+
     public Dictionary<string, string> Fields { get; set; } = new();
     public KeyDomain Domain { get; set; }
     public int Index { get; set; }
@@ -47,7 +50,7 @@ public class MultiLevelKey
         var fields = new Dictionary<string, string>();
 
         var obj = Activator.CreateInstance(typeof(T));
-        if (obj  != null) 
+        if (obj != null)
         {
             var props = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
             foreach (var prop in props)
@@ -55,9 +58,15 @@ public class MultiLevelKey
                 if (prop != null)
                 {
                     if (prop.CanWrite && prop.PropertyType == typeof(string))
-                        prop.SetValue(obj, Fields.TryGetValue(prop.Name, out var value) ? value : string.Empty);
-                }
+                    {
+                        string? val = "";
+                        if (Fields.TryGetValue(prop.Name.ToLower(), out val))
+                            prop.SetValue(obj, val);
+                        else
+                            prop.SetValue(obj, string.Empty);
 
+                    }
+                }
             }
         }
         return (T?)obj;
@@ -78,7 +87,14 @@ public class MultiLevelKey
         {
             var parts = kvpair.Split('=');
             if (parts.Length == 2)
+            {
+                if (parts[1].Contains(':'))
+                {
+                    // For now remove standard classifiers
+                    parts[1] = parts[1].Substring(parts[1].IndexOf(':') + 1);
+                }
                 key.Fields[parts[0].Trim()] = parts[1].Trim();
+            }
         }
         return key;
     }
