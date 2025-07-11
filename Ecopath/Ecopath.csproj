@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="MultiLevelKey parsing\Fields\AliasFieldMatcher.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="BSR.Surimi.Surimi-Protocol.Grpc.Csharp" Version="1.73.10101.13+01790b97f17e" />
     <PackageReference Include="Google.Api.CommonProtos" Version="2.16.0" />
     <PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />

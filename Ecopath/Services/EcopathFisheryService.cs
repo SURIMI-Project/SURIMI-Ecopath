@@ -53,7 +53,7 @@ namespace Ecopath.Services
                             FleetSegment = new FleetSegment
                             {
                                 GearCode = grid.FleetSegment.GearCode ?? string.Empty,
-                                Flag = grid.FleetSegment.flag ?? string.Empty
+                                Flag = grid.FleetSegment.Flag ?? string.Empty
                             }
                         };
                         if (grid.DispositionCells != null)
@@ -91,7 +91,7 @@ namespace Ecopath.Services
                     FleetSegment = new Ecopath.Models.FleetSegment
                     {
                         GearCode = grid.FleetSegment.GearCode,
-                        flag = grid.FleetSegment.Flag
+                        Flag = grid.FleetSegment.Flag ?? string.Empty
                     },
                     Species = new Ecopath.Models.Species
                     {
