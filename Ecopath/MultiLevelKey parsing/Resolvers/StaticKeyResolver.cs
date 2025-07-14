@@ -17,8 +17,30 @@ public class StaticKeyResolver : IKeyResolver
 
     public IEnumerable<(int index, int score, float propertion)> FindAllMatches(MultiLevelKey key, KeyDomain domain)
     {
-        foreach (var kvp in m_mappings.Where(n => n.Domain == domain))
-            if (kvp.Fields.OrderBy(k => k.Key).SequenceEqual(key.Fields.OrderBy(k => k.Key)))
+        var fieldsB = key.FieldNames().OrderBy(f => f).ToList();
+
+        foreach (var kvp in m_mappings)
+        {
+            if (kvp.Domain != domain)
+                continue;
+
+            var fieldsA = kvp.FieldNames().OrderBy(f => f).ToList();
+
+            if (fieldsA.Count != fieldsB.Count)
+                continue;
+
+            bool allEqual = true;
+            for (int i = 0; i < fieldsA.Count; i++)
+            {
+                if (fieldsA[i] != fieldsB[i] || kvp.GetField(fieldsA[i]) != key.GetField(fieldsB[i]))
+                {
+                    allEqual = false;
+                    break;
+                }
+            }
+
+            if (allEqual)
                 yield return (kvp.Index, 1, kvp.Propertion);
+        }
     }
 }

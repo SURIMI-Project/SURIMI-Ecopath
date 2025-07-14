@@ -122,7 +122,7 @@ namespace Ecopath.EwE
             {
                 if (this.m_runstate != value)
                 {
-                    Console.WriteLine("Run state set to " + value.ToString());
+                    //Console.WriteLine("Run state set to " + value.ToString());
                     this.m_runstate = value;
                     this.OnRunStateChanged?.Invoke(this.m_runstate);
                 }
@@ -201,7 +201,7 @@ namespace Ecopath.EwE
             cEcospaceDataStructures ds = this.m_core.EcospaceDataStructures;
             ds.SpinUpYears = this.m_configuration.SpinupYears;
             ds.UseSpinUp = (this.m_configuration.SpinupYears > 0);
-            this.m_logger.LogInformation("EwE - Ecospace spin-up {0}", ds.UseSpinUp ? this.m_configuration.SpinupYears.ToString() : "off");
+            this.m_logger.LogInformation("EwE - Ecospace spin-up for {0} years", ds.UseSpinUp ? this.m_configuration.SpinupYears.ToString() : "off");
 
             // Start running Ecospace up to the point where intended simulations begin
             var tcs = new TaskCompletionSource();
@@ -216,7 +216,7 @@ namespace Ecopath.EwE
             this.m_thread = new Thread(RunEcospace);
             this.m_thread.Start();
 
-            // Set spin-up period trackers. Needed because we need to look one time step ahead for pausing
+            // Set spin-up progress trackers. Needed because we need to look one time step ahead for pausing
             this.m_nSpinUpSteps = ds.UseSpinUp ? (int)(ds.SpinUpYears / ds.TimeStep) : 0;
             this.m_iSpinUpStep = 0;
 
@@ -523,7 +523,7 @@ namespace Ecopath.EwE
                         MultiLevelKey? mlkFleet = this.m_configuration.Find(iFleet, KeyDomain.FleetSegment);
                         MultiLevelKey? mlkMarket = this.m_configuration.Find(iFleet, KeyDomain.Market);
 
-                        string market = mlkMarket?.Fields["marketcode"] ?? string.Empty;
+                        string market = mlkMarket?.GetField("marketcode") ?? string.Empty;
 
                         double[,] catches = new double[spaceds.InRow + 1, spaceds.InCol + 1];
                         double[,] deaddisc = new double[spaceds.InRow + 1, spaceds.InCol + 1];
@@ -566,7 +566,7 @@ namespace Ecopath.EwE
                             // Prepare disposition grid
                             var grid = new DispositionGrid()
                             {
-                                FleetSegment = mlkMarket?.ToObject<Ecopath.Models.FleetSegment>() ,
+                                FleetSegment = mlkMarket?.ToObject<Ecopath.Models.FleetSegment>(),
                                 Species = mlkGroup?.ToObject<Ecopath.Models.Species>()
                             };
                             for (int ir = 1; ir <= spaceds.InRow; ir++)
@@ -599,7 +599,7 @@ namespace Ecopath.EwE
                     MultiLevelKey? mlkMarket = this.m_configuration.Find(iFleet, KeyDomain.Market);
                     var sales = new SalesSummary()
                     {
-                        MarketId = mlkMarket?.Fields["marketcode"] ?? string.Empty,
+                        MarketId = mlkMarket?.GetField("marketcode") ?? string.Empty,
                         MeasurementUnit = "kg",
                         Currency = "EUR", // No conversion here
                         Sales = new List<Sale>()
@@ -611,8 +611,8 @@ namespace Ecopath.EwE
                         {
                             Sale s = new Sale()
                             {
-                                GearCode = mlkFleet?.Fields["gearcode"] ?? string.Empty,
-                                SpeciesCode = mlkSpecies?.Fields["speciescde"] ?? string.Empty,
+                                GearCode = mlkFleet?.GetField("gearcode") ?? string.Empty,
+                                SpeciesCode = mlkSpecies?.GetField("speciescde") ?? string.Empty,
                                 Quantity = saleTot.Volume,
                                 Value = saleTot.Value
                             };
@@ -731,10 +731,22 @@ namespace Ecopath.EwE
                         break;
 
                     case cEcospaceBridgePlugin.EventType.BeginTimeStep:
-                        // Tick
-                        this.m_iSpinUpStep += 1;
                         // Prices need to be integerated into the start of a time step for EwE effort distributions
                         this.IntegratePrices();
+
+                        cEcospaceDataStructures ds = this.m_core.EcospaceDataStructures;
+                        if (ds.bInSpinUp)
+                        {
+                            // Tick
+                            this.m_iSpinUpStep += 1;
+                            if (this.m_iSpinUpStep % cCore.N_MONTHS == 0)
+                                this.m_logger.LogInformation("EwE - finished spinup year {0}", (int) (this.m_iSpinUpStep / cCore.N_MONTHS));
+                        }
+                        else
+                        {
+                            if (iTime % cCore.N_MONTHS == 0)
+                                this.m_logger.LogInformation("EwE - finished year {0}", this.m_core.EcospaceTimestepToAbsoluteTime(iTime).Year);
+                        }
                         break;
 
                     case cEcospaceBridgePlugin.EventType.BeginTimeStepPost:
