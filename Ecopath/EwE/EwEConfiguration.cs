@@ -122,7 +122,7 @@ namespace Ecopath.EwE
         public IEnumerable<(int index, int score, float propertion)> ResolveGroups(string speciescode)
         {
             MultiLevelKey key = new();
-            key.Fields.Add("SpeciesCode", speciescode);
+            key.SetField("SpeciesCode", speciescode);
 
             return ResolveGroups(key);
         }
@@ -148,8 +148,8 @@ namespace Ecopath.EwE
         public (int index, int score, float propertion) ResolveFleet(string gearcode, string marketcode)
         {
             MultiLevelKey key = new();
-            key.Fields.Add("GearCode", gearcode);
-            key.Fields.Add("MarketCode", marketcode);
+            key.SetField("GearCode", gearcode);
+            key.SetField("MarketCode", marketcode);
 
             StaticKeyResolver resolver = new StaticKeyResolver(this.m_mappings);
             return resolver.FindAllMatches(key, KeyDomain.FleetSegment).First();

@@ -36,15 +36,14 @@ public class FuzzyKeyResolver : IKeyResolver
     private int MatchScore(MultiLevelKey a, MultiLevelKey b)
     {
         int score = 0;
-        foreach (var kvpair in a.Fields)
+        foreach (string key in a.FieldNames())
         {
-            if (b.Fields.TryGetValue(kvpair.Key, out var valB))
-            {
-                var matcher = m_matcherRegistry?.Get(kvpair.Key) ?? new ExactFieldMatcher();
-                double similarity = matcher.Score(kvpair.Key, kvpair.Value, valB);
-
-                score += (int)((m_fieldWeights.TryGetValue(kvpair.Key.ToLower(), out var weight) ? weight : 1) * similarity);
-            }
+            string valueA = a.GetField(key);
+            string valueB = b.GetField(key);
+            var matcher = m_matcherRegistry?.Get(key) ?? new ExactFieldMatcher();
+            double similarity = matcher.Score(key, valueA, valueB);
+            // ToDo: safeguard that field weights are also specified as lowercase invariant
+            score += (int)((m_fieldWeights.TryGetValue(key, out var weight) ? weight : 1) * similarity);
         }
         return score;
     }

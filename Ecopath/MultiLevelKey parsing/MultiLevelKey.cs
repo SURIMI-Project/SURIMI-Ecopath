@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using Google.Protobuf.WellKnownTypes;
+using System.Reflection;
 
 public enum KeyDomain
 {
@@ -15,7 +16,7 @@ public class MultiLevelKey
 
     // ToDo: enforce lowercase field names through property access; hide dictionary
 
-    public Dictionary<string, string> Fields { get; set; } = new();
+    private Dictionary<string, string> Fields { get; set; } = new();
     public KeyDomain Domain { get; set; }
     public int Index { get; set; }
     public float Propertion { get; set; }
@@ -37,7 +38,7 @@ public class MultiLevelKey
                 {
                     var valueObj = prop.GetValue(source);
                     if (valueObj is string value && !string.IsNullOrWhiteSpace(value))
-                        fields[prop.Name.ToLower()] = value;
+                        fields[ToSafeKey(prop.Name)] = value;
                 }
             }
         }
@@ -60,7 +61,7 @@ public class MultiLevelKey
                     if (prop.CanWrite && prop.PropertyType == typeof(string))
                     {
                         string? val = "";
-                        if (Fields.TryGetValue(prop.Name.ToLower(), out val))
+                        if (Fields.TryGetValue(ToSafeKey(prop.Name), out val))
                             prop.SetValue(obj, val);
                         else
                             prop.SetValue(obj, string.Empty);
@@ -99,8 +100,27 @@ public class MultiLevelKey
         return key;
     }
 
+    public void SetField(string key, string value)
+    {
+        this.Fields[ToSafeKey(key)] = value;
+    }
+
+    public string GetField(string key)
+    {
+        key = ToSafeKey(key);
+        if (this.Fields.TryGetValue(key, out var value)) return value;
+        return string.Empty;
+    }
+
+    public IEnumerable<string> FieldNames() =>this.Fields.Keys;
+
     public override string ToString()
     {
         return string.Join("; ", Fields.Select(kv => $"{kv.Key}={kv.Value}"));
+    }
+
+    private static string ToSafeKey(string key)
+    {
+        return key.ToLowerInvariant();
     }
 }
