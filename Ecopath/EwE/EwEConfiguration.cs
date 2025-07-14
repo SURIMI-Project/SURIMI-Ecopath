@@ -149,14 +149,14 @@ namespace Ecopath.EwE
             return resolver.FindAllMatches(MultiLevelKey.FromObject(fleetsegment), KeyDomain.FleetSegment).First();
         }
 
-        public (int index, int score, float propertion) ResolveFleet(string gearcode, string marketcode)
+        public (int index, int score, float propertion) ResolveMarket(string gearcode, string marketcode)
         {
             MultiLevelKey key = new();
             key.SetField("GearCode", gearcode);
             key.SetField("MarketCode", marketcode);
 
             StaticKeyResolver resolver = new StaticKeyResolver(this.m_mappings);
-            return resolver.FindAllMatches(key, KeyDomain.FleetSegment).First();
+            return resolver.FindAllMatches(key, KeyDomain.Market).First();
         }
 
         public MultiLevelKey? Find(int iIndex, KeyDomain domain)
