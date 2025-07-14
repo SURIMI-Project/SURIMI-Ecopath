@@ -95,7 +95,11 @@ namespace Ecopath.EwE
             m_mappings.Add(MultiLevelKey.Parse("gearcode==EwE:Artisanal; flag=FRA", KeyDomain.FleetSegment, 8));
             m_mappings.Add(MultiLevelKey.Parse("gearcode==EwE:Recreational; flag=FRA", KeyDomain.FleetSegment, 9));
 
-            m_mappings.Add(MultiLevelKey.Parse("gearcode=LLN; marketcode=ES", KeyDomain.Market, 2));
+            m_mappings.Add(MultiLevelKey.Parse("gearcode=TB; marketcode=ESP", KeyDomain.Market, 1));
+            m_mappings.Add(MultiLevelKey.Parse("gearcode=PS; marketcode=ESP", KeyDomain.Market, 2));
+            m_mappings.Add(MultiLevelKey.Parse("gearcode=LL; marketcode=ESP", KeyDomain.Market, 3));
+            m_mappings.Add(MultiLevelKey.Parse("gearcode=EwE:Artisanal; marketcode=ESP", KeyDomain.Market, 4));
+            m_mappings.Add(MultiLevelKey.Parse("gearcode=PS; marketcode=ESP", KeyDomain.Market, 5));
 
             for (int iGroup = 1; iGroup <= core.nGroups; iGroup++)
                 if (core.get_EcopathGroupInputs(iGroup).IsFished)
