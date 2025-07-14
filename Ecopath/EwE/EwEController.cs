@@ -668,23 +668,9 @@ namespace Ecopath.EwE
             this.m_core.RunEcospace(ref dgt);
         }
 
-        private void OnCoreMessage(ref cMessage msg)
-        {
-            switch (msg.Type)
-            {
-                case eMessageType.EcospaceRunCompleted:
-
-                    // Clear all modifications made by the process
-                    this.m_core.DiscardChanges();
-                    // Correctly reset the state and clean up
-                    this.RunState = RunStates.idle;
-                    this.m_thread = null;
-                    break;
-            }
-        }
-
         private void ForceStop()
         {
+            this.m_logger.LogInformation("EwE - !! Force stop received");
             try
             {
                 if (this.m_thread != null && m_thread.IsAlive)
@@ -775,6 +761,8 @@ namespace Ecopath.EwE
                         break;
 
                     case cEcospaceBridgePlugin.EventType.EndRun:
+                        this.m_logger.LogInformation("EwE - end run callback");
+                        
                         // Clear all modifications made to core data, if any
                         this.m_core.DiscardChanges();
                         // Correctly reset the state and clean up
