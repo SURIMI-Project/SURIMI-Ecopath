@@ -31,7 +31,7 @@ namespace Ecopath.Services
                     GearCode = p.GearCode,
                     Price = p.Price,
                     Currency = p.Currency,
-                    MeasuremenyUnit = p.MeasurementUnit,
+                    MeasurementUnit = p.MeasurementUnit,
                     MarketCode = p.MarketCode,
                     Timestamp = p.Timestamp.ToDateTime()
                 })

@@ -6,7 +6,7 @@
         public required string MarketCode { get; set; }
         public required string GearCode{ get; set; }
         public double Price { get; set; }
-        public required string MeasuremenyUnit { get; set; }
+        public required string MeasurementUnit { get; set; }
         public required string Currency { get; set; }
         public DateTime Timestamp { get; set; }
     }

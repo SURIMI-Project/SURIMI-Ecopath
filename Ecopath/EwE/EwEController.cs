@@ -251,7 +251,7 @@ namespace Ecopath.EwE
             this.OnRunStateChanged += Handler;
 
             // Carry on
-            this.m_logger.LogInformation("EwE - Continue with time step " + this.m_core.EcospaceDataStructures.TimeNow);
+            this.m_logger.LogInformation("EwE - Continue");
             this.RunState = RunStates.running;
             this.m_core.EcospacePaused = false;
 
@@ -355,23 +355,25 @@ namespace Ecopath.EwE
 
             foreach (var price in m_pricesIn)
             { 
-                int iFleet = m_configuration.ResolveFleet(price.GearCode, price.MarketCode).index;
-
-                foreach (var info in m_configuration.ResolveGroups(price.SpeciesCode))
+                int iFleet = m_configuration.ResolveMarket(price.GearCode, price.MarketCode).index;
+                if (iFleet > 0)
                 {
-                    float pr = (float)price.Price;
-
-                    // ToDo: implement unit conversions?
-                    Debug.Assert(string.Compare(price.Currency, "eur", true) == 0);
-                    Debug.Assert(string.Compare(price.MeasuremenyUnit, "kg", true) == 0);
-
-                    if (iFleet > 0 && info.index > 0)
-                        ds.Market[iFleet, info.index] = (float)price.Price;
-                    else
+                    foreach (var info in m_configuration.ResolveGroups(price.SpeciesCode))
                     {
-                        // ToDo_JS: decide how to respond to a potential EwE misconfiguration.
-                        //this.m_logger.LogWarning("Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.marketCode, price.SpeciesCode), price);
-                        //throw new Exception("Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.marketCode, price.SpeciesCode);
+                        float pr = (float)price.Price;
+
+                        // ToDo: implement unit conversions?
+                        //Debug.Assert(string.Compare(price.Currency, "eur", true) == 0);
+                        //Debug.Assert(string.Compare(price.MeasurementUnit, "kg", true) == 0);
+
+                        if (iFleet > 0 && info.index > 0)
+                            ds.Market[iFleet, info.index] = (float)price.Price;
+                        else
+                        {
+                            // ToDo_JS: decide how to respond to a potential EwE misconfiguration.
+                            this.m_logger.LogWarning("EwE - !! Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.MarketCode, price.SpeciesCode);
+                            //throw new Exception("Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.marketCode, price.SpeciesCode);
+                        }
                     }
                 }
             }
