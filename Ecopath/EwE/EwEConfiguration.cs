@@ -3,6 +3,7 @@ using EwECore.Auxiliary;
 using EwEUtils.Core;
 using Grpc.Net.Client.Balancer;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text;
@@ -112,6 +113,9 @@ namespace Ecopath.EwE
                 if (core.get_EcopathGroupInputs(iGroup).IsFished)
                     m_fishedGroups.Add(iGroup);
 
+            // ToDo: enable SPP discovery as soon as taxa can be read from the .eiixml file
+            //this.ReadMappingsFromTaxonomy(core);
+
             return true;
         }
 
@@ -142,7 +146,6 @@ namespace Ecopath.EwE
         {
             return ResolveGroups(MultiLevelKey.FromObject(species));
         }
-
 
         public IEnumerable<(int index, int score, float propertion)> ResolveGroups(MultiLevelKey key)
         {
@@ -214,5 +217,48 @@ namespace Ecopath.EwE
         public int[] FishedGroups() => m_fishedGroups.ToArray();
 
         #endregion // Mappings
+
+        #region Smarts 
+
+        private void ReadMappingsFromTaxonomy(cCore core)
+        {
+            ASFISSpeciesOntology fao = new();
+            DwCStageOntology dwc = new();
+
+            if (!fao.Load(@"Includes/ASFIS_sp_2024.csv"))
+                return;
+
+            foreach (int iGroup in this.FishedGroups())
+            {
+                var grp = core.get_EcopathGroupInputs(iGroup);
+                for (int i = 1; i <= grp.NTaxon; i++)
+                {
+                    var iTaxon = grp.get_iTaxon(i);
+                    var taxon = core.get_Taxon(iTaxon);
+                    var code = taxon.CodeFAO;
+
+                    var key = new MultiLevelKey();
+                    key.Domain = KeyDomain.Species;
+                    key.Index = iGroup;
+
+                    if (String.IsNullOrEmpty(code))
+                        code = fao.MatchSpeciesName(taxon.Common).match;
+
+                    if (!string.IsNullOrWhiteSpace(code))
+                    {
+                        key.SetField("speciescode", code);
+                        if (grp.IsMultiStanza)
+                        {
+                            code = dwc.MatchStage(grp.Name).match;
+                            key.SetField("stage", code);
+                        }
+
+                        this.m_mappings.Add(key);
+                    }
+                }
+            }
+        }
+
+        #endregion // Smarts
     }
 }
