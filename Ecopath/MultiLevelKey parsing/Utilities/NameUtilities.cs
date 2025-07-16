@@ -15,10 +15,14 @@ namespace Utilities
             string normalized = str.Normalize(NormalizationForm.FormC);
             // Lowercase invariant
             string invariant = normalized.ToLowerInvariant();
-            // Split by regex: std whitespace \s and unicode whitespaces \p{Z}
-            string[] bits = Regex.Split(invariant.Trim(), @"[\s\p{Z}]+");
-            // Join 'em up again with regular spaces
-            return string.Join(" ", bits);
+            // Replace non-letter/digit characters with space
+            normalized = Regex.Replace(normalized, @"[^\p{L}\p{N}]+", " ");
+            // Split
+            string[] bits = normalized.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+            // Split on space and rejoin
+            string joined = string.Join(" ", normalized.Split(" ", StringSplitOptions.RemoveEmptyEntries));
+            // Final lowercase (after all processing)
+            return joined.ToLowerInvariant();
         }
 
         public static (string BestMatch, int Score) FuzzyMatch(string input, IEnumerable<string> knownNames, int minScore = 80)
