@@ -51,6 +51,13 @@ namespace Ecopath.EwE
             SpinupYears = 10;
             StartYear = 2013; // The year that the simulation starts
             MaxRunYears = 25;
+
+#if DEBUG
+            // Just to speed up the process of testing :P
+            SpinupYears = 1;
+            StartYear = 2001; 
+#endif
+
         }
 
 
@@ -75,10 +82,10 @@ namespace Ecopath.EwE
             m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:MTS", KeyDomain.Species, 10));                         // Spottail mantis shrimp
             m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:NEP", KeyDomain.Species, 5));                          // Norway lobster
             m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:ARS", KeyDomain.Species, 5));                          // Spanish red shrimp
-            m_mappings.Add(MultiLevelKey.Parse("speciescode=EwE:OtherShrimp", KeyDomain.Species, 6));                    // !! Must decide how to expose. Only most important, eg Red Shrimp?
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=EwE:OtherShrimp", KeyDomain.Species, 6));                    // !! Must decide how to expose. Only most important?
             m_mappings.Add(MultiLevelKey.Parse("speciescode=EwE:Crabs", KeyDomain.Species, 7));                          // !! Must decide how to expose. Only most important?
-            m_mappings.Add(MultiLevelKey.Parse("speciescode=EwE:MUT; stage=juvenile", KeyDomain.Species, 22));           // Mullet (j)
-            m_mappings.Add(MultiLevelKey.Parse("speciescode=EwE:MUT; stage=adult", KeyDomain.Species, 23));              // Mullet (a)
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:MUT; stage=juvenile", KeyDomain.Species, 22));         // Mullet (j)
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:MUT; stage=adult", KeyDomain.Species, 23));            // Mullet (a)
             m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:WHB", KeyDomain.Species, 24));                         // Blue Whting
             m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:HKE; stage=DwC:juvenile", KeyDomain.Species, 26));     // European Hake (j)
             m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:HKE; stage=DwC:adult", KeyDomain.Species, 27));        // European Hake (a)
