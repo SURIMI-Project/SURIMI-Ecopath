@@ -61,6 +61,11 @@ namespace Ecopath.EwE
         private int m_nSpinUpSteps = 0;
         private int m_iSpinUpStep = 0;
 
+        /// <summary>
+        /// To track species group proportions affected by external fishing
+        /// </summary>
+        private Dictionary<int, GroupSpeciesProportions> m_groupSpeciesProportions = new();
+
         #endregion // Private vars 
 
          public EwEController(ILogger<EwEController> logger)
@@ -196,6 +201,10 @@ namespace Ecopath.EwE
                 this.m_configuration.Mappings(KeyDomain.Species).Count(), 
                 this.m_configuration.Mappings(KeyDomain.FleetSegment).Count(), 
                 this.m_configuration.Mappings(KeyDomain.Market).Count());
+
+            // Build species proportion accounting
+            foreach (int iGroup in m_configuration.FishedGroups)
+                this.m_groupSpeciesProportions[iGroup] = GroupSpeciesProportionsFactory.Create(this.m_core, iGroup, m_configuration.Mappings(KeyDomain.Species));
 
             // Configure Ecospace
             cEcospaceDataStructures ds = this.m_core.EcospaceDataStructures;
@@ -511,7 +520,7 @@ namespace Ecopath.EwE
             Dictionary<(int Group, int Fleet), (double Volume, double Value)> TotalSales = new();
             HashSet<int> markets = new();
 
-            foreach (int iGroup in this.m_configuration.FishedGroups())
+            foreach (int iGroup in this.m_configuration.FishedGroups)
             {
                 MultiLevelKey? mlkGroup = this.m_configuration.Find(iGroup, KeyDomain.Species);
                 float sppProp = mlkGroup?.Proportion ?? 0;

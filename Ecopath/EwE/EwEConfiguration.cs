@@ -211,7 +211,7 @@ namespace Ecopath.EwE
         /// <summary>
         /// Get all fished groups.
         /// </summary>
-        public int[] FishedGroups() => m_fishedGroups.ToArray();
+        public int[] FishedGroups => m_fishedGroups.ToArray();
 
         #endregion // Mappings
 
@@ -223,8 +223,8 @@ namespace Ecopath.EwE
         /// <param name="core"></param>
         private void ReadASFISSpeciesMappings(cCore core)
         {
-            ASFISSpeciesOntology fao = new();
-            DwCStageOntology dwc = new();
+            ASFISSpeciesVocabulary fao = new();
+            DwCLifestageVocabulary dwc = new();
 
             if (!fao.Load(@"Includes/ASFIS_sp_2024.csv"))
                 return;
@@ -247,16 +247,17 @@ namespace Ecopath.EwE
                         {
                             // Is given life stage fished?
                             int iGroup = stz.get_iGroups(iLS);
-                            if (this.FishedGroups().Contains(iGroup))
+                            if (this.FishedGroups.Contains(iGroup))
                             {
                                 // #Yes: add life stage to mappings
                                 cEcoPathGroupInput grp = core.get_EcopathGroupInputs(iGroup);
 
                                 var key = new MultiLevelKey();
                                 key.Domain = KeyDomain.Species;
-                                key.SetField("speciescode", fao.OntologyName + ":" + code);
+                                key.SetField(SpeciesFields.SpeciesCode, fao.VocabularyName + ":" + code);
+
                                 // Try to infer the stage from the group name
-                                key.SetField("stage", dwc.OntologyName + ":" + dwc.MatchStage(grp.Name).match);
+                                key.SetField(SpeciesFields.Lifestage, dwc.VocabularyName + ":" + dwc.MatchLifestage(grp.Name).match);
                                 key.Index = iGroup;
                                 key.Proportion = 1;
 
@@ -266,11 +267,11 @@ namespace Ecopath.EwE
                     }
                     else
                     {
-                        if (this.FishedGroups().Contains(taxon.iGroup))
+                        if (this.FishedGroups.Contains(taxon.iGroup))
                         {
                             var key = new MultiLevelKey();
                             key.Domain = KeyDomain.Species;
-                            key.SetField("speciescode", fao.OntologyName + ":" + code);
+                            key.SetField(SpeciesFields.SpeciesCode, fao.VocabularyName + ":" + code);
                             key.Index = taxon.iGroup;
                             key.Proportion = taxon.PropB / 100;
 
