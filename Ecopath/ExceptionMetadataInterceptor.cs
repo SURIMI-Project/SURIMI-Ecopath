@@ -29,7 +29,7 @@ namespace Ecopath
                 var metadata = new Metadata
                 {
                     { "method", context.Method },
-                    { "application", typeof(Program).Assembly.GetName().Name }
+                    { "application", "EwE" }
                 };
                 throw new RpcException(status, metadata);
             }

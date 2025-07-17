@@ -29,7 +29,7 @@ public class FuzzyKeyResolver : IKeyResolver
         {
             int score = MatchScore(input, key);
             if (score > 0)
-                yield return (key.Index, score, key.Propertion);
+                yield return (key.Index, score, key.Proportion);
         }
     }
 
