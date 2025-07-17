@@ -19,7 +19,7 @@ public class MultiLevelKey
     private Dictionary<string, string> Fields { get; set; } = new();
     public KeyDomain Domain { get; set; }
     public int Index { get; set; }
-    public float Propertion { get; set; }
+    public float Proportion { get; set; }
 
     public DateTime? Timestamp { get; set; }
     
@@ -79,7 +79,7 @@ public class MultiLevelKey
         {
             Domain = domain,
             Index = iIndex,
-            Propertion = proportion
+            Proportion = proportion
         };
 
         if (string.IsNullOrWhiteSpace(keyStr)) return key;

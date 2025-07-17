@@ -40,7 +40,7 @@ public class StaticKeyResolver : IKeyResolver
             }
 
             if (allEqual)
-                yield return (kvp.Index, 1, kvp.Propertion);
+                yield return (kvp.Index, 1, kvp.Proportion);
         }
     }
 }

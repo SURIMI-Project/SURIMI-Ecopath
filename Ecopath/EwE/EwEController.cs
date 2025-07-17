@@ -466,7 +466,7 @@ namespace Ecopath.EwE
                             Species = species
                         };
                         int iGroup = key.Index;
-                        float sppProp = key.Propertion;
+                        float sppProp = key.Proportion;
 
                         for (int ic = 1; ic <= ds.InCol; ic++)
                             for (int ir = 1; ir <= ds.InRow; ir++)
@@ -514,7 +514,7 @@ namespace Ecopath.EwE
             foreach (int iGroup in this.m_configuration.FishedGroups())
             {
                 MultiLevelKey? mlkGroup = this.m_configuration.Find(iGroup, KeyDomain.Species);
-                float sppProp = mlkGroup?.Propertion ?? 0;
+                float sppProp = mlkGroup?.Proportion ?? 0;
 
                 for (int iFleet = 1; iFleet <= this.m_core.nFleets; iFleet++)
                 {

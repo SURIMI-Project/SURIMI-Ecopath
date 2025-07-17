@@ -9,19 +9,38 @@ public class DwCStageOntology : IStageOntology
         m_keys["juvenile"] = ["young", "juvenile", "small"];
         m_keys["adult"] = ["adult", "large", "old"];
         m_keys["larva"] = ["larva", "spawn", "hatchling"];
+        m_keys["egg"] = ["egg"];
     }
 
-    KeyDomain IOntology.KeyDomain => KeyDomain.Species;
+    public KeyDomain KeyDomain => KeyDomain.Species;
 
-    string IOntology.OntologyName => "dwc";
+    public string OntologyName => "dwc";
 
-    public (string match, int score) MatchStage(string stage)
+    public (string match, int score) MatchStage(string stage, int iMinScore = 70)
     {
-        // Hack and slash version
-        foreach (string key in m_keys.Keys)
+        if (!string.IsNullOrWhiteSpace(stage))
         {
-            (string Match, int Score) match = NameUtilities.FuzzyMatch(stage, m_keys[key]);
-            if (match.Score > 80) return (key, match.Score);
+            stage = NameUtilities.NormalizeName(stage);
+
+            string bestKey = string.Empty;
+            int bestScore = 0;
+
+            // Hack and slash version
+            foreach (string bit in stage.Split(" ", StringSplitOptions.RemoveEmptyEntries))
+            {
+                foreach (string key in m_keys.Keys)
+                {
+                    (string Match, int Score) match = NameUtilities.FuzzyMatch(bit, m_keys[key]);
+                    if (match.Score > bestScore)
+                    {
+                        bestKey = key;
+                        bestScore = match.Score;
+                    }
+                }
+            }
+
+            if (bestScore >= iMinScore)
+                return (bestKey, bestScore);
         }
         return (string.Empty, 0);
     }

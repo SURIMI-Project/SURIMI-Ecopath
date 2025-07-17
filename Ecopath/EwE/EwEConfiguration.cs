@@ -80,17 +80,6 @@ namespace Ecopath.EwE
 
             string cfgtext = GetConfigBucket(core).Remark;
 
-            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:MTS", KeyDomain.Species, 10));                         // Spottail mantis shrimp
-            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:NEP", KeyDomain.Species, 5));                          // Norway lobster
-            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:ARS", KeyDomain.Species, 5));                          // Spanish red shrimp
-            m_mappings.Add(MultiLevelKey.Parse("speciescode=EwE:OtherShrimp", KeyDomain.Species, 6));                    // !! Must decide how to expose. Only most important?
-            m_mappings.Add(MultiLevelKey.Parse("speciescode=EwE:Crabs", KeyDomain.Species, 7));                          // !! Must decide how to expose. Only most important?
-            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:MUT; stage=juvenile", KeyDomain.Species, 22));         // Mullet (j)
-            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:MUT; stage=adult", KeyDomain.Species, 23));            // Mullet (a)
-            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:WHB", KeyDomain.Species, 24));                         // Blue Whting
-            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:HKE; stage=DwC:juvenile", KeyDomain.Species, 26));     // European Hake (j)
-            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:HKE; stage=DwC:adult", KeyDomain.Species, 27));        // European Hake (a)
-
             m_mappings.Add(MultiLevelKey.Parse("gearcode=TB; flag=ESP", KeyDomain.FleetSegment, 1));
             m_mappings.Add(MultiLevelKey.Parse("gearcode=PS; flag=ESP", KeyDomain.FleetSegment, 2));
             m_mappings.Add(MultiLevelKey.Parse("gearcode=LL; flag=ESP", KeyDomain.FleetSegment, 3));
@@ -113,8 +102,16 @@ namespace Ecopath.EwE
                 if (core.get_EcopathGroupInputs(iGroup).IsFished)
                     m_fishedGroups.Add(iGroup);
 
-            // ToDo: enable SPP discovery as soon as taxa can be read from the .eiixml file
-            //this.ReadMappingsFromTaxonomy(core);
+            this.ReadASFISSpeciesMappings(core);
+
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:MUR; stage=dwc:juvenile", KeyDomain.Species, 22));       // Mullet (j)
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:MUR; stage=dwc:adult", KeyDomain.Species, 23));          // Mullet (a)
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:HKE; stage=dwc:juvenile", KeyDomain.Species, 26));       // European Hake (j)
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:HKE; stage=dwc:adult", KeyDomain.Species, 27));          // European Hake (a)
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:ANE; stage=dwc:juvenile", KeyDomain.Species, 39));       // Anchovy (j)
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:ANE; stage=dwc:adult", KeyDomain.Species, 40));          // Anchovy (a)
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:PIL; stage=dwc:juvenile", KeyDomain.Species, 41));       // Sardine (j)
+            m_mappings.Add(MultiLevelKey.Parse("speciescode=ASFIS:PIL; stage=dwc:adult", KeyDomain.Species, 42));          // Sardine (a)
 
             return true;
         }
@@ -220,7 +217,11 @@ namespace Ecopath.EwE
 
         #region Smarts 
 
-        private void ReadMappingsFromTaxonomy(cCore core)
+        /// <summary>
+        /// Load the species -> FAO code mappings from the model
+        /// </summary>
+        /// <param name="core"></param>
+        private void ReadASFISSpeciesMappings(cCore core)
         {
             ASFISSpeciesOntology fao = new();
             DwCStageOntology dwc = new();
@@ -228,32 +229,53 @@ namespace Ecopath.EwE
             if (!fao.Load(@"Includes/ASFIS_sp_2024.csv"))
                 return;
 
-            foreach (int iGroup in this.FishedGroups())
+            for (int iTaxa = 1; iTaxa <= core.nTaxon; iTaxa++) 
             {
-                var grp = core.get_EcopathGroupInputs(iGroup);
-                for (int i = 1; i <= grp.NTaxon; i++)
+                cTaxon taxon = core.get_Taxon(iTaxa);
+                var code = taxon.CodeFAO;
+                if (String.IsNullOrEmpty(code))
+                    code = fao.SpeciesToCode(taxon.Common);
+
+                if (!string.IsNullOrEmpty(code))
                 {
-                    var iTaxon = grp.get_iTaxon(i);
-                    var taxon = core.get_Taxon(iTaxon);
-                    var code = taxon.CodeFAO;
-
-                    var key = new MultiLevelKey();
-                    key.Domain = KeyDomain.Species;
-                    key.Index = iGroup;
-
-                    if (String.IsNullOrEmpty(code))
-                        code = fao.MatchSpeciesName(taxon.Common).match;
-
-                    if (!string.IsNullOrWhiteSpace(code))
+                    // Taxon refers to a multi-stanza configuration?
+                    if (taxon.iStanza > 0 && false)
                     {
-                        key.SetField("speciescode", code);
-                        if (grp.IsMultiStanza)
+                        // #Yes: iterate over life stages
+                        cStanzaGroup stz = core.get_StanzaGroups(taxon.iStanza);
+                        for (int iLS = 1; iLS <= stz.nLifeStages; iLS++)
                         {
-                            code = dwc.MatchStage(grp.Name).match;
-                            key.SetField("stage", code);
-                        }
+                            // Is given life stage fished?
+                            int iGroup = stz.get_iGroups(iLS);
+                            if (this.FishedGroups().Contains(iGroup))
+                            {
+                                // #Yes: add life stage to mappings
+                                cEcoPathGroupInput grp = core.get_EcopathGroupInputs(iGroup);
 
-                        this.m_mappings.Add(key);
+                                var key = new MultiLevelKey();
+                                key.Domain = KeyDomain.Species;
+                                key.SetField("speciescode", fao.OntologyName + ":" + code);
+                                // Try to infer the stage from the group name
+                                key.SetField("stage", dwc.OntologyName + ":" + dwc.MatchStage(grp.Name).match);
+                                key.Index = iGroup;
+                                key.Proportion = 1;
+
+                                this.m_mappings.Add(key);
+                            }                        
+                        }
+                    }
+                    else
+                    {
+                        if (this.FishedGroups().Contains(taxon.iGroup))
+                        {
+                            var key = new MultiLevelKey();
+                            key.Domain = KeyDomain.Species;
+                            key.SetField("speciescode", fao.OntologyName + ":" + code);
+                            key.Index = taxon.iGroup;
+                            key.Proportion = taxon.PropB / 100;
+
+                            this.m_mappings.Add(key);
+                        }
                     }
                 }
             }

@@ -8,9 +8,9 @@ public class ASFISSpeciesOntology
 {
     private Dictionary<string, string> m_keys = new();
 
-    KeyDomain IOntology.KeyDomain => KeyDomain.Species;
+    public KeyDomain KeyDomain => KeyDomain.Species;
 
-    string IOntology.OntologyName => "ASFIS";
+    public string OntologyName => "ASFIS";
 
     public bool Load(string fin)
     {
@@ -46,18 +46,25 @@ public class ASFISSpeciesOntology
             }
         }
     }
+    public (string match, int score) MatchSpeciesName(string speciesname, int iMinScore = 70) 
+        => NameUtilities.FuzzyMatch(speciesname, this.m_keys.Keys, iMinScore);
 
-    public (string match, int score) MatchSpeciesName(string speciesname) => NameUtilities.FuzzyMatch(speciesname, this.m_keys.Keys);
-
-    public (string match, int score) MatchSpeciesCode(string speciescode)
+    public string CodeToSpecies(string speciescode)
     {
-        foreach (string key in this.m_keys.Keys)
-        {
-            if (string.Compare(speciescode, this.m_keys[key], StringComparison.InvariantCultureIgnoreCase) == 0)
-            {
-                return (key, 1);
-            } 
-        }
-        return (string.Empty, 0);
+        foreach (string key in m_keys.Keys)
+            if (string.Compare(m_keys[key], speciescode, StringComparison.OrdinalIgnoreCase) == 0)
+                return key;
+        return string.Empty;
     }
+
+    public string SpeciesToCode(string speciesname)
+    {
+        string resolved = NameUtilities.FuzzyMatch(speciesname, this.m_keys.Keys).BestMatch;
+
+        if (string.IsNullOrWhiteSpace(resolved))
+            return string.Empty;
+
+        return m_keys.TryGetValue(resolved, out var code) ? code : string.Empty;
+    }
+
 }
