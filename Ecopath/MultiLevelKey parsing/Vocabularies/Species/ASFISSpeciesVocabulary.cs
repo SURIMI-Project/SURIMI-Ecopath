@@ -3,14 +3,14 @@ using System.Data;
 using System.Globalization;
 using Utilities;
 
-public class ASFISSpeciesOntology 
-    : ISpeciesOntology
+public class ASFISSpeciesVocabulary 
+    : ISpeciesCodeVocabulary
 {
     private Dictionary<string, string> m_keys = new();
 
     public KeyDomain KeyDomain => KeyDomain.Species;
 
-    public string OntologyName => "ASFIS";
+    public string VocabularyName => "ASFIS";
 
     public bool Load(string fin)
     {

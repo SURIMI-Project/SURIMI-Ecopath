@@ -1,10 +1,10 @@
 ﻿using Utilities;
 
-public class DwCStageOntology : IStageOntology
+public class DwCLifestageVocabulary : ILifestageVocabulary
 {
     Dictionary<string, string[]> m_keys = new();
 
-    public DwCStageOntology()
+    public DwCLifestageVocabulary()
     {
         m_keys["juvenile"] = ["young", "juvenile", "small"];
         m_keys["adult"] = ["adult", "large", "old"];
@@ -14,9 +14,9 @@ public class DwCStageOntology : IStageOntology
 
     public KeyDomain KeyDomain => KeyDomain.Species;
 
-    public string OntologyName => "dwc";
+    public string VocabularyName => "dwc.lifestage";
 
-    public (string match, int score) MatchStage(string stage, int iMinScore = 70)
+    public (string match, int score) MatchLifestage(string stage, int iMinScore = 70)
     {
         if (!string.IsNullOrWhiteSpace(stage))
         {

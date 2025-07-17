@@ -1,4 +1,4 @@
-﻿public interface ISpeciesOntology : IOntology
+﻿public interface ISpeciesCodeVocabulary : IControlledVocabulary
 {
     /// <summary>
     /// Resolve a species name to the properly spelled species name.

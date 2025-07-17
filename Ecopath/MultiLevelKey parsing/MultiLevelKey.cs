@@ -1,13 +1,6 @@
 ﻿using Google.Protobuf.WellKnownTypes;
 using System.Reflection;
 
-public enum KeyDomain
-{
-    Species,
-    FleetSegment,
-    Market
-}
-
 /// <summary>
 /// Represents a multi-level, self-describing key (e.g., for species or fleets)
 /// </summary>
@@ -94,14 +87,24 @@ public class MultiLevelKey
                     // For now remove standard classifiers
                     parts[1] = parts[1].Substring(parts[1].IndexOf(':') + 1);
                 }
-                key.Fields[parts[0].Trim()] = parts[1].Trim();
+                key.SetField(parts[0], parts[1]);
             }
         }
         return key;
     }
 
-    public void SetField(string key, string value)
+    public void SetField(string key, string value, bool bRemoveVocabulary = true)
     {
+        if (string.IsNullOrWhiteSpace(key)) return;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            this.Fields.Remove(key);
+            return;
+        }
+
+        if (bRemoveVocabulary) 
+            value= value.Substring(value.IndexOf(':') + 1);
+
         this.Fields[ToSafeKey(key)] = value;
     }
 
@@ -121,6 +124,6 @@ public class MultiLevelKey
 
     private static string ToSafeKey(string key)
     {
-        return key.ToLowerInvariant();
+        return key.Trim().ToLowerInvariant();
     }
 }
