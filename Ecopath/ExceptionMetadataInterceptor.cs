@@ -1,5 +1,6 @@
-﻿using Grpc.Core.Interceptors;
-using Grpc.Core;
+﻿using Grpc.Core;
+using Grpc.Core.Interceptors;
+using System.Diagnostics;
 
 namespace Ecopath
 {
@@ -22,6 +23,8 @@ namespace Ecopath
             }
             catch (Exception ex)
             {
+                LogExceptionToActivity(ex);
+
                 var status = new Status(StatusCode.Internal, ex.Message);
                 var metadata = new Metadata
                 {
@@ -29,6 +32,22 @@ namespace Ecopath
                     { "application", typeof(Program).Assembly.GetName().Name }
                 };
                 throw new RpcException(status, metadata);
+            }
+        }
+
+
+        private void LogExceptionToActivity(Exception ex)
+        {
+            var activity = Activity.Current;
+            if (activity != null)
+            {
+                activity.SetStatus(ActivityStatusCode.Error, ex.Message);
+                activity.AddEvent(new ActivityEvent("exception", tags: new ActivityTagsCollection
+                {
+                    { "exception.type", ex.GetType().ToString() },
+                    { "exception.message", ex.Message },
+                    { "exception.stacktrace", ex.StackTrace ?? string.Empty }
+                }));
             }
         }
     }
