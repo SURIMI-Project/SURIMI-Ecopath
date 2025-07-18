@@ -446,7 +446,7 @@ namespace Ecopath.EwE
                                 // Leave some tiny biomass in the cell; fisheries cannot catch it all (and Ecospace does not like divisions by zero)
                                 @catch = (float)Math.Max(1E-10, available - @catch);
 
-                                m_groupSpeciesProportions[iFleet].ApplyFishingMortality(ir, ic, keyGroup, @catch, (double)ds.Bcell[ir, ic, iGroup]);
+                                m_groupSpeciesProportions[iGroup].ApplyFishingMortality(ir, ic, keyGroup, @catch, (double)ds.Bcell[ir, ic, iGroup]);
 
                                 ds.Bcell[ir, ic, iGroup] = @catch;
                                 ds.CatchMap[ir, ic, iGroup] += @catch;
@@ -458,7 +458,14 @@ namespace Ecopath.EwE
                     }
                 }
             }
+            // Catches have been processed
             this.m_catchIn = null;
+            // Recover and normalize species proportions
+            foreach (var prop in m_groupSpeciesProportions.Values)
+            {
+                prop.ApplyRecovery();
+                prop.NormalizeDirtyCells();
+            }
         }
 
         /// <summary>
@@ -486,18 +493,20 @@ namespace Ecopath.EwE
                             Species = species
                         };
                         int iGroup = key.Index;
-                        float sppProp = key.Proportion;
 
                         for (int ic = 1; ic <= ds.InCol; ic++)
                             for (int ir = 1; ir <= ds.InRow; ir++)
                                 if (ds.Depth[ir, ic] > 0)
                                 {
+                                    // Express biomass of group proportion in kg at timestep units (not annual)
+                                    double biomassCell = DensityToKg(ds.Bcell[ir, ic, iGroup], ir, ic) * ds.TimeStep;
+                                    double biomassSpecies = m_groupSpeciesProportions[iGroup].GetSpeciesBiomass(ir, ic, species.Ag, biomassCell);
+
                                     grid.BiomassCells.Add(new BiomassCell()
                                     {
                                         Latitude = bm.RowToLat(ir),
                                         Longitude = bm.ColToLon(ic),
-                                        // Express biomass of group proportion in kg at timestep units (not annual)
-                                        Biomass = DensityToKg(ds.Bcell[ir, ic, iGroup], ir, ic) * sppProp * ds.TimeStep
+                                        Biomass = biomassSpecies
                                     });
                                 }
                         this.m_biomassOut.BiomassGrids.Add(grid);
