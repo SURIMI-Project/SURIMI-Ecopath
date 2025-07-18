@@ -92,7 +92,7 @@ public class GroupSpeciesProportions
         m_dirtyCells.Clear();
     }
 
-    public double GetSpeciesBiomass(int row, int col, EwEMapping species, double fgBiomass)
+    public double GetSpeciesBiomass(int row, int col, MultiLevelKey species, double fgBiomass)
     {
         var cell = (row, col);
         string key = Key(species);
