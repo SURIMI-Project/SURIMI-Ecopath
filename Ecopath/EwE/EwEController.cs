@@ -500,6 +500,7 @@ namespace Ecopath.EwE
                                 {
                                     // Express biomass of group proportion in kg at timestep units (not annual)
                                     double biomassCell = DensityToKg(ds.Bcell[ir, ic, iGroup], ir, ic) * ds.TimeStep;
+                                    // Return the biomass proportion in the FG for the current cell
                                     double biomassSpecies = m_groupSpeciesProportions[iGroup].GetSpeciesBiomass(ir, ic, key, biomassCell);
 
                                     grid.BiomassCells.Add(new BiomassCell()

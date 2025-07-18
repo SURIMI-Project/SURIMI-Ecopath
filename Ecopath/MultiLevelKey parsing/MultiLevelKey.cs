@@ -72,7 +72,7 @@ public class MultiLevelKey
             {
                 if (parts[1].Contains(':'))
                 {
-                    // For now remove standard classifiers
+                    // For now remove vocabulary classifiers
                     parts[1] = parts[1].Substring(parts[1].IndexOf(':') + 1);
                 }
                 this.SetField(parts[0], parts[1]);
