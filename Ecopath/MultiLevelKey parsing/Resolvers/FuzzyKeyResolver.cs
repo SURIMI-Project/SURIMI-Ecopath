@@ -6,19 +6,19 @@
 public class FuzzyKeyResolver : IKeyResolver
 {
     private readonly IEnumerable<MultiLevelKey> m_mappings;
-    private readonly Dictionary<string, int> m_fieldWeights;
+    private readonly IEnumerable<KeyFieldDescriptor> m_fieldDescriptors;
     private readonly MatcherRegistry? m_matcherRegistry;
 
     /// <summary>
     /// 
     /// </summary>
     /// <param name="mappings"></param>
-    /// <param name="customWeights">Custom weights per field. Field names must be lowercase.</param>
+    /// <param name="descriptors"></param>
     /// <param name="matcherRegistry"></param>
-    public FuzzyKeyResolver(IEnumerable<MultiLevelKey> mappings, Dictionary<string, int>? customWeights = null, MatcherRegistry? matcherRegistry = null)
+    public FuzzyKeyResolver(IEnumerable<MultiLevelKey> mappings, IEnumerable<KeyFieldDescriptor> descriptors, MatcherRegistry? matcherRegistry = null)
     {
         m_mappings = mappings;
-        m_fieldWeights = customWeights ?? DefaultWeights();
+        m_fieldDescriptors = descriptors;
         m_matcherRegistry = matcherRegistry;
     }
 
@@ -35,26 +35,22 @@ public class FuzzyKeyResolver : IKeyResolver
     private int MatchScore(MultiLevelKey a, MultiLevelKey b)
     {
         int score = 0;
-        foreach (string key in a.FieldNames())
+
+        foreach (KeyFieldDescriptor descr in m_fieldDescriptors) 
         {
-            string valueA = a.GetField(key);
-            string valueB = b.GetField(key);
-            var matcher = m_matcherRegistry?.Get(key) ?? new ExactFieldMatcher();
-            double similarity = matcher.Score(key, valueA, valueB);
-            // ToDo: safeguard that field weights are also specified as lowercase invariant
-            score += (int)((m_fieldWeights.TryGetValue(key, out var weight) ? weight : 1) * similarity);
+            string? valueA = a.GetField(descr.FieldName);
+            string? valueB = b.GetField(descr.FieldName);
+
+            // Fail early
+            if (descr.IsRequired && (string.IsNullOrWhiteSpace(valueA) || string.IsNullOrEmpty(valueB)))
+                return 0;
+
+            var matcher = m_matcherRegistry?.Get(descr.FieldName) ?? new ExactFieldMatcher();
+            double similarity = matcher.Score(descr.FieldName, valueA, valueB);
+
+            score += (int)(descr.Weight * similarity);
         }
         return score;
     }
 
-    private static Dictionary<string, int> DefaultWeights() => new()
-    {
-        {SpeciesFields.SpeciesCode, 10},
-        {SpeciesFields.Lifestage, 3},
-        {SpeciesFields.Length, 3},
-        {SpeciesFields.Age, 3},
-        {FishingFields.GearCode, 10},
-        {FishingFields.Flag, 10 },
-        {"marketcode", 10}
-    };
 }

@@ -74,7 +74,8 @@ public class GroupSpeciesProportions
 
     /// -----------------------------------------------------------------------
     /// <summary>
-    /// 
+    /// Normalize the species propertions in all the cells affected by external 
+    /// fishing over the current time step.
     /// </summary>
     /// <returns></returns>
     /// -----------------------------------------------------------------------
@@ -87,11 +88,32 @@ public class GroupSpeciesProportions
 
             if (total > 0)
                 foreach (var code in props.Keys.ToList())
+                {
+                    // Normalize, round to two decimals to stop numerical noise dead in its tracks, and 
+                    // retain a small proportion for species to be able to recover.
+
+                    // Note that this proportion could be made dependent on dispersal rates over cell
+                    // length to 'mimick' neighbourning cell reseeding. Ugh... better to stop here.
                     props[code] = Math.Max(0.0001, Math.Round(props[code] / total, 2));
+                }
         }
+
+        // Clear the dirty cells cache
         m_dirtyCells.Clear();
     }
 
+    /// -----------------------------------------------------------------------
+    /// <summary>
+    /// Returns the biomass represented by a single species as part of the group
+    /// biomass.
+    /// </summary>
+    /// <param name="row">One-based index of the Ecospace grid row.</param>
+    /// <param name="col">One-based index of the Ecospace grid column.</param>
+    /// <param name="species">The <see cref="MultiLevelKey"/> that identifies the 
+    /// species to get the biomass for.</param>
+    /// <param name="fgBiomass">The total biomass in the cell.</param>
+    /// <returns></returns>
+    /// -----------------------------------------------------------------------
     public double GetSpeciesBiomass(int row, int col, MultiLevelKey species, double fgBiomass)
     {
         var cell = (row, col);
@@ -128,13 +150,12 @@ public class GroupSpeciesProportions
 
     /// -----------------------------------------------------------------------
     /// <summary>
-    /// 
+    /// Gradually recover species FG proportions back towards baseline.
     /// </summary>
     /// -----------------------------------------------------------------------
     public void ApplyRecovery()
     {
         foreach (var (cell, speciesMap) in m_proportions)
-        {
             foreach (var species in speciesMap.Keys.ToList())
             {
                 if (!m_baselineProportions.TryGetValue(species, out var p0)) continue;
@@ -142,8 +163,7 @@ public class GroupSpeciesProportions
                 var p = speciesMap[species];
                 double drift = m_r * p * (1 - p / p0);
                 speciesMap[species] += drift;
-            } 
-        }
+            }
     }
 
     #endregion // Public access

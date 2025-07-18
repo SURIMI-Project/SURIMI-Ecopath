@@ -19,3 +19,8 @@ public class FishingFields
     public static readonly string GearCode = "gearcode";
     public static readonly string Flag = "flag";
 }
+
+public class MarketFields
+{
+    public static readonly string MarketCode = "marketcode";
+}

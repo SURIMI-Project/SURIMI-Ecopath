@@ -1,4 +1,5 @@
-﻿using EwECore;
+﻿using Ecopath.Models;
+using EwECore;
 using EwECore.Auxiliary;
 using EwEUtils.Core;
 using Grpc.Net.Client.Balancer;
@@ -36,6 +37,7 @@ namespace Ecopath.EwE
         /// </list>
         /// </remarks>
         private readonly List<EwEMapping> m_mappings = new();
+        private readonly KeyFieldDescriptorRegistry m_keyFieldDescriptorRegistry = new ();
 
         // The EwE indices of externally managed fleets.
         private readonly HashSet<int> m_externalFleets = new();
@@ -57,9 +59,18 @@ namespace Ecopath.EwE
 #if DEBUG
             // Just to speed up the process of testing :P
             SpinupYears = 1;
-            StartYear = 2001; 
+            StartYear = 2001;
 #endif
 
+            m_keyFieldDescriptorRegistry.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.SpeciesCode, true, 10));
+            m_keyFieldDescriptorRegistry.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Stage, false, 3));
+            m_keyFieldDescriptorRegistry.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Length, false, 3));
+            m_keyFieldDescriptorRegistry.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Age, false, 3));
+
+            m_keyFieldDescriptorRegistry.Register(KeyDomain.FleetSegment, new KeyFieldDescriptor(FishingFields.GearCode, true, 10));
+            m_keyFieldDescriptorRegistry.Register(KeyDomain.FleetSegment, new KeyFieldDescriptor(FishingFields.Flag, false, 3));
+
+            m_keyFieldDescriptorRegistry.Register(KeyDomain.FleetSegment, new KeyFieldDescriptor(MarketFields.MarketCode, true, 10));
         }
 
 
@@ -147,13 +158,13 @@ namespace Ecopath.EwE
 
         public IEnumerable<(EwEMapping match, int score)> ResolveGroups(MultiLevelKey key)
         {
-            StaticKeyResolver resolver = new(this.m_mappings);
+            StaticKeyResolver resolver = new(this.m_mappings, this.m_keyFieldDescriptorRegistry.Get(KeyDomain.Species));
             return (IEnumerable<(EwEMapping match, int score)>)resolver.FindAllMatches(key, KeyDomain.Species);
         }
 
         public (EwEMapping match, int score) ResolveFleet(Ecopath.Models.FleetSegment fleetsegment)
         {
-            StaticKeyResolver resolver = new StaticKeyResolver(this.m_mappings);
+            StaticKeyResolver resolver = new StaticKeyResolver(this.m_mappings, this.m_keyFieldDescriptorRegistry.Get(KeyDomain.FleetSegment));
             var match = resolver.FindAllMatches(MultiLevelKey.FromObject(fleetsegment), KeyDomain.FleetSegment).First();
             return ((EwEMapping)match.key, match.score);
         }
@@ -164,7 +175,7 @@ namespace Ecopath.EwE
             key.SetField("GearCode", gearcode);
             key.SetField("MarketCode", marketcode);
 
-            StaticKeyResolver resolver = new StaticKeyResolver(this.m_mappings);
+            StaticKeyResolver resolver = new StaticKeyResolver(this.m_mappings, this.m_keyFieldDescriptorRegistry.Get(KeyDomain.Market));
             var match = resolver.FindAllMatches(key, KeyDomain.Market).First();
             return ((EwEMapping)match.key, match.score);
         }
