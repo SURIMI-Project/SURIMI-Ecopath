@@ -4,6 +4,7 @@ using EwECore;
 using EwEPlugin;
 using EwEUtils.Core;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace Ecopath.EwE
 {
@@ -364,19 +365,20 @@ namespace Ecopath.EwE
 
             foreach (var price in m_pricesIn)
             { 
-                int iFleet = m_configuration.ResolveMarket(price.GearCode, price.MarketCode).index;
+                int iFleet = m_configuration.ResolveMarket(price.GearCode, price.MarketCode).match?.Index ?? 0;
                 if (iFleet > 0)
                 {
                     foreach (var info in m_configuration.ResolveGroups(price.SpeciesCode))
                     {
                         float pr = (float)price.Price;
+                        EwEMapping key = info.match;
 
                         // ToDo: implement unit conversions?
                         //Debug.Assert(string.Compare(price.Currency, "eur", true) == 0);
                         //Debug.Assert(string.Compare(price.MeasurementUnit, "kg", true) == 0);
 
-                        if (iFleet > 0 && info.index > 0)
-                            ds.Market[iFleet, info.index] = (float)price.Price;
+                        if (iFleet > 0 && key.Index > 0)
+                            ds.Market[iFleet, key.Index] = (float)price.Price;
                         else
                         {
                             // ToDo_JS: decide how to respond to a potential EwE misconfiguration.
@@ -401,10 +403,17 @@ namespace Ecopath.EwE
 
             foreach (var grid in this.m_catchIn.DispositionGrids)
             {
-                foreach (var groupinfo in m_configuration.ResolveGroups(grid.Species))
+                // Try to parse species code in grid
+                MultiLevelKey key = MultiLevelKey.FromObject(grid.Species);
+                // Resolve mapping key for grid fleet segment
+                EwEMapping keyFkeet = m_configuration.ResolveFleet(grid.FleetSegment).match;
+
+                foreach (var groupinfo in m_configuration.ResolveGroups(key))
                 {
-                    int iGroup = groupinfo.index;
-                    int iFleet = m_configuration.ResolveFleet(grid.FleetSegment).index;
+                    EwEMapping keyGroup = groupinfo.match;
+
+                    int iGroup = keyGroup.Index;
+                    int iFleet = keyFkeet.Index;
 
                     // ToDo: validate group and fleet codes
 
@@ -437,6 +446,8 @@ namespace Ecopath.EwE
                                 // Leave some tiny biomass in the cell; fisheries cannot catch it all (and Ecospace does not like divisions by zero)
                                 @catch = (float)Math.Max(1E-10, available - @catch);
 
+                                m_groupSpeciesProportions[iFleet].ApplyFishingMortality(ir, ic, keyGroup, @catch, (double)ds.Bcell[ir, ic, iGroup]);
+
                                 ds.Bcell[ir, ic, iGroup] = @catch;
                                 ds.CatchMap[ir, ic, iGroup] += @catch;
                                 ds.CatchFleetMap[ir, ic, iFleet] += @catch;
@@ -465,7 +476,7 @@ namespace Ecopath.EwE
                 cEcospaceDataStructures ds = this.m_core.EcospaceDataStructures;
                 cEcospaceBasemap bm = this.m_core.EcospaceBasemap;
 
-                foreach (MultiLevelKey key in this.m_configuration.Mappings(KeyDomain.Species))
+                foreach (EwEMapping key in this.m_configuration.Mappings(KeyDomain.Species))
                 {
                     Species? species = key.ToObject<Ecopath.Models.Species>();
                     if (species != null)
@@ -522,7 +533,7 @@ namespace Ecopath.EwE
 
             foreach (int iGroup in this.m_configuration.FishedGroups)
             {
-                MultiLevelKey? mlkGroup = this.m_configuration.Find(iGroup, KeyDomain.Species);
+                EwEMapping? mlkGroup = this.m_configuration.Find(iGroup, KeyDomain.Species);
                 float sppProp = mlkGroup?.Proportion ?? 0;
 
                 for (int iFleet = 1; iFleet <= this.m_core.nFleets; iFleet++)

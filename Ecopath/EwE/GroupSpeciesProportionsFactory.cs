@@ -1,4 +1,5 @@
-﻿using EwECore;
+﻿using Ecopath.EwE;
+using EwECore;
 
 public static class GroupSpeciesProportionsFactory
 {
@@ -20,12 +21,12 @@ public static class GroupSpeciesProportionsFactory
 
         var props = new GroupSpeciesProportions(iGroup, r, activeCells);
 
-        foreach (MultiLevelKey key in mappings)
+        foreach (EwEMapping key in mappings)
         {
             if (key.Index == iGroup)
             {
                 string code = key.GetField(SpeciesFields.SpeciesCode);
-                props.SetBaseline(code, key.Proportion);
+                props.RegisterSpecies(key);
             }
         }
 
