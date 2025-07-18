@@ -1,5 +1,4 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using System.Reflection;
+﻿using System.Reflection;
 
 /// <summary>
 /// Represents a multi-level, self-describing key (e.g., for species or fleets)
@@ -11,11 +10,7 @@ public class MultiLevelKey
 
     private Dictionary<string, string> Fields { get; set; } = new();
     public KeyDomain Domain { get; set; }
-    public int Index { get; set; }
-    public float Proportion { get; set; }
 
-    public DateTime? Timestamp { get; set; }
-    
     public static MultiLevelKey FromObject(object source)
     {
         if (source == null) throw new ArgumentNullException(nameof(source));
@@ -66,16 +61,9 @@ public class MultiLevelKey
         return (T?)obj;
     }
 
-    public static MultiLevelKey Parse(string keyStr, KeyDomain domain, int iIndex, float proportion = 1)
+    public bool Parse(string keyStr)
     {
-        var key = new MultiLevelKey()
-        {
-            Domain = domain,
-            Index = iIndex,
-            Proportion = proportion
-        };
-
-        if (string.IsNullOrWhiteSpace(keyStr)) return key;
+        if (string.IsNullOrWhiteSpace(keyStr)) return false;
 
         foreach (var kvpair in keyStr.Split(';'))
         {
@@ -87,10 +75,10 @@ public class MultiLevelKey
                     // For now remove standard classifiers
                     parts[1] = parts[1].Substring(parts[1].IndexOf(':') + 1);
                 }
-                key.SetField(parts[0], parts[1]);
+                this.SetField(parts[0], parts[1]);
             }
         }
-        return key;
+        return true;
     }
 
     public void SetField(string key, string value, bool bRemoveVocabulary = true)
@@ -117,9 +105,15 @@ public class MultiLevelKey
 
     public IEnumerable<string> FieldNames() =>this.Fields.Keys;
 
+    /// <summary>
+    /// Returns a canonical string representation of the key
+    /// </summary>
+    /// <returns></returns>
     public override string ToString()
     {
-        return string.Join("; ", Fields.Select(kv => $"{kv.Key}={kv.Value}"));
+        return string.Join(";",
+            this.Fields.OrderBy(kv => kv.Key).Select(kv => $"{kv.Key}={kv.Value}"))
+            + $";domain={this.Domain.ToString().ToLowerInvariant()}";
     }
 
     private static string ToSafeKey(string key)

@@ -1,9 +1,11 @@
-﻿/// <summary>
+﻿using Ecopath.Models;
+
+/// <summary>
 /// A fuzzy implementation using partial field matching with weights and matchers
 /// </summary>
 public class FuzzyKeyResolver : IKeyResolver
 {
-    private readonly List<MultiLevelKey> m_mappings;
+    private readonly IEnumerable<MultiLevelKey> m_mappings;
     private readonly Dictionary<string, int> m_fieldWeights;
     private readonly MatcherRegistry? m_matcherRegistry;
 
@@ -13,23 +15,20 @@ public class FuzzyKeyResolver : IKeyResolver
     /// <param name="mappings"></param>
     /// <param name="customWeights">Custom weights per field. Field names must be lowercase.</param>
     /// <param name="matcherRegistry"></param>
-    public FuzzyKeyResolver(
-        List<MultiLevelKey> mappings,
-        Dictionary<string, int>? customWeights = null,
-        MatcherRegistry? matcherRegistry = null)
+    public FuzzyKeyResolver(IEnumerable<MultiLevelKey> mappings, Dictionary<string, int>? customWeights = null, MatcherRegistry? matcherRegistry = null)
     {
         m_mappings = mappings;
         m_fieldWeights = customWeights ?? DefaultWeights();
         m_matcherRegistry = matcherRegistry;
     }
 
-    public IEnumerable<(int index, int score, float propertion)> FindAllMatches(MultiLevelKey input, KeyDomain domain)
+    public IEnumerable<(MultiLevelKey key, int score)> FindAllMatches(MultiLevelKey input, KeyDomain domain)
     {
         foreach (var key in m_mappings.Where(n => n.Domain == domain))
         {
             int score = MatchScore(input, key);
             if (score > 0)
-                yield return (key.Index, score, key.Proportion);
+                yield return (key, score);
         }
     }
 
@@ -50,17 +49,12 @@ public class FuzzyKeyResolver : IKeyResolver
 
     private static Dictionary<string, int> DefaultWeights() => new()
     {
-        {"speciescode", 10},
-        {"stage", 3},
-        {"length", 3},
-        {"age", 3},
-        {"gearcode", 10},
-        {"flag", 10 },
+        {SpeciesFields.SpeciesCode, 10},
+        {SpeciesFields.Lifestage, 3},
+        {SpeciesFields.Length, 3},
+        {SpeciesFields.Age, 3},
+        {FishingFields.GearCode, 10},
+        {FishingFields.Flag, 10 },
         {"marketcode", 10}
     };
-
-    public MultiLevelKey? GetKey(int index, KeyDomain domain)
-    {
-        return m_mappings.FirstOrDefault(pair => (pair.Index == index && pair.Domain == domain));
-    }
 }

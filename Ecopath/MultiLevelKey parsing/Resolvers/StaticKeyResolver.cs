@@ -3,19 +3,14 @@
 /// </summary>
 public class StaticKeyResolver : IKeyResolver
 {
-    private readonly List<MultiLevelKey> m_mappings;
+    private readonly IEnumerable<MultiLevelKey> m_mappings;
 
-    public StaticKeyResolver(List<MultiLevelKey> mappings)
+    public StaticKeyResolver(IEnumerable<MultiLevelKey> mappings)
     {
         m_mappings = mappings;
     }
 
-    public MultiLevelKey? GetKey(int index, KeyDomain domain)
-    {
-        return m_mappings.FirstOrDefault(pair => (pair.Index == index && pair.Domain == domain));
-    }
-
-    public IEnumerable<(int index, int score, float propertion)> FindAllMatches(MultiLevelKey key, KeyDomain domain)
+    public IEnumerable<(MultiLevelKey key, int score)> FindAllMatches(MultiLevelKey key, KeyDomain domain)
     {
         var fieldsB = key.FieldNames().OrderBy(f => f).ToList();
 
@@ -40,7 +35,7 @@ public class StaticKeyResolver : IKeyResolver
             }
 
             if (allEqual)
-                yield return (kvp.Index, 1, kvp.Proportion);
+                yield return (kvp, 1);
         }
     }
 }

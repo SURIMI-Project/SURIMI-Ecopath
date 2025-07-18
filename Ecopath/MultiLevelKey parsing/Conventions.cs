@@ -14,8 +14,8 @@ public class SpeciesFields
     public static readonly string Length = "length";
 }
 
-public class FleetSegmentFields
+public class FishingFields
 {
-    public static readonly string FleetSegmentCode = "gearcode";
+    public static readonly string GearCode = "gearcode";
     public static readonly string Flag = "flag";
 }
