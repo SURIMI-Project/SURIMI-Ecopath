@@ -1,5 +1,5 @@
 ﻿/// <summary>
-/// Field-specific descriptors
+/// Field-specific descriptors, organized per <see cref="KeyDomain"/>.
 /// </summary>
 public class KeyFieldDescriptorRegistry
 {

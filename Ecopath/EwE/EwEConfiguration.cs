@@ -143,41 +143,41 @@ namespace Ecopath.EwE
 
         #region Consulting the registry
 
-        public IEnumerable<(EwEMapping match, int score)> ResolveGroups(string speciescode)
+        public IEnumerable<EwEMappingMatch> ResolveGroups(string speciescode)
         {
             MultiLevelKey key = new();
             key.SetField("SpeciesCode", speciescode);
-
             return ResolveGroups(key);
         }
 
-        public IEnumerable<(EwEMapping match, int score)> ResolveGroups(Ecopath.Models.Species species)
+        public IEnumerable<EwEMappingMatch> ResolveGroups(Ecopath.Models.Species species)
         {
             return ResolveGroups(MultiLevelKey.FromObject(species));
         }
 
-        public IEnumerable<(EwEMapping match, int score)> ResolveGroups(MultiLevelKey key)
+        public IEnumerable<EwEMappingMatch> ResolveGroups(MultiLevelKey key)
         {
             StaticKeyResolver resolver = new(this.m_mappings, this.m_keyFieldDescriptorRegistry.Get(KeyDomain.Species));
-            return (IEnumerable<(EwEMapping match, int score)>)resolver.FindAllMatches(key, KeyDomain.Species);
+            foreach (var match in resolver.FindAllMatches(key, KeyDomain.Species))
+                yield return new EwEMappingMatch((EwEMapping)match.Key, match.Score);
         }
 
-        public (EwEMapping match, int score) ResolveFleet(Ecopath.Models.FleetSegment fleetsegment)
+        public IEnumerable<EwEMappingMatch> ResolveFleets(Ecopath.Models.FleetSegment fleetsegment)
         {
             StaticKeyResolver resolver = new StaticKeyResolver(this.m_mappings, this.m_keyFieldDescriptorRegistry.Get(KeyDomain.FleetSegment));
-            var match = resolver.FindAllMatches(MultiLevelKey.FromObject(fleetsegment), KeyDomain.FleetSegment).First();
-            return ((EwEMapping)match.key, match.score);
+            foreach (var match in resolver.FindAllMatches(MultiLevelKey.FromObject(fleetsegment), KeyDomain.FleetSegment))
+                yield return new EwEMappingMatch((EwEMapping)match.Key, match.Score);
         }
 
-        public (EwEMapping match, int score) ResolveMarket(string gearcode, string marketcode)
+        public IEnumerable<EwEMappingMatch> ResolveMarkets(string gearcode, string marketcode)
         {
             MultiLevelKey key = new();
             key.SetField("GearCode", gearcode);
             key.SetField("MarketCode", marketcode);
 
             StaticKeyResolver resolver = new StaticKeyResolver(this.m_mappings, this.m_keyFieldDescriptorRegistry.Get(KeyDomain.Market));
-            var match = resolver.FindAllMatches(key, KeyDomain.Market).First();
-            return ((EwEMapping)match.key, match.score);
+            foreach (var match in resolver.FindAllMatches(key, KeyDomain.Market))
+                yield return new EwEMappingMatch((EwEMapping)match.Key, match.Score);
         }
 
         public EwEMapping? Find(int iIndex, KeyDomain domain)

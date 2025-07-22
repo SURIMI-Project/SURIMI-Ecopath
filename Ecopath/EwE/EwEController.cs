@@ -5,6 +5,7 @@ using EwEPlugin;
 using EwEUtils.Core;
 using System.Diagnostics;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace Ecopath.EwE
 {
@@ -364,21 +365,21 @@ namespace Ecopath.EwE
             var ds = this.m_core.EcopathDataStructures;
 
             foreach (var price in m_pricesIn)
-            { 
-                int iFleet = m_configuration.ResolveMarket(price.GearCode, price.MarketCode).match?.Index ?? 0;
-                if (iFleet > 0)
+            {
+                float pr = (float)price.Price;
+                foreach (var marketinfo in  this.m_configuration.ResolveMarkets(price.GearCode, price.MarketCode))
                 {
-                    foreach (var info in m_configuration.ResolveGroups(price.SpeciesCode))
+                    int iFleet = marketinfo.EwEMapping.Index;
+                    foreach (var groupinfo in m_configuration.ResolveGroups(price.SpeciesCode))
                     {
-                        float pr = (float)price.Price;
-                        EwEMapping key = info.match;
+                        int iGroup = groupinfo.EwEMapping.Index;
 
                         // ToDo: implement unit conversions?
                         //Debug.Assert(string.Compare(price.Currency, "eur", true) == 0);
                         //Debug.Assert(string.Compare(price.MeasurementUnit, "kg", true) == 0);
 
-                        if (iFleet > 0 && key.Index > 0)
-                            ds.Market[iFleet, key.Index] = (float)price.Price;
+                        if (iFleet > 0 && iGroup > 0)
+                            ds.Market[iFleet, iGroup] = pr;
                         else
                         {
                             // ToDo_JS: decide how to respond to a potential EwE misconfiguration.
@@ -406,54 +407,52 @@ namespace Ecopath.EwE
                 // Try to parse species code in grid
                 MultiLevelKey key = MultiLevelKey.FromObject(grid.Species);
                 // Resolve mapping key for grid fleet segment
-                EwEMapping keyFkeet = m_configuration.ResolveFleet(grid.FleetSegment).match;
-
-                foreach (var groupinfo in m_configuration.ResolveGroups(key))
+                foreach (var fleetinfo in m_configuration.ResolveFleets(grid.FleetSegment))
                 {
-                    EwEMapping keyGroup = groupinfo.match;
-
-                    int iGroup = keyGroup.Index;
-                    int iFleet = keyFkeet.Index;
-
-                    // ToDo: validate group and fleet codes
-
-                    foreach (var cell in grid.DispositionCells)
+                    int iFleet = fleetinfo.EwEMapping.Index;
+                    foreach (var groupinfo in m_configuration.ResolveGroups(key))
                     {
-                        int ir = (int)Math.Floor(bm.LatToRow((float)cell.Latitude));
-                        int ic = (int)Math.Floor(bm.LonToCol((float)cell.Longitude));
-
-                        if (1 <= ir & ir <= ds.InRow & 1 <= ic & ic <= ds.InCol)
-                            if (ds.Depth[ir, ic] > 0)
+                        int iGroup = groupinfo.EwEMapping.Index;
+                        // Validate group and fleet codes
+                        if (iGroup > 0 && iFleet > 0)
+                            foreach (var cell in grid.DispositionCells)
                             {
-                                // Stop this Ecospace fleet from fishing in this cell - should in fact not fish anywhere anymore for this time step!
-                                ds.EffortSpace[iFleet, ir, ic] = 0;
-                                ds.PAreaFished[iFleet][ir, ic] = 0;
+                                int ir = (int)Math.Floor(bm.LatToRow((float)cell.Latitude));
+                                int ic = (int)Math.Floor(bm.LonToCol((float)cell.Longitude));
 
-                                float @catch = KgToDensity(cell.GrossCatchBiomass - cell.LiveDiscardsBiomass, ir, ic);
-                                float deaddisc = KgToDensity(cell.DeadDiscardsBiomass, ir, ic);
-                                float available = ds.Bcell[ir, ic, iGroup];
+                                if (1 <= ir & ir <= ds.InRow & 1 <= ic & ic <= ds.InCol)
+                                    if (ds.Depth[ir, ic] > 0)
+                                    {
+                                        // Stop this Ecospace fleet from fishing in this cell - should in fact not fish anywhere anymore for this time step!
+                                        ds.EffortSpace[iFleet, ir, ic] = 0;
+                                        ds.PAreaFished[iFleet][ir, ic] = 0;
 
-                                Debug.Assert(@catch >= 0, "Cannot fish negatively. Would be nice, but sorry, no.");
-                                Debug.Assert(ds.Depth[ir, ic] > 0, "Not a modelled cell?!");
+                                        float @catch = KgToDensity(cell.GrossCatchBiomass - cell.LiveDiscardsBiomass, ir, ic);
+                                        float deaddisc = KgToDensity(cell.DeadDiscardsBiomass, ir, ic);
+                                        float available = ds.Bcell[ir, ic, iGroup];
 
-                                if (@catch > available)
-                                {
-                                    // WHoah!! External fishing is catching more than is available in this cell
-                                    throw new Exception(string.Format("EwE controller cannot integrate Catch Disposition {0} kg ({1} t/km2), into cell {2}x{3} ({4}x{5}), only {6} t/km2 available in Ecospace",
-                                        (cell.GrossCatchBiomass - cell.LiveDiscardsBiomass), @catch, cell.Longitude, cell.Latitude, ic, ir, available));
-                                }
+                                        Debug.Assert(@catch >= 0, "Cannot fish negatively. Would be nice, but sorry, no.");
+                                        Debug.Assert(ds.Depth[ir, ic] > 0, "Not a modelled cell?!");
 
-                                // Leave some tiny biomass in the cell; fisheries cannot catch it all (and Ecospace does not like divisions by zero)
-                                @catch = (float)Math.Max(1E-10, available - @catch);
+                                        if (@catch > available)
+                                        {
+                                            // WHoah!! External fishing is catching more than is available in this cell
+                                            throw new Exception(string.Format("EwE controller cannot integrate Catch Disposition {0} kg ({1} t/km2), into cell {2}x{3} ({4}x{5}), only {6} t/km2 available in Ecospace",
+                                                (cell.GrossCatchBiomass - cell.LiveDiscardsBiomass), @catch, cell.Longitude, cell.Latitude, ic, ir, available));
+                                        }
 
-                                m_groupSpeciesProportions[iGroup].ApplyFishingMortality(ir, ic, keyGroup, @catch, (double)ds.Bcell[ir, ic, iGroup]);
+                                        // Leave some tiny biomass in the cell; fisheries cannot catch it all (and Ecospace does not like divisions by zero)
+                                        @catch = (float)Math.Max(1E-10, available - @catch);
 
-                                ds.Bcell[ir, ic, iGroup] = @catch;
-                                ds.CatchMap[ir, ic, iGroup] += @catch;
-                                ds.CatchFleetMap[ir, ic, iFleet] += @catch;
-                                ds.Landings[iFleet, iGroup] += @catch;
-                                ds.DiscardsMap[ir, ic, iFleet] += deaddisc;
-                                ds.ResultsByFleetGroup[(int)eSpaceResultsFleetsGroups.CatchBio, iFleet, iGroup, iTime] += @catch;
+                                        m_groupSpeciesProportions[iGroup].ApplyFishingMortality(ir, ic, groupinfo.EwEMapping, @catch, (double)ds.Bcell[ir, ic, iGroup]);
+
+                                        ds.Bcell[ir, ic, iGroup] = @catch;
+                                        ds.CatchMap[ir, ic, iGroup] += @catch;
+                                        ds.CatchFleetMap[ir, ic, iFleet] += @catch;
+                                        ds.Landings[iFleet, iGroup] += @catch;
+                                        ds.DiscardsMap[ir, ic, iFleet] += deaddisc;
+                                        ds.ResultsByFleetGroup[(int)eSpaceResultsFleetsGroups.CatchBio, iFleet, iGroup, iTime] += @catch;
+                                    }
                             }
                     }
                 }

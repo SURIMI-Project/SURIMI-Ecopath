@@ -1,4 +1,7 @@
-﻿public class KeyFieldDescriptor
+﻿/// <summary>
+/// Describes the parsing properties of multi-level key fields.
+/// </summary>
+public class KeyFieldDescriptor
 {
     public string FieldName { get; }
     public bool IsRequired { get; }

@@ -3,5 +3,5 @@
 /// </summary>
 public interface IKeyResolver
 {
-    IEnumerable<(MultiLevelKey key, int score)> FindAllMatches(MultiLevelKey key, KeyDomain domain);
+    IEnumerable<MultiLevelKeyMatch> FindAllMatches(MultiLevelKey key, KeyDomain domain);
 }

@@ -12,14 +12,16 @@ public class StaticKeyResolver : IKeyResolver
         m_fieldDescriptors = descriptors;
     }
 
-    public IEnumerable<(MultiLevelKey key, int score)> FindAllMatches(MultiLevelKey input, KeyDomain domain)
+    public IEnumerable<MultiLevelKeyMatch> FindAllMatches(MultiLevelKey input, KeyDomain domain)
     {
+        List<MultiLevelKeyMatch> results = new();
         foreach (var key in m_mappings.Where(n => n.Domain == domain))
         {
             int score = MatchScore(input, key);
             if (score > 0)
-                yield return (key, score);
+                results.Add(new MultiLevelKeyMatch(key, score));
         }
+        return results;
     }
 
     private int MatchScore(MultiLevelKey a, MultiLevelKey b)
