@@ -22,13 +22,13 @@ public class FuzzyKeyResolver : IKeyResolver
         m_matcherRegistry = matcherRegistry;
     }
 
-    public IEnumerable<(MultiLevelKey key, int score)> FindAllMatches(MultiLevelKey input, KeyDomain domain)
+    public IEnumerable<MultiLevelKeyMatch> FindAllMatches(MultiLevelKey input, KeyDomain domain)
     {
         foreach (var key in m_mappings.Where(n => n.Domain == domain))
         {
             int score = MatchScore(input, key);
             if (score > 0)
-                yield return (key, score);
+                yield return new MultiLevelKeyMatch(key, score);
         }
     }
 
