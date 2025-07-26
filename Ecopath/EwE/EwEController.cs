@@ -5,6 +5,7 @@ using EwEPlugin;
 using EwEUtils.Core;
 using System.Diagnostics;
 using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Ecopath.EwE
@@ -199,10 +200,17 @@ namespace Ecopath.EwE
 
             // Now load the configuration
             this.m_configuration.Load(this.m_core);
-            this.m_logger.LogInformation("EwE - exposed {0} group(s), {1} fleet(s) and {2} market(s) to gRPC",
-                this.m_configuration.Mappings(KeyDomain.Species).Count(), 
-                this.m_configuration.Mappings(KeyDomain.FleetSegment).Count(), 
-                this.m_configuration.Mappings(KeyDomain.Market).Count());
+            StringBuilder info = new();
+            info.AppendLine("EwE FG - species mappings:");
+            foreach (var mapping in this.m_configuration.Mappings(KeyDomain.Species))
+                info.AppendLine(string.Format(" - {0}", mapping.ToInfoString(m_core)));
+            info.AppendLine("EwE fleet - fleetsegment mappings:");
+            foreach (var mapping in this.m_configuration.Mappings(KeyDomain.FleetSegment))
+                info.AppendLine(string.Format(" - {0}", mapping.ToInfoString(m_core)));
+            info.AppendLine("EwE fleet - market mappings:");
+            foreach (var mapping in this.m_configuration.Mappings(KeyDomain.Market))
+                info.AppendLine(string.Format(" - {0}", mapping.ToInfoString(m_core)));
+            this.m_logger.LogInformation(info.ToString());
 
             // Build species proportion accounting
             foreach (int iGroup in m_configuration.FishedGroups)
@@ -473,10 +481,7 @@ namespace Ecopath.EwE
         private void CacheBiomassData()
         {
             // Wipe
-            this.m_biomassOut = new Biomass()
-            {
-                MeasurementUnit = "kg"
-            };
+            this.m_biomassOut = new Biomass() { MeasurementUnit = "kg" };
             if (this.m_configuration != null)
             {
                 cEcospaceDataStructures ds = this.m_core.EcospaceDataStructures;
@@ -487,7 +492,7 @@ namespace Ecopath.EwE
                     Species? species = key.ToObject<Ecopath.Models.Species>();
                     if (species != null)
                     {
-                        BiomassGrid grid = new BiomassGrid()
+                        BiomassGrid grid = new()
                         {
                             Species = species
                         };

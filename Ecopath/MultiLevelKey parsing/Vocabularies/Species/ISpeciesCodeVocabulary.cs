@@ -8,14 +8,14 @@
     (string match, int score) MatchSpeciesName(string speciesname, int iMinScore = 70);
 
     /// <summary>
-    /// Map a code in the ontology to a species name.
+    /// Map a code in the vocabulary to a species name.
     /// </summary>
     /// <param name="speciescode"></param>
     /// <returns></returns>
     string CodeToSpecies(string speciescode);
 
     /// <summary>
-    /// Map a species name to a code in the ontology.
+    /// Map a species name to a code in the vocabulary.
     /// </summary>
     /// <param name="speciesname"></param>
     /// <returns></returns>

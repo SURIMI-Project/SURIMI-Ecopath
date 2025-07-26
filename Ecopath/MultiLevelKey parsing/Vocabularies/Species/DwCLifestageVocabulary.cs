@@ -1,4 +1,5 @@
-﻿using Utilities;
+﻿using System.Text.RegularExpressions;
+using Utilities;
 
 public class DwCLifestageVocabulary : ILifestageVocabulary
 {
@@ -6,10 +7,6 @@ public class DwCLifestageVocabulary : ILifestageVocabulary
 
     public DwCLifestageVocabulary()
     {
-        m_keys["juvenile"] = ["young", "juvenile", "small"];
-        m_keys["adult"] = ["adult", "large", "old"];
-        m_keys["larva"] = ["larva", "spawn", "hatchling"];
-        m_keys["egg"] = ["egg"];
     }
 
     public KeyDomain KeyDomain => KeyDomain.Species;
@@ -26,8 +23,11 @@ public class DwCLifestageVocabulary : ILifestageVocabulary
             int bestScore = 0;
 
             // Hack and slash version
-            foreach (string bit in stage.Split(" ", StringSplitOptions.RemoveEmptyEntries))
+            foreach (string bit in Regex.Split(stage, @"\w+", RegexOptions.CultureInvariant))
             {
+                if (string.IsNullOrWhiteSpace(bit))
+                    continue;
+
                 foreach (string key in m_keys.Keys)
                 {
                     (string Match, int Score) match = NameUtilities.FuzzyMatch(bit, m_keys[key]);
@@ -43,5 +43,17 @@ public class DwCLifestageVocabulary : ILifestageVocabulary
                 return (bestKey, bestScore);
         }
         return (string.Empty, 0);
+    }
+
+    public bool Load()
+    {
+        m_keys.Clear();
+
+        m_keys["juvenile"] = ["young", "juvenile", "small"];
+        m_keys["adult"] = ["adult", "large", "old"];
+        m_keys["larva"] = ["larva", "spawn", "hatchling"];
+        m_keys["egg"] = ["egg"];
+
+        return true;
     }
 }
