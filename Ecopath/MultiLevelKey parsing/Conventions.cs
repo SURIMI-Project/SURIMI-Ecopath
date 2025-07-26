@@ -2,7 +2,8 @@
 {
     Species,
     FleetSegment,
-    Market
+    Market,
+    Country
 }
 
 public class SpeciesFields
