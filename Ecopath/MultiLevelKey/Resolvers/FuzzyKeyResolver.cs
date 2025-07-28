@@ -38,15 +38,15 @@ public class FuzzyKeyResolver : IKeyResolver
 
         foreach (KeyFieldDescriptor descr in m_fieldDescriptors) 
         {
-            string? valueA = a.GetField(descr.FieldName);
-            string? valueB = b.GetField(descr.FieldName);
+            MultiLevelKeyField? valueA = a.GetField(descr.FieldName);
+            MultiLevelKeyField? valueB = b.GetField(descr.FieldName);
 
             // Fail early
-            if (descr.IsRequired && (string.IsNullOrWhiteSpace(valueA) || string.IsNullOrEmpty(valueB)))
+            if (descr.IsRequired && (valueA == null || valueB == null))
                 return 0;
 
             var matcher = m_matcherRegistry?.Get(descr.FieldName) ?? new ExactFieldMatcher();
-            double similarity = matcher.Score(descr.FieldName, valueA, valueB);
+            double similarity = matcher.Score(descr.FieldName, valueA!.ToString(true), valueB!.ToString(true));
 
             score += (int)(descr.Weight * similarity);
         }
