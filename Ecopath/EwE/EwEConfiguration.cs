@@ -3,17 +3,10 @@ using EwECore.Auxiliary;
 
 namespace Ecopath.EwE
 {
-    // This code is going to have to change
-    // Use multi-level keys to identify groups
-    // Do not use ontologies; hard code keys to the SURIMI standard
-    // However, use reflection to map between EwE items and SURIMI entities
-    //
-    //
 
     public partial class EwEConfiguration : IEwEConfiguration
     {
         #region Data
-
 
         //private readonly MatcherRegistry m_registry = new(); // Overkill for now
 
@@ -37,6 +30,23 @@ namespace Ecopath.EwE
         private readonly HashSet<int> m_fishedGroups = new();
 
         #endregion // Data
+
+        private class EwEMappingComparer : IComparer<EwEMapping>
+        {
+            public int Compare(EwEMapping? x, EwEMapping? y)
+            {
+                if (x == null && y == null)
+                    return 0;
+                else if (x == null)
+                    return -1;
+                else if (y == null)
+                    return 1;
+
+                if (x.Index < y.Index) return -1;
+                if (x.Index > y.Index) return 1;
+                return string.Compare(x.ToString(), y.ToString());
+            }
+        }
 
         public EwEConfiguration()
         {
@@ -135,6 +145,8 @@ namespace Ecopath.EwE
             //m_mappings.Add(new EwEMapping("speciescode=ASFIS:ANE; stage=dwc:adult", KeyDomain.Species, 40));          // Anchovy (a)
             //m_mappings.Add(new EwEMapping("speciescode=ASFIS:PIL; stage=dwc:juvenile", KeyDomain.Species, 41));       // Sardine (j)
             //m_mappings.Add(new EwEMapping("speciescode=ASFIS:PIL; stage=dwc:adult", KeyDomain.Species, 42));          // Sardine (a)
+
+            m_mappings.Sort(new EwEMappingComparer());
 
             return true;
         }
@@ -280,16 +292,28 @@ namespace Ecopath.EwE
                                 key.SetField(SpeciesFields.SpeciesCode, vocSpecies.VocabularyName + ":" + code);
 
                                 // Try to infer the stage from the group name
-                                key.SetField(SpeciesFields.Lifestage, vocLifeStage.VocabularyName + ":" + vocLifeStage.MatchLifestage(grp.Name).match);
+                                string ls = vocLifeStage.MatchLifestage(grp.Name).match;
+                                key.SetField(SpeciesFields.Lifestage, vocLifeStage.VocabularyName + ":" + ls);
                                 key.Index = iGroup;
                                 key.Proportion = 1;
 
                                 this.m_mappings.Add(key);
                             }
+                            else
+                            {
+                                // Not fished: do not register species for data exchange
+                            }
                         }
                     }
                     else
                     {
+                        cEcoPathGroupInput grp = core.get_EcopathGroupInputs(taxon.iGroup);
+                        if (grp.iStanza > 0)
+                        {
+                            Console.WriteLine("EwE Config error: regular taxon {0} attached to stanza group {1}", taxon.DBID, taxon.iGroup);
+                            continue;   
+                        }
+
                         if (this.FishedGroups.Contains(taxon.iGroup))
                         {
                             var key = new EwEMapping();
@@ -300,6 +324,10 @@ namespace Ecopath.EwE
 
                             this.m_mappings.Add(key);
                         }
+                        else
+                        {
+                            // Not fished: do not register species for data exchange
+                        }
                     }
                 }
             }
@@ -308,10 +336,10 @@ namespace Ecopath.EwE
         private void ReadFleetMappings(cCore core)
         {
             // The name of the vocabulary is implied here, but should be read from the fields
-            IGearCodeVocabulary? vocGear = m_vocabularies.Get<IGearCodeVocabulary>("ISSCFG");
-            ICountryCodeVocabulary vocCountry = m_vocabularies.Get<ICountryCodeVocabulary>("ISO-3166");
+            //IGearCodeVocabulary? vocGear = m_vocabularies.Get<IGearCodeVocabulary>("ISSCFG");
+            //ICountryCodeVocabulary vocCountry = m_vocabularies.Get<ICountryCodeVocabulary>("ISO-3166");
 
-            #endregion // Smarts
         }
+        #endregion // Smarts
     }
 }

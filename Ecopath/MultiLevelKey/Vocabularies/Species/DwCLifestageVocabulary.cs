@@ -23,7 +23,7 @@ public class DwCLifestageVocabulary : ILifestageVocabulary
             int bestScore = 0;
 
             // Hack and slash version
-            foreach (string bit in Regex.Split(stage, @"\w+", RegexOptions.CultureInvariant))
+            foreach (string bit in stage.Split(' ', StringSplitOptions.RemoveEmptyEntries))
             {
                 if (string.IsNullOrWhiteSpace(bit))
                     continue;
