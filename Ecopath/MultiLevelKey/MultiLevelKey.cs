@@ -41,7 +41,7 @@ public class MultiLevelKey
         return new MultiLevelKey() { Fields = fields };
     }
 
-    public T? ToObject<T>()
+    public T? ToObject<T>(bool includeVocabulary = true)
     {
         var fields = new Dictionary<string, string>();
 
@@ -57,7 +57,7 @@ public class MultiLevelKey
                     {
                         MultiLevelKeyField? val = null;
                         if (Fields.TryGetValue(ToSafeKey(prop.Name), out val))
-                            prop.SetValue(obj, val.ToString());
+                            prop.SetValue(obj, val.ToString(includeVocabulary));
                         else
                             prop.SetValue(obj, string.Empty);
                     }

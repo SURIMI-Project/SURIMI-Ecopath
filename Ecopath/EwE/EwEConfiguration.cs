@@ -92,6 +92,10 @@ namespace Ecopath.EwE
         public int SpinupYears { get; set; } = 0;
         public int StartYear { get; set; } = 0;
         public int MaxRunYears { get; set; } = 400;
+        /// <summary>
+        /// Get/set whether MultiLevelKeys sent out to SURIMI should include vocabularies (e.g., "stage=dwc.lifestage:juvenile")
+        /// </summary>
+        public bool IncludeVocabularies { get; set; } = false;
 
         #region Persistence
 
