@@ -489,7 +489,7 @@ namespace Ecopath.EwE
 
                 foreach (EwEMapping key in this.m_configuration.Mappings(KeyDomain.Species))
                 {
-                    Species? species = key.ToObject<Ecopath.Models.Species>();
+                    Species? species = key.ToObject<Ecopath.Models.Species>(m_configuration.IncludeVocabularies);
                     if (species != null)
                     {
                         BiomassGrid grid = new()
@@ -601,8 +601,8 @@ namespace Ecopath.EwE
 #pragma warning disable CS8601 // Possible null reference assignment.
                             var grid = new DispositionGrid()
                             {
-                                FleetSegment = mlkMarket.ToObject<Ecopath.Models.FleetSegment>(),
-                                Species = mlkGroup.ToObject<Ecopath.Models.Species>()
+                                FleetSegment = mlkMarket.ToObject<Ecopath.Models.FleetSegment>(m_configuration.IncludeVocabularies),
+                                Species = mlkGroup.ToObject<Ecopath.Models.Species>(m_configuration.IncludeVocabularies)
                             };
 #pragma warning restore CS8601 // Possible null reference assignment.
                             for (int ir = 1; ir <= spaceds.InRow; ir++)
@@ -635,7 +635,7 @@ namespace Ecopath.EwE
                     MultiLevelKey? mlkMarket = this.m_configuration.Find(iFleet, KeyDomain.Market);
                     var sales = new SalesSummary()
                     {
-                        MarketId = mlkMarket.GetField("marketcode").ToString(),
+                        MarketId = mlkMarket.GetField("marketcode").ToString(m_configuration.IncludeVocabularies),
                         MeasurementUnit = "kg",
                         Currency = "EUR", // No conversion here
                         Sales = new List<Sale>()
@@ -647,8 +647,8 @@ namespace Ecopath.EwE
                         {
                             Sale s = new Sale()
                             {
-                                GearCode = mlkFleet.GetField("gearcode").ToString(),
-                                SpeciesCode = mlkSpecies.GetField("speciescde").ToString(),
+                                GearCode = mlkFleet.GetField("gearcode").ToString(m_configuration.IncludeVocabularies),
+                                SpeciesCode = mlkSpecies.GetField("speciescde").ToString(m_configuration.IncludeVocabularies),
                                 Quantity = saleTot.Volume,
                                 Value = saleTot.Value
                             };
