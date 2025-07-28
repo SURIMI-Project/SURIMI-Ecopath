@@ -54,16 +54,20 @@ namespace Ecopath.EwE
             StartYear = 2001;
 #endif
 
+            // Register the different species fields that the application may be interested in
             m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.SpeciesCode, true, 10));
             m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Stage, false, 3));
             m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Length, false, 3));
             m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Age, false, 3));
 
+            // Register the different gear fields that the application may be interested in
             m_keyFieldDescriptors.Register(KeyDomain.FleetSegment, new KeyFieldDescriptor(FishingFields.GearCode, true, 10));
             m_keyFieldDescriptors.Register(KeyDomain.FleetSegment, new KeyFieldDescriptor(FishingFields.Flag, false, 3));
 
+            // Register the different market fields that the application may be interested in
             m_keyFieldDescriptors.Register(KeyDomain.FleetSegment, new KeyFieldDescriptor(MarketFields.MarketCode, true, 10));
 
+            // Register available look-up vocabularies
             m_vocabularies.Register(new ASFISSpeciesVocabulary());
             m_vocabularies.Register(new DwCLifestageVocabulary());
             m_vocabularies.Register(new ISSCFGGearCodeVocabulary());
@@ -89,6 +93,7 @@ namespace Ecopath.EwE
 
             string cfgtext = GetConfigBucket(core).Remark;
 
+            // Register fleet segments as gear + flag pairs to match fleet + flag fishing
             m_mappings.Add(new EwEMapping("gearcode=TB; flag=ESP", KeyDomain.FleetSegment, 1));
             m_mappings.Add(new EwEMapping("gearcode=PS; flag=ESP", KeyDomain.FleetSegment, 2));
             m_mappings.Add(new EwEMapping("gearcode=LL; flag=ESP", KeyDomain.FleetSegment, 3));
@@ -101,17 +106,26 @@ namespace Ecopath.EwE
             m_mappings.Add(new EwEMapping("gearcode==EwE:Artisanal; flag=FRA", KeyDomain.FleetSegment, 8));
             m_mappings.Add(new EwEMapping("gearcode==EwE:Recreational; flag=FRA", KeyDomain.FleetSegment, 9));
 
+            // Register fleet segments as gear + market code pairs to match fleet > market deliveries
             m_mappings.Add(new EwEMapping("gearcode=TB; marketcode=ESP", KeyDomain.Market, 1));
             m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=ESP", KeyDomain.Market, 2));
             m_mappings.Add(new EwEMapping("gearcode=LL; marketcode=ESP", KeyDomain.Market, 3));
             m_mappings.Add(new EwEMapping("gearcode=EwE:Artisanal; marketcode=ESP", KeyDomain.Market, 4));
             m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=ESP", KeyDomain.Market, 5));
 
+            m_mappings.Add(new EwEMapping("gearcode=TB; marketcode=FRA", KeyDomain.Market, 5));
+            m_mappings.Add(new EwEMapping("gearcode=TM; marketcode=FRA", KeyDomain.Market, 6));
+            m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=FRA", KeyDomain.Market, 7));
+            m_mappings.Add(new EwEMapping("gearcode==EwE:Artisanal; marketcode=FRA", KeyDomain.Market, 8));
+            m_mappings.Add(new EwEMapping("gearcode==EwE:Recreational; marketcode=FRA", KeyDomain.Market, 9));
+
+
             for (int iGroup = 1; iGroup <= core.nGroups; iGroup++)
                 if (core.get_EcopathGroupInputs(iGroup).IsFished)
                     m_fishedGroups.Add(iGroup);
 
             this.ReadSpeciesMappings(core);
+            this.ReadFleetMappings(core);
 
             //m_mappings.Add(new EwEMapping("speciescode=ASFIS:MUR; stage=dwc:juvenile", KeyDomain.Species, 22));       // Mullet (j)
             //m_mappings.Add(new EwEMapping("speciescode=ASFIS:MUR; stage=dwc:adult", KeyDomain.Species, 23));          // Mullet (a)
@@ -233,10 +247,11 @@ namespace Ecopath.EwE
         /// <param name="core"></param>
         private void ReadSpeciesMappings(cCore core)
         {
+            // The name of the vocabulary is implied here, but should be read from the species code
             ISpeciesCodeVocabulary vocSpecies = m_vocabularies.Get<ISpeciesCodeVocabulary>("asfis");
             ILifestageVocabulary? vocLifeStage = m_vocabularies.Get<ILifestageVocabulary>("dwc.lifestage");
 
-            for (int iTaxa = 1; iTaxa <= core.nTaxon; iTaxa++) 
+            for (int iTaxa = 1; iTaxa <= core.nTaxon; iTaxa++)
             {
                 cTaxon taxon = core.get_Taxon(iTaxa);
                 var code = taxon.CodeFAO;
@@ -270,7 +285,7 @@ namespace Ecopath.EwE
                                 key.Proportion = 1;
 
                                 this.m_mappings.Add(key);
-                            }                        
+                            }
                         }
                     }
                     else
@@ -289,7 +304,14 @@ namespace Ecopath.EwE
                 }
             }
         }
+        
+        private void ReadFleetMappings(cCore core)
+        {
+            // The name of the vocabulary is implied here, but should be read from the fields
+            IGearCodeVocabulary? vocGear = m_vocabularies.Get<IGearCodeVocabulary>("ISSCFG");
+            ICountryCodeVocabulary vocCountry = m_vocabularies.Get<ICountryCodeVocabulary>("ISO-3166");
 
-        #endregion // Smarts
+            #endregion // Smarts
+        }
     }
 }

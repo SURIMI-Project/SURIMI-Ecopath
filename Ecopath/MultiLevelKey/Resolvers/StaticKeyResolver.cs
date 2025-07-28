@@ -30,16 +30,19 @@ public class StaticKeyResolver : IKeyResolver
 
         foreach (KeyFieldDescriptor descr in m_fieldDescriptors)
         {
-            string? valueA = a.GetField(descr.FieldName);
-            string? valueB = b.GetField(descr.FieldName);
+            MultiLevelKeyField? fva = a.GetField(descr.FieldName);
+            MultiLevelKeyField? fvb = b.GetField(descr.FieldName);
 
             // Fail early
-            if (descr.IsRequired && (string.IsNullOrWhiteSpace(valueA) || string.IsNullOrEmpty(valueB)))
+            if (descr.IsRequired && (fva == null || fvb == null))
                 return 0;
 
             // No fuzzy matching
-            if (!string.IsNullOrWhiteSpace(valueA) && !string.IsNullOrWhiteSpace(valueB))
-                score += string.CompareOrdinal(valueA, valueB) == 0 ? descr.Weight : 0;
+            string valueA = fva.ToString();
+            if (!string.IsNullOrWhiteSpace(fva!.Value) && !string.IsNullOrWhiteSpace(fvb!.Value))
+            {
+                score += string.CompareOrdinal(fva!.Value, fvb!.Value) == 0 ? descr.Weight : 0;
+            }
         }
         return score;
     }

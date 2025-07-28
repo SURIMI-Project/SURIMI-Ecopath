@@ -1,21 +1,24 @@
 ﻿using System.Reflection;
+using System.Text;
 
 /// <summary>
 /// Represents a multi-level, self-describing key (e.g., for species or fleets)
 /// </summary>
 public class MultiLevelKey
 {
+    #region Private parts 
 
-    // ToDo: enforce lowercase field names through property access; hide dictionary
-
-    private Dictionary<string, string> Fields { get; set; } = new();
+    private Dictionary<string, MultiLevelKeyField> Fields { get; set; } = new();
     public KeyDomain Domain { get; set; }
+    public DateTime TimeStamp { get; set; } = DateTime.MinValue;
+
+    #endregion // Private parts (tee hee hee)
 
     public static MultiLevelKey FromObject(object source)
     {
         if (source == null) throw new ArgumentNullException(nameof(source));
 
-        var fields = new Dictionary<string, string>();
+        var fields = new Dictionary<string, MultiLevelKeyField>();
 
         var props = source.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
         foreach (var prop in props)
@@ -26,7 +29,11 @@ public class MultiLevelKey
                 {
                     var valueObj = prop.GetValue(source);
                     if (valueObj is string value && !string.IsNullOrWhiteSpace(value))
-                        fields[ToSafeKey(prop.Name)] = value;
+                    {
+                        var key = MultiLevelKeyField.FromString(value);
+                        if (key != null)
+                            fields[ToSafeKey(prop.Name)] = key;
+                    }
                 }
             }
         }
@@ -48,12 +55,11 @@ public class MultiLevelKey
                 {
                     if (prop.CanWrite && prop.PropertyType == typeof(string))
                     {
-                        string? val = "";
+                        MultiLevelKeyField? val = null;
                         if (Fields.TryGetValue(ToSafeKey(prop.Name), out val))
-                            prop.SetValue(obj, val);
+                            prop.SetValue(obj, val.ToString());
                         else
                             prop.SetValue(obj, string.Empty);
-
                     }
                 }
             }
@@ -70,18 +76,13 @@ public class MultiLevelKey
             var parts = kvpair.Split('=');
             if (parts.Length == 2)
             {
-                if (parts[1].Contains(':'))
-                {
-                    // For now remove vocabulary classifiers
-                    parts[1] = parts[1].Substring(parts[1].IndexOf(':') + 1);
-                }
                 this.SetField(parts[0], parts[1]);
             }
         }
         return true;
     }
 
-    public void SetField(string key, string value, bool bRemoveVocabulary = true)
+    public void SetField(string key, string value, bool bRemoveVocabulary = false)
     {
         if (string.IsNullOrWhiteSpace(key)) return;
         if (string.IsNullOrWhiteSpace(value))
@@ -90,17 +91,18 @@ public class MultiLevelKey
             return;
         }
 
-        if (bRemoveVocabulary) 
-            value= value.Substring(value.IndexOf(':') + 1);
+        int iSep = value.IndexOf(':');
+        string vocab = (iSep == -1 | bRemoveVocabulary) ? string.Empty : value.Substring(0, iSep);
+        value = (iSep == -1) ? value: value.Substring(iSep + 1);
 
-        this.Fields[ToSafeKey(key)] = value;
+        this.Fields[ToSafeKey(key)] = new MultiLevelKeyField(value, vocab);
     }
 
-    public string GetField(string key)
+    public MultiLevelKeyField? GetField(string key)
     {
         key = ToSafeKey(key);
         if (this.Fields.TryGetValue(key, out var value)) return value;
-        return string.Empty;
+        return null;
     }
 
     public IEnumerable<string> FieldNames() =>this.Fields.Keys;
@@ -111,9 +113,12 @@ public class MultiLevelKey
     /// <returns></returns>
     public override string ToString()
     {
-        return string.Join(";",
-            this.Fields.OrderBy(kv => kv.Key).Select(kv => $"{kv.Key}={kv.Value}"))
-            + $";domain={this.Domain.ToString().ToLowerInvariant()}";
+        StringBuilder sb = new();
+        sb.Append(string.Join(";",this.Fields.OrderBy(kv => kv.Key).Select(kv => $"{kv.Key}={kv.Value}")));
+        sb.Append($";domain={this.Domain.ToString()}");
+        if (this.TimeStamp > DateTime.MinValue)
+            sb.Append($"timestamp={this.TimeStamp.ToShortDateString()}");
+        return sb.ToString().ToLowerInvariant();
     }
 
     private static string ToSafeKey(string key)

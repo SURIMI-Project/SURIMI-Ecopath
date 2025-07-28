@@ -559,8 +559,6 @@ namespace Ecopath.EwE
                         MultiLevelKey? mlkFleet = this.m_configuration.Find(iFleet, KeyDomain.FleetSegment);
                         MultiLevelKey? mlkMarket = this.m_configuration.Find(iFleet, KeyDomain.Market);
 
-                        string market = mlkMarket?.GetField("marketcode") ?? string.Empty;
-
                         double[,] catches = new double[spaceds.InRow + 1, spaceds.InCol + 1];
                         double[,] deaddisc = new double[spaceds.InRow + 1, spaceds.InCol + 1];
                         double[,] livedisc = new double[spaceds.InRow + 1, spaceds.InCol + 1];
@@ -597,14 +595,16 @@ namespace Ecopath.EwE
                                     }
 
                         // Finally prepare data for the framework
-                        if (bHasData)
+                        if (bHasData && mlkMarket != null && mlkGroup != null)
                         {
                             // Prepare disposition grid
+#pragma warning disable CS8601 // Possible null reference assignment.
                             var grid = new DispositionGrid()
                             {
-                                FleetSegment = mlkMarket?.ToObject<Ecopath.Models.FleetSegment>(),
-                                Species = mlkGroup?.ToObject<Ecopath.Models.Species>()
+                                FleetSegment = mlkMarket.ToObject<Ecopath.Models.FleetSegment>(),
+                                Species = mlkGroup.ToObject<Ecopath.Models.Species>()
                             };
+#pragma warning restore CS8601 // Possible null reference assignment.
                             for (int ir = 1; ir <= spaceds.InRow; ir++)
                                 for (int ic = 1; ic <= spaceds.InCol; ic++)
                                     if (spaceds.Depth[ir, ic] > 0)
@@ -635,7 +635,7 @@ namespace Ecopath.EwE
                     MultiLevelKey? mlkMarket = this.m_configuration.Find(iFleet, KeyDomain.Market);
                     var sales = new SalesSummary()
                     {
-                        MarketId = mlkMarket?.GetField("marketcode") ?? string.Empty,
+                        MarketId = mlkMarket.GetField("marketcode").ToString(),
                         MeasurementUnit = "kg",
                         Currency = "EUR", // No conversion here
                         Sales = new List<Sale>()
@@ -647,8 +647,8 @@ namespace Ecopath.EwE
                         {
                             Sale s = new Sale()
                             {
-                                GearCode = mlkFleet?.GetField("gearcode") ?? string.Empty,
-                                SpeciesCode = mlkSpecies?.GetField("speciescde") ?? string.Empty,
+                                GearCode = mlkFleet.GetField("gearcode").ToString(),
+                                SpeciesCode = mlkSpecies.GetField("speciescde").ToString(),
                                 Quantity = saleTot.Volume,
                                 Value = saleTot.Value
                             };
