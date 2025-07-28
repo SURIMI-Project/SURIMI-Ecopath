@@ -1,5 +1,9 @@
 ﻿using Utilities;
 
+/// =====================================================
+/// <summary>
+/// Registry of named vocabularies, organized by <see cref="KeyDomain"/>
+/// </summary>
 public class VocabularyRegistry
 {
     private readonly Dictionary<string, IControlledVocabulary> m_vocabularies = new();
@@ -23,6 +27,7 @@ public class VocabularyRegistry
             vocab = found as T;
             if (vocab != null)
             { 
+                // Load when obtained?
                 vocab.Load();
                 return true;
             }
@@ -40,11 +45,7 @@ public class VocabularyRegistry
         if (!TryGet<T>(NameUtilities.NormalizeName(name), out var vocab))
             throw new InvalidOperationException(
                 $"Vocabulary '{name}' not found or not of type {typeof(T).Name}.");
-        
-        if (vocab != null)
-            vocab.Load();
-
-        return vocab!;
+          return vocab!;
     }
 
     /// <summary>

@@ -23,16 +23,16 @@ public class ISO3166CountryCodeVocabulary : ICountryCodeVocabulary
             using (var dr = new CsvDataReader(csv))
             {
                 DataTable dt = new();
-                dt.Columns.Add("Alpha3_Code", typeof(string));
-                dt.Columns.Add("Country_Name", typeof(string));
+                dt.Columns.Add("alpha-3", typeof(string));
+                dt.Columns.Add("name", typeof(string));
 
                 try
                 {
                     dt.Load(dr);
                     foreach (DataRow dataRow in dt.Rows)
                     {
-                        string code = (string)dataRow["Alpha3_Code"];
-                        string scname = (string)dataRow["Country_Name"];
+                        string code = dataRow["alpha-3"].ToString() ?? string.Empty;
+                        string scname = dataRow["name"].ToString() ?? string.Empty;
 
                         if (!string.IsNullOrWhiteSpace(code) && !string.IsNullOrWhiteSpace(scname))
                             m_keys[NameUtilities.NormalizeName(scname)] = code;

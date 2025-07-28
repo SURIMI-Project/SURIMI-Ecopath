@@ -92,6 +92,7 @@ namespace Ecopath.EwE
         public int SpinupYears { get; set; } = 0;
         public int StartYear { get; set; } = 0;
         public int MaxRunYears { get; set; } = 400;
+
         /// <summary>
         /// Get/set whether MultiLevelKeys sent out to SURIMI should include vocabularies (e.g., "stage=dwc.lifestage:juvenile")
         /// </summary>
@@ -340,8 +341,8 @@ namespace Ecopath.EwE
         private void ReadFleetMappings(cCore core)
         {
             // The name of the vocabulary is implied here, but should be read from the fields
-            //IGearCodeVocabulary? vocGear = m_vocabularies.Get<IGearCodeVocabulary>("ISSCFG");
-            //ICountryCodeVocabulary vocCountry = m_vocabularies.Get<ICountryCodeVocabulary>("ISO-3166");
+            IGearCodeVocabulary? vocGear = m_vocabularies.Get<IGearCodeVocabulary>("ISSCFG");
+            ICountryCodeVocabulary vocCountry = m_vocabularies.Get<ICountryCodeVocabulary>("ISO-3166");
 
         }
         #endregion // Smarts
