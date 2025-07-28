@@ -4,9 +4,7 @@ using EwECore;
 using EwEPlugin;
 using EwEUtils.Core;
 using System.Diagnostics;
-using System.Globalization;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace Ecopath.EwE
 {
@@ -34,6 +32,11 @@ namespace Ecopath.EwE
     // ! devise system to order up the same scenario across all participating models
     // ! user stories in GitHub!!!
 
+    /// =======================================================================
+    /// <summary>
+    /// Shell class that provides the interactions between SURIMI and the EwE model.
+    /// </summary>
+    /// =======================================================================
     public class EwEController : IEwEController
     {
         #region Private vars 

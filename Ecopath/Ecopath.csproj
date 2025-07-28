@@ -64,6 +64,9 @@
 	  <None Update="Includes\GSA0607EwENBS.eiixml">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <None Update="Includes\ISO-3166-Countries-with-Regional-Codes.csv">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	  <None Update="Includes\ISSCFG_2024.csv">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
