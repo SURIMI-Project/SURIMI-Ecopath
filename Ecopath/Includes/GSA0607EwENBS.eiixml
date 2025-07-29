@@ -4615,7 +4615,7 @@ Jo crec que la biomassa está subestimada",,EcoPathGroupInput:17:BiomassAreaInpu
     <Row>60,35,TCatchInput</Row>
   </Table>
   <Table Name="EcopathGroupSample" Columns="BiomAcc:System.Single,BiomAccRate:System.Single,Biomass:System.Single,ConsBiom:System.Single,EcoEfficiency:System.Single,GroupID:System.Int64,ImpVar:System.Single,ProdBiom:System.Single,SampleID:System.Int64" Num="0" />
-  <Table Name="EcopathGroupTaxon" Columns="EcopathGroupID:System.Int64,PropCatch:System.Single,Proportion:System.Single,TaxonID:System.Int64" Num="368">
+  <Table Name="EcopathGroupTaxon" Columns="EcopathGroupID:System.Int64,PropCatch:System.Single,Proportion:System.Single,TaxonID:System.Int64" Num="364">
     <Row>11,100,100,1</Row>
     <Row>12,100,100,2</Row>
     <Row>13,100,100,3</Row>
@@ -4707,7 +4707,6 @@ Jo crec que la biomassa está subestimada",,EcoPathGroupInput:17:BiomassAreaInpu
     <Row>59,1,1,93</Row>
     <Row>60,1,1,94</Row>
     <Row>28,50,50,95</Row>
-    <Row>22,1,1,96</Row>
   </Table>
   <Table Name="EcopathModel" Columns="Area:System.Single,AreaName:System.String,Author:System.String,CodeEcobase:System.String,Contact:System.String,Country:System.String,DateEnd:System.Int64,DateStart:System.Int64,Description:System.String,EcoSimVulMultAll:System.Int64,EcosystemType:System.String,FirstYear:System.Int64,GroupDigits:System.Byte,LastSaved:System.Single,LastSavedVersion:System.String,MaxLat:System.Single,MaxLon:System.Single,MinLat:System.Single,MinLon:System.Single,ModelID:System.Int64,MonetaryUnit:System.String,Name:System.String,NumDigits:System.Int32,NumYears:System.Single,PublicationDOI:System.String,PublicationRef:System.String,PublicationURI:System.String,StepsPerYear:System.Int64,UnitCurrency:System.Int64,UnitCurrencyCustom:System.String,UnitMonetary:System.String,UnitTime:System.Int64,UnitTimeCustom:System.String,WithSeason:System.Boolean" Num="34">
     <Row>45547,Mediterranean Sea,Marta Coll,,mcoll@icm.csic.es,,,,"The modeled ecosystem is situated at the continental shelf and the upper slope of the Balearic Sea and the Gulf of Lions from Cabo de La Nao in Spain to Toulon in France. The model represented the ecosystem in the 2000-2003, covered 45547 km2, and included depths from 0 to 1000 m. The model was modified from the published version (Corrales et al. 2015) with new information from SPELMED EU project and PELWEB PE Spanish project. Published in Coll et al., 2024",0,,2000,0,45859.64,6.7.0.19431,44,6,38.5,-1.028239,1,,NWMed Model,3,0,,,,12,5,,EUR,1,,False</Row>
@@ -4722,7 +4721,7 @@ Jo crec que la biomassa está subestimada",,EcoPathGroupInput:17:BiomassAreaInpu
     <Row>2,99</Row>
     <Row>5,100</Row>
   </Table>
-  <Table Name="EcopathTaxon" Columns="ClassName:System.String,CodeAphia:System.String,CodeAquaMaps:System.String,CodeFAO:System.String,CodeFB:System.Int64,CodeLCID:System.String,CodeOBIS:System.Int64,CodeSAUP:System.Int64,CodeSLB:System.Int64,CommonName:System.String,ConservationStatus:System.Int64,EcologyType:System.Int64,ExploitationStatus:System.Int64,Exploited:System.Byte,FamilyName:System.String,GenusName:System.String,LastUpdated:System.Single,MaxLength:System.Single,MeanLength:System.Single,MeanLifeSpan:System.Single,MeanWeight:System.Single,OccurrenceStatus:System.Int64,OrderName:System.String,OrganismType:System.Int64,SourceKey:System.String,SourceName:System.String,SpeciesName:System.String,TaxonID:System.Int64,vbgfK:System.Int64,VulnerabiltyIndex:System.Int32,Winf:System.Single" Num="2976">
+  <Table Name="EcopathTaxon" Columns="ClassName:System.String,CodeAphia:System.String,CodeAquaMaps:System.String,CodeFAO:System.String,CodeFB:System.Int64,CodeLCID:System.String,CodeOBIS:System.Int64,CodeSAUP:System.Int64,CodeSLB:System.Int64,CommonName:System.String,ConservationStatus:System.Int64,EcologyType:System.Int64,ExploitationStatus:System.Int64,Exploited:System.Byte,FamilyName:System.String,GenusName:System.String,LastUpdated:System.Single,MaxLength:System.Single,MeanLength:System.Single,MeanLifeSpan:System.Single,MeanWeight:System.Single,OccurrenceStatus:System.Int64,OrderName:System.String,OrganismType:System.Int64,SourceKey:System.String,SourceName:System.String,SpeciesName:System.String,TaxonID:System.Int64,vbgfK:System.Int64,VulnerabiltyIndex:System.Int32,Winf:System.Single" Num="2945">
     <Row>,,,,0,0,-9999,0,0,Squilla mantis,1,3,,6,,Squilla,43424.53,0,0,0,0,1,,5,,,mantis,1,0,0,0</Row>
     <Row>,,,,0,0,-9999,0,0,Nephrops norvegicus,3,3,,6,,Nephrops,43424.53,24,19,0,0,1,,5,,,norvegicus,2,0,0,0</Row>
     <Row>,,,,0,0,-9999,0,0,Aristeus antennatus,3,5,,6,,Aristeus,43424.53,22,0,0,0,1,,5,,,antennatus,3,0,0,0</Row>
@@ -4814,11 +4813,10 @@ Jo crec que la biomassa está subestimada",,EcoPathGroupInput:17:BiomassAreaInpu
     <Row>,,,,0,0,0,0,0,Mola mola,2,8,,1,,Mola,44284.67,213,129.5,-9999,-9999,1,,6,,,Mola,93,-9999,82,-9999</Row>
     <Row>,,,,0,0,0,0,0,Prionace glauca,7,8,,1,,Prionace,44284.91,263.1,184.95,-9999,-9999,1,,6,,,glauca,94,-9999,77,-9999</Row>
     <Row>,,,,0,0,0,0,0,,3,4,,6,,Trisopterus,44589.54,32,-9999,7.5,-9999,1,,6,,,luscus,95,-9999,31,-9999</Row>
-    <Row>,,,,0,0,0,0,0,Sarpa salpa,3,5,,1,,Sarpa,44589.57,-9999,-9999,-9999,-9999,1,,6,,,salpa,96,-9999,-9999,-9999</Row>
-    <Row>Teleostei,,,,0,urn:lsid:marinespecies.org:taxname:126986,0,0,0,Mullus surmuletus,0,0,,0,Mullidae,Mullus,45859.64,-9999,-9999,-9999,-9999,0,Mulliformes,6,126986,EwEWoRMSPlugin!EwEWoRMSPlugin.cWoRMSPluginPoint,surmuletus,97,-9999,-9999,-9999</Row>
-    <Row>Teleostei,,,,0,urn:lsid:marinespecies.org:taxname:126484,0,0,0,Merluccius merluccius,0,0,,0,Merlucciidae,Merluccius,45859.64,-9999,-9999,-9999,-9999,0,Gadiformes,6,126484,EwEWoRMSPlugin!EwEWoRMSPlugin.cWoRMSPluginPoint,merluccius,98,-9999,-9999,-9999</Row>
-    <Row>Teleostei,,,,0,urn:lsid:marinespecies.org:taxname:300610,0,0,0,Engraulis encrasicholoides,0,0,,0,Engraulidae,Engraulis,45859.64,-9999,-9999,-9999,-9999,0,Clupeiformes,6,300610,EwEWoRMSPlugin!EwEWoRMSPlugin.cWoRMSPluginPoint,encrasicholoides,99,-9999,-9999,-9999</Row>
-    <Row>Teleostei,,,,0,urn:lsid:marinespecies.org:taxname:126421,0,0,0,Sardina pilchardus,0,0,,0,Alosidae,Sardina,45859.64,-9999,-9999,-9999,-9999,0,Clupeiformes,6,126421,EwEWoRMSPlugin!EwEWoRMSPlugin.cWoRMSPluginPoint,pilchardus,100,-9999,-9999,-9999</Row>
+    <Row>Teleostei,,,MUR,0,urn:lsid:marinespecies.org:taxname:126986,0,0,0,Mullus surmuletus,0,0,,0,Mullidae,Mullus,45859.64,-9999,-9999,-9999,-9999,0,Mulliformes,6,126986,EwEWoRMSPlugin!EwEWoRMSPlugin.cWoRMSPluginPoint,surmuletus,97,-9999,-9999,-9999</Row>
+    <Row>Teleostei,,,HKE,0,urn:lsid:marinespecies.org:taxname:126484,0,0,0,Merluccius merluccius,0,0,,0,Merlucciidae,Merluccius,45859.64,-9999,-9999,-9999,-9999,0,Gadiformes,6,126484,EwEWoRMSPlugin!EwEWoRMSPlugin.cWoRMSPluginPoint,merluccius,98,-9999,-9999,-9999</Row>
+    <Row>Teleostei,,,ANE,0,urn:lsid:marinespecies.org:taxname:300610,0,0,0,Engraulis encrasicholoides,0,0,,0,Engraulidae,Engraulis,45859.64,-9999,-9999,-9999,-9999,0,Clupeiformes,6,300610,EwEWoRMSPlugin!EwEWoRMSPlugin.cWoRMSPluginPoint,encrasicholoides,99,-9999,-9999,-9999</Row>
+    <Row>Teleostei,,,PIL,0,urn:lsid:marinespecies.org:taxname:126421,0,0,0,Sardina pilchardus,0,0,,0,Alosidae,Sardina,45859.64,-9999,-9999,-9999,-9999,0,Clupeiformes,6,126421,EwEWoRMSPlugin!EwEWoRMSPlugin.cWoRMSPluginPoint,pilchardus,100,-9999,-9999,-9999</Row>
   </Table>
   <Table Name="EcosimModel" Columns="ForcePoints:System.Int64,ModelID:System.Int64" Num="2">
     <Row>1212,1</Row>
