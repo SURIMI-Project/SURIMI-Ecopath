@@ -37,11 +37,13 @@ public class StaticKeyResolver : IKeyResolver
             if (descr.IsRequired && (fva == null || fvb == null))
                 return 0;
 
-            // No fuzzy matching
-            string valueA = fva.ToString();
-            if (!string.IsNullOrWhiteSpace(fva!.Value) && !string.IsNullOrWhiteSpace(fvb!.Value))
+            if (fva != null && fvb != null)
             {
-                score += string.CompareOrdinal(fva!.Value, fvb!.Value) == 0 ? descr.Weight : 0;
+                // No fuzzy matching
+                if (!string.IsNullOrWhiteSpace(fva!.Value) && !string.IsNullOrWhiteSpace(fvb!.Value))
+                {
+                    score += string.CompareOrdinal(fva!.Value, fvb!.Value) == 0 ? descr.Weight : 0;
+                }
             }
         }
         return score;
