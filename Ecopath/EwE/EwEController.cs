@@ -426,6 +426,10 @@ namespace Ecopath.EwE
                         int iGroup = groupinfo.EwEMapping.Index;
                         // Validate group and fleet codes
                         if (iGroup > 0 && iFleet > 0)
+                        {
+                            // Apply a proportion of the selected group is a multi-stanza group that the catch disposition did not identify as such
+                            float scalar = this.StanzaWideModifier(iGroup, key);
+
                             foreach (var cell in grid.DispositionCells)
                             {
                                 int ir = (int)Math.Floor(bm.LatToRow((float)cell.Latitude));
@@ -438,8 +442,8 @@ namespace Ecopath.EwE
                                         ds.EffortSpace[iFleet, ir, ic] = 0;
                                         ds.PAreaFished[iFleet][ir, ic] = 0;
 
-                                        float @catch = KgToDensity(cell.GrossCatchBiomass - cell.LiveDiscardsBiomass, ir, ic);
-                                        float deaddisc = KgToDensity(cell.DeadDiscardsBiomass, ir, ic);
+                                        float @catch = KgToDensity(cell.GrossCatchBiomass - cell.LiveDiscardsBiomass, ir, ic) * scalar;
+                                        float deaddisc = KgToDensity(cell.DeadDiscardsBiomass, ir, ic) * scalar;
                                         float available = ds.Bcell[ir, ic, iGroup];
 
                                         Debug.Assert(@catch >= 0, "Cannot fish negatively. Would be nice, but sorry, no.");
@@ -465,6 +469,7 @@ namespace Ecopath.EwE
                                         ds.ResultsByFleetGroup[(int)eSpaceResultsFleetsGroups.CatchBio, iFleet, iGroup, iTime] += @catch;
                                     }
                             }
+                        }
                     }
                 }
             }
@@ -827,6 +832,31 @@ namespace Ecopath.EwE
             if (m_iSpinUpStep + 1 < m_nSpinUpSteps) return false;
             DateTime dt = this.m_core.EcospaceTimestepToAbsoluteTime(iTime);
             return (dt.Year >= m_configuration?.StartYear);
+        }
+
+        /// <summary>
+        /// It may occur that a group IS flagged as a stanza but that the
+        /// key used to indicate the group does not have stanza data.
+        /// In that case, each life stage is (for now) bluntly fished by
+        /// the n lifestages in the stanza configuration
+        /// </summary>
+        /// <param name="iGroup"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        private float StanzaWideModifier(int iGroup, MultiLevelKey key)
+        {
+            if (key == null)
+                return 0f;
+
+            var group = this.m_core.get_EcopathGroupInputs(iGroup);
+            var iStanza = group.iStanza;
+            bool hasStanzaKeys = (key.FieldNames().Count() > 1);
+
+            if (iStanza < 0 || hasStanzaKeys)
+                return 1f;
+
+            var stanza = this.m_core.get_StanzaGroups(iStanza);
+            return 1 / Math.Max(1, stanza.nLifeStages);
         }
 
         #endregion // Internal - EwE interactions
