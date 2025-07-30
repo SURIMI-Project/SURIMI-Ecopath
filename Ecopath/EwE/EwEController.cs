@@ -48,7 +48,7 @@ namespace Ecopath.EwE
         /// <summary>The framework logger. Very pretty.</summary>
         private readonly ILogger<EwEController> m_logger;
         /// <summary>EwE configuration that defines how EwE entities relate to common concepts (species, fishing, markets, etc).</summary>
-        private EwEConfiguration? m_configuration;
+        private readonly IEwEConfiguration m_configuration;
 
         private RunStates m_runstate = RunStates.idle;
 
@@ -74,7 +74,7 @@ namespace Ecopath.EwE
 
         #endregion // Private vars 
 
-         public EwEController(ILogger<EwEController> logger)
+        public EwEController(ILogger<EwEController> logger, IEwEConfiguration configuration)
         {
 
             this.m_core = new cCore();
@@ -94,6 +94,8 @@ namespace Ecopath.EwE
                 cEcospaceBridgePlugin ppt = (cEcospaceBridgePlugin)pi;
                 ppt.BridgeCallback = this.BridgeCallback;
             }
+
+            m_configuration = configuration;
         }
 
         ~EwEController()
@@ -152,7 +154,7 @@ namespace Ecopath.EwE
         /// Start EwE and wait for Ecospace to get ready for simulations
         /// </summary>
         /// <returns></returns>
-        public async Task<int> StartAsync(EwEConfiguration config, int timeoutMs = 60 * 10 * 1000)
+        public async Task<int> StartAsync(int timeoutMs = 60 * 10 * 1000)
         {
             // Check readiness
             if (RunState != RunStates.idle)
@@ -160,7 +162,6 @@ namespace Ecopath.EwE
 
             // Commence configuration
             this.RunState = RunStates.starting;
-            this.m_configuration = config;
 
             // Load model
             if (!File.Exists(this.m_configuration.ModelName))
@@ -826,7 +827,7 @@ namespace Ecopath.EwE
             cEcospaceDataStructures ds = m_core.EcospaceDataStructures;
             if (m_iSpinUpStep + 1 < m_nSpinUpSteps) return false;
             DateTime dt = this.m_core.EcospaceTimestepToAbsoluteTime(iTime);
-            return (dt.Year >= m_configuration?.StartYear);
+            return (dt.Year >= m_configuration.StartYear);
         }
 
         #endregion // Internal - EwE interactions

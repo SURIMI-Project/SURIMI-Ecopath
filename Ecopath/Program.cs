@@ -17,6 +17,7 @@ public class Program
         });
 
         builder.Services.AddSingleton<CheckSimulationService>(); // Add CheckSimulationService as a Singleton
+        builder.Services.AddSingleton<IEwEConfiguration, EwEConfiguration>();
         builder.Services.AddSingleton<IEwEController, EwEController>();
 
         var app = builder.Build();
