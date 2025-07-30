@@ -27,7 +27,7 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
 
         try
         {
-            var result = await m_controller.StartAsync(new EwEConfiguration());
+            var result = await m_controller.StartAsync();
             if (result != 1)
             {
                 throw new RpcException(new Status(StatusCode.Internal, "Failed to initialise Ecopath"));
