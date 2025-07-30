@@ -4742,7 +4742,7 @@ Jo crec que la biomassa está subestimada",,EcoPathGroupInput:17:BiomassAreaInpu
     <Row>,,,,0,0,-9999,0,0,Sepiolidae,3,3,,1,,,43424.53,2.6,0,0,0,1,,5,,,Sepiolidae,18,0,0,0</Row>
     <Row>,,,,0,0,-9999,0,0,Histioteuthis bonellii,3,4,,1,,Histioteuthis,43424.53,0,0,0,0,1,,5,,,bonellii,19,0,0,0</Row>
     <Row>,,,,0,0,-9999,0,0,Todarodes sagittatus,3,4,,1,,Todarodes s,43424.53,0,0,0,0,1,,5,,,agittatus,20,0,0,0</Row>
-    <Row>,,,,0,0,-9999,0,0,Mullus surmuletus,3,5,,6,,Mullus,43424.53,40,25,11.8,0.196,1,,6,,,surmuletus,22,0,39,0</Row>
+    <Row>,,,,0,0,-9999,0,0,Mullus barbatus,3,5,,6,,Mullus,43424.53,40,25,11.8,0.196,1,,6,,,barbatus,22,0,39,0</Row>
     <Row>,,,,0,0,-9999,0,0,Micromesistius poutassou,1,2,,6,,Micromesistius,43424.53,50,22,7.7,0.062,1,,6,,,poutassou,23,0,33,0</Row>
     <Row>,,,,0,0,-9999,0,0,Lophius budegassa,2,1,,6,,Lophius,43424.53,100,50,28.7,1.925,1,,6,,,budegassa,24,0,68,0</Row>
     <Row>,,,,0,0,-9999,0,0,Lophius piscatorius,3,1,,1,,Lophius,43424.53,200,100,16,12.547,1,,6,,,piscatorius,25,0,72,0</Row>
