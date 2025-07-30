@@ -4615,7 +4615,7 @@ Jo crec que la biomassa está subestimada",,EcoPathGroupInput:17:BiomassAreaInpu
     <Row>60,35,TCatchInput</Row>
   </Table>
   <Table Name="EcopathGroupSample" Columns="BiomAcc:System.Single,BiomAccRate:System.Single,Biomass:System.Single,ConsBiom:System.Single,EcoEfficiency:System.Single,GroupID:System.Int64,ImpVar:System.Single,ProdBiom:System.Single,SampleID:System.Int64" Num="0" />
-  <Table Name="EcopathGroupTaxon" Columns="EcopathGroupID:System.Int64,PropCatch:System.Single,Proportion:System.Single,TaxonID:System.Int64" Num="364">
+  <Table Name="EcopathGroupTaxon" Columns="EcopathGroupID:System.Int64,PropCatch:System.Single,Proportion:System.Single,TaxonID:System.Int64" Num="360">
     <Row>11,100,100,1</Row>
     <Row>12,100,100,2</Row>
     <Row>13,100,100,3</Row>
@@ -4636,7 +4636,6 @@ Jo crec que la biomassa está subestimada",,EcoPathGroupInput:17:BiomassAreaInpu
     <Row>20,40.81744,40.81744,18</Row>
     <Row>21,26.56604,26.56604,19</Row>
     <Row>21,73.43396,73.43396,20</Row>
-    <Row>23,13.69693,13.69693,22</Row>
     <Row>24,100,100,23</Row>
     <Row>25,50.46881,50.46881,24</Row>
     <Row>25,49.53119,49.53119,25</Row>
@@ -4721,7 +4720,7 @@ Jo crec que la biomassa está subestimada",,EcoPathGroupInput:17:BiomassAreaInpu
     <Row>2,99</Row>
     <Row>5,100</Row>
   </Table>
-  <Table Name="EcopathTaxon" Columns="ClassName:System.String,CodeAphia:System.String,CodeAquaMaps:System.String,CodeFAO:System.String,CodeFB:System.Int64,CodeLCID:System.String,CodeOBIS:System.Int64,CodeSAUP:System.Int64,CodeSLB:System.Int64,CommonName:System.String,ConservationStatus:System.Int64,EcologyType:System.Int64,ExploitationStatus:System.Int64,Exploited:System.Byte,FamilyName:System.String,GenusName:System.String,LastUpdated:System.Single,MaxLength:System.Single,MeanLength:System.Single,MeanLifeSpan:System.Single,MeanWeight:System.Single,OccurrenceStatus:System.Int64,OrderName:System.String,OrganismType:System.Int64,SourceKey:System.String,SourceName:System.String,SpeciesName:System.String,TaxonID:System.Int64,vbgfK:System.Int64,VulnerabiltyIndex:System.Int32,Winf:System.Single" Num="2945">
+  <Table Name="EcopathTaxon" Columns="ClassName:System.String,CodeAphia:System.String,CodeAquaMaps:System.String,CodeFAO:System.String,CodeFB:System.Int64,CodeLCID:System.String,CodeOBIS:System.Int64,CodeSAUP:System.Int64,CodeSLB:System.Int64,CommonName:System.String,ConservationStatus:System.Int64,EcologyType:System.Int64,ExploitationStatus:System.Int64,Exploited:System.Byte,FamilyName:System.String,GenusName:System.String,LastUpdated:System.Single,MaxLength:System.Single,MeanLength:System.Single,MeanLifeSpan:System.Single,MeanWeight:System.Single,OccurrenceStatus:System.Int64,OrderName:System.String,OrganismType:System.Int64,SourceKey:System.String,SourceName:System.String,SpeciesName:System.String,TaxonID:System.Int64,vbgfK:System.Int64,VulnerabiltyIndex:System.Int32,Winf:System.Single" Num="2914">
     <Row>,,,,0,0,-9999,0,0,Squilla mantis,1,3,,6,,Squilla,43424.53,0,0,0,0,1,,5,,,mantis,1,0,0,0</Row>
     <Row>,,,,0,0,-9999,0,0,Nephrops norvegicus,3,3,,6,,Nephrops,43424.53,24,19,0,0,1,,5,,,norvegicus,2,0,0,0</Row>
     <Row>,,,,0,0,-9999,0,0,Aristeus antennatus,3,5,,6,,Aristeus,43424.53,22,0,0,0,1,,5,,,antennatus,3,0,0,0</Row>
@@ -4742,7 +4741,6 @@ Jo crec que la biomassa está subestimada",,EcoPathGroupInput:17:BiomassAreaInpu
     <Row>,,,,0,0,-9999,0,0,Sepiolidae,3,3,,1,,,43424.53,2.6,0,0,0,1,,5,,,Sepiolidae,18,0,0,0</Row>
     <Row>,,,,0,0,-9999,0,0,Histioteuthis bonellii,3,4,,1,,Histioteuthis,43424.53,0,0,0,0,1,,5,,,bonellii,19,0,0,0</Row>
     <Row>,,,,0,0,-9999,0,0,Todarodes sagittatus,3,4,,1,,Todarodes s,43424.53,0,0,0,0,1,,5,,,agittatus,20,0,0,0</Row>
-    <Row>,,,,0,0,-9999,0,0,Mullus barbatus,3,5,,6,,Mullus,43424.53,40,25,11.8,0.196,1,,6,,,barbatus,22,0,39,0</Row>
     <Row>,,,,0,0,-9999,0,0,Micromesistius poutassou,1,2,,6,,Micromesistius,43424.53,50,22,7.7,0.062,1,,6,,,poutassou,23,0,33,0</Row>
     <Row>,,,,0,0,-9999,0,0,Lophius budegassa,2,1,,6,,Lophius,43424.53,100,50,28.7,1.925,1,,6,,,budegassa,24,0,68,0</Row>
     <Row>,,,,0,0,-9999,0,0,Lophius piscatorius,3,1,,1,,Lophius,43424.53,200,100,16,12.547,1,,6,,,piscatorius,25,0,72,0</Row>
@@ -4813,7 +4811,7 @@ Jo crec que la biomassa está subestimada",,EcoPathGroupInput:17:BiomassAreaInpu
     <Row>,,,,0,0,0,0,0,Mola mola,2,8,,1,,Mola,44284.67,213,129.5,-9999,-9999,1,,6,,,Mola,93,-9999,82,-9999</Row>
     <Row>,,,,0,0,0,0,0,Prionace glauca,7,8,,1,,Prionace,44284.91,263.1,184.95,-9999,-9999,1,,6,,,glauca,94,-9999,77,-9999</Row>
     <Row>,,,,0,0,0,0,0,,3,4,,6,,Trisopterus,44589.54,32,-9999,7.5,-9999,1,,6,,,luscus,95,-9999,31,-9999</Row>
-    <Row>Teleostei,,,MUR,0,urn:lsid:marinespecies.org:taxname:126986,0,0,0,Mullus surmuletus,0,0,,0,Mullidae,Mullus,45859.64,-9999,-9999,-9999,-9999,0,Mulliformes,6,126986,EwEWoRMSPlugin!EwEWoRMSPlugin.cWoRMSPluginPoint,surmuletus,97,-9999,-9999,-9999</Row>
+    <Row>Teleostei,,,MUT,0,urn:lsid:marinespecies.org:taxname:126986,0,0,0,Mullus barbatus,0,0,,0,Mullidae,Mullus,45859.64,-9999,-9999,-9999,-9999,0,Mulliformes,6,126986,,barbatus,97,-9999,-9999,-9999</Row>
     <Row>Teleostei,,,HKE,0,urn:lsid:marinespecies.org:taxname:126484,0,0,0,Merluccius merluccius,0,0,,0,Merlucciidae,Merluccius,45859.64,-9999,-9999,-9999,-9999,0,Gadiformes,6,126484,EwEWoRMSPlugin!EwEWoRMSPlugin.cWoRMSPluginPoint,merluccius,98,-9999,-9999,-9999</Row>
     <Row>Teleostei,,,ANE,0,urn:lsid:marinespecies.org:taxname:300610,0,0,0,Engraulis encrasicholoides,0,0,,0,Engraulidae,Engraulis,45859.64,-9999,-9999,-9999,-9999,0,Clupeiformes,6,300610,EwEWoRMSPlugin!EwEWoRMSPlugin.cWoRMSPluginPoint,encrasicholoides,99,-9999,-9999,-9999</Row>
     <Row>Teleostei,,,PIL,0,urn:lsid:marinespecies.org:taxname:126421,0,0,0,Sardina pilchardus,0,0,,0,Alosidae,Sardina,45859.64,-9999,-9999,-9999,-9999,0,Clupeiformes,6,126421,EwEWoRMSPlugin!EwEWoRMSPlugin.cWoRMSPluginPoint,pilchardus,100,-9999,-9999,-9999</Row>
