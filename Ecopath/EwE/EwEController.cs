@@ -74,10 +74,8 @@ namespace Ecopath.EwE
 
         #endregion // Private vars 
 
-        public EwEController(ILogger<EwEController> logger, IEwEConfiguration configuration)
+        public EwEController(ILogger<EwEController> logger, IEwEConfiguration configuration, cCore core)
         {
-
-            this.m_core = new cCore();
             cLog.VerboseLevel = eVerboseLevel.Disabled; // Turn off all internal event logging
             this.RunState = RunStates.idle;
 
@@ -85,7 +83,7 @@ namespace Ecopath.EwE
             Directory.SetCurrentDirectory(System.AppDomain.CurrentDomain.BaseDirectory);
             this.m_logger = logger;
 
-            this.m_core.PluginManager = new cPluginManager();
+            this.m_core!.PluginManager = new cPluginManager();
             this.m_logger.LogInformation("EwE loaded {0} plug-in(s)", this.m_core.PluginManager.LoadPlugins());
 
             IPlugin? pi = GetPlugin(typeof(cEcospaceBridgePlugin));
@@ -96,6 +94,7 @@ namespace Ecopath.EwE
             }
 
             m_configuration = configuration;
+            m_core = core;
         }
 
         ~EwEController()
