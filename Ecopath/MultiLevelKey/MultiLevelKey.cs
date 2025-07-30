@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Data;
+using System.Reflection;
 using System.Text;
 
 /// <summary>
@@ -65,6 +66,24 @@ public class MultiLevelKey
             }
         }
         return (T?)obj;
+    }
+
+    public static MultiLevelKey FromDataRow(DataRow source)
+    {
+        var fields = new Dictionary<string, MultiLevelKeyField>();
+        var dt = source.Table;
+
+        foreach (DataColumn col in dt.Columns)
+        {
+            var valueObj = source[col];
+            if (valueObj is string value && !string.IsNullOrWhiteSpace(value))
+            {
+                var key = MultiLevelKeyField.FromString(value);
+                if (key != null)
+                    fields[ToSafeKey(col.ColumnName)] = key;
+            }
+        }
+        return new MultiLevelKey() { Fields = fields };
     }
 
     public bool Parse(string keyStr)
