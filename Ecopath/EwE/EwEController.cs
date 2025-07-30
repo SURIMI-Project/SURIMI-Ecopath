@@ -76,33 +76,33 @@ namespace Ecopath.EwE
 
         public EwEController(ILogger<EwEController> logger, IEwEConfiguration configuration, cCore core)
         {
+            m_configuration = configuration;
+            m_core = core;
+
             cLog.VerboseLevel = eVerboseLevel.Disabled; // Turn off all internal event logging
-            this.RunState = RunStates.idle;
+            RunState = RunStates.idle;
 
             // To make sure we can find local resources. This is rather hack.
             Directory.SetCurrentDirectory(System.AppDomain.CurrentDomain.BaseDirectory);
-            this.m_logger = logger;
+            m_logger = logger;
 
-            this.m_core!.PluginManager = new cPluginManager();
-            this.m_logger.LogInformation("EwE loaded {0} plug-in(s)", this.m_core.PluginManager.LoadPlugins());
+            m_core.PluginManager = new cPluginManager();
+            m_logger.LogInformation("EwE loaded {0} plug-in(s)", m_core.PluginManager.LoadPlugins());
 
             IPlugin? pi = GetPlugin(typeof(cEcospaceBridgePlugin));
             if (pi != null)
             {
                 cEcospaceBridgePlugin ppt = (cEcospaceBridgePlugin)pi;
-                ppt.BridgeCallback = this.BridgeCallback;
+                ppt.BridgeCallback = BridgeCallback;
             }
-
-            m_configuration = configuration;
-            m_core = core;
         }
 
         ~EwEController()
         {
-            this.ForceStop();
+            ForceStop();
 
-            this.m_core.CloseModel();
-            this.m_core.Dispose();
+            m_core.CloseModel();
+            m_core.Dispose();
         }
 
         #region EwE helpers
@@ -129,14 +129,14 @@ namespace Ecopath.EwE
         /// </summary>
         public RunStates RunState
         {
-            get => this.m_runstate;
+            get => m_runstate;
             private set
             {
-                if (this.m_runstate != value)
+                if (m_runstate != value)
                 {
                     //Console.WriteLine("Run state set to " + value.ToString());
-                    this.m_runstate = value;
-                    this.OnRunStateChanged?.Invoke(this.m_runstate);
+                    m_runstate = value;
+                    OnRunStateChanged?.Invoke(m_runstate);
                 }
             }
         }
@@ -160,70 +160,70 @@ namespace Ecopath.EwE
                 throw new Exception("EwE controller already busy, aborting");
 
             // Commence configuration
-            this.RunState = RunStates.starting;
+            RunState = RunStates.starting;
 
             // Load model
-            if (!File.Exists(this.m_configuration.ModelName))
-                throw new FileNotFoundException("EwE model file '{0}' cannot be found", this.m_configuration.ModelName); 
-            if (!this.m_core.LoadModel(m_configuration.ModelName))
-                throw new Exception($"EwE could not load model '{this.m_configuration.ModelName}'");
-            this.m_logger.LogInformation("EwE - Ecopath loaded file '{0}', model '{1}'", this.m_configuration.ModelName, this.m_core.EcopathDataStructures.ModelName);
+            if (!File.Exists(m_configuration.ModelName))
+                throw new FileNotFoundException("EwE model file '{0}' cannot be found", m_configuration.ModelName); 
+            if (!m_core.LoadModel(m_configuration.ModelName))
+                throw new Exception($"EwE could not load model '{m_configuration.ModelName}'");
+            m_logger.LogInformation("EwE - Ecopath loaded file '{0}', model '{1}'", m_configuration.ModelName, m_core.EcopathDataStructures.ModelName);
 
             // Check Ecopath balancing
             bool bIsBalanced = false;
-            if (!this.m_core.RunEcopath(ref bIsBalanced) | !bIsBalanced)
+            if (!m_core.RunEcopath(ref bIsBalanced) | !bIsBalanced)
                 throw new Exception("EwE - Ecopath does not balance");
-            this.m_logger.LogInformation("EwE - Ecopath does balance");
+            m_logger.LogInformation("EwE - Ecopath does balance");
 
             // Check and load Ecosim
-            if (this.m_configuration.EcosimScenario <= 0 | !this.m_core.LoadEcosimScenario(m_configuration.EcosimScenario))
-                throw new Exception($"EwE - Ecosim scenario {this.m_configuration.EcosimScenario} not loaded");
-            this.m_logger.LogInformation("EwE - Ecosim scenario {0} loaded", this.m_configuration.EcosimScenario);
-            if (this.m_configuration.EcosimTimeSeries > 0)
+            if (m_configuration.EcosimScenario <= 0 | !m_core.LoadEcosimScenario(m_configuration.EcosimScenario))
+                throw new Exception($"EwE - Ecosim scenario {m_configuration.EcosimScenario} not loaded");
+            m_logger.LogInformation("EwE - Ecosim scenario {0} loaded", m_configuration.EcosimScenario);
+            if (m_configuration.EcosimTimeSeries > 0)
             {
-                if (!this.m_core.LoadTimeSeries(m_configuration.EcosimTimeSeries))
-                    throw new Exception($"EwE - Ecosim time series {this.m_configuration.EcosimTimeSeries} not loaded");
-                this.m_logger.LogInformation("EwE - Ecosim time series {0} loaded", this.m_configuration.EcosimTimeSeries);
+                if (!m_core.LoadTimeSeries(m_configuration.EcosimTimeSeries))
+                    throw new Exception($"EwE - Ecosim time series {m_configuration.EcosimTimeSeries} not loaded");
+                m_logger.LogInformation("EwE - Ecosim time series {0} loaded", m_configuration.EcosimTimeSeries);
             }
 
             // Configure Ecosim
-            cEcoSimModelParameters parms = this.m_core.EcosimModelParameters;
-            parms.NumberYears = this.m_configuration.MaxRunYears; // No of years apply to both Sim and Space
+            cEcoSimModelParameters parms = m_core.EcosimModelParameters;
+            parms.NumberYears = m_configuration.MaxRunYears; // No of years apply to both Sim and Space
 
             // Run Ecosim
-            this.m_logger.LogInformation("EwE - Going to run Ecosim for {0} years", parms.NumberYears);
-            if (!this.m_core.RunEcosim())
+            m_logger.LogInformation("EwE - Going to run Ecosim for {0} years", parms.NumberYears);
+            if (!m_core.RunEcosim())
                 throw new Exception("EwE - Ecosim failed to run");
-            this.m_logger.LogInformation("EwE - Ecosim run successfully");
+            m_logger.LogInformation("EwE - Ecosim run successfully");
 
             // Check and load Ecospace
-            if (this.m_configuration.EcospaceScenario <= 0 | !this.m_core.LoadEcospaceScenario(this.m_configuration.EcospaceScenario))
-                throw new Exception($"EwE - Ecospace scenario {this.m_configuration.EcospaceScenario} not loaded");
-            this.m_logger.LogInformation("EwE - Ecospace scenario {0} loaded", this.m_configuration.EcospaceScenario);
+            if (m_configuration.EcospaceScenario <= 0 | !m_core.LoadEcospaceScenario(m_configuration.EcospaceScenario))
+                throw new Exception($"EwE - Ecospace scenario {m_configuration.EcospaceScenario} not loaded");
+            m_logger.LogInformation("EwE - Ecospace scenario {0} loaded", m_configuration.EcospaceScenario);
 
             // Now load the configuration
-            this.m_configuration.Load(this.m_core);
+            m_configuration.Load(m_core);
             StringBuilder info = new();
             info.AppendLine("EwE FG - species mappings:");
-            foreach (var mapping in this.m_configuration.Mappings(KeyDomain.Species))
+            foreach (var mapping in m_configuration.Mappings(KeyDomain.Species))
                 info.AppendLine(string.Format(" - {0}", mapping.ToInfoString(m_core)));
             info.AppendLine("EwE fleet - fleetsegment mappings:");
-            foreach (var mapping in this.m_configuration.Mappings(KeyDomain.FleetSegment))
+            foreach (var mapping in m_configuration.Mappings(KeyDomain.FleetSegment))
                 info.AppendLine(string.Format(" - {0}", mapping.ToInfoString(m_core)));
             info.AppendLine("EwE fleet - market mappings:");
-            foreach (var mapping in this.m_configuration.Mappings(KeyDomain.Market))
+            foreach (var mapping in m_configuration.Mappings(KeyDomain.Market))
                 info.AppendLine(string.Format(" - {0}", mapping.ToInfoString(m_core)));
-            this.m_logger.LogInformation(info.ToString());
+            m_logger.LogInformation(info.ToString());
 
             // Build species proportion accounting
             foreach (int iGroup in m_configuration.FishedGroups)
-                this.m_groupSpeciesProportions[iGroup] = GroupSpeciesProportionsFactory.Create(this.m_core, iGroup, m_configuration.Mappings(KeyDomain.Species));
+                m_groupSpeciesProportions[iGroup] = GroupSpeciesProportionsFactory.Create(m_core, iGroup, m_configuration.Mappings(KeyDomain.Species));
 
             // Configure Ecospace
-            cEcospaceDataStructures ds = this.m_core.EcospaceDataStructures;
-            ds.SpinUpYears = this.m_configuration.SpinupYears;
-            ds.UseSpinUp = (this.m_configuration.SpinupYears > 0);
-            this.m_logger.LogInformation("EwE - Ecospace spin-up for {0} years", ds.UseSpinUp ? this.m_configuration.SpinupYears.ToString() : "off");
+            cEcospaceDataStructures ds = m_core.EcospaceDataStructures;
+            ds.SpinUpYears = m_configuration.SpinupYears;
+            ds.UseSpinUp = (m_configuration.SpinupYears > 0);
+            m_logger.LogInformation("EwE - Ecospace spin-up for {0} years", ds.UseSpinUp ? m_configuration.SpinupYears.ToString() : "off");
 
             // Start running Ecospace up to the point where intended simulations begin
             var tcs = new TaskCompletionSource();
@@ -235,12 +235,12 @@ namespace Ecopath.EwE
             OnRunStateChanged += Handler;
 
             // Phew, we managed to plow through. Run Ecospace!
-            this.m_thread = new Thread(RunEcospace);
-            this.m_thread.Start();
+            m_thread = new Thread(RunEcospace);
+            m_thread.Start();
 
             // Set spin-up progress trackers. Needed because we need to look one time step ahead for pausing
-            this.m_nSpinUpSteps = ds.UseSpinUp ? (int)(ds.SpinUpYears / ds.TimeStep) : 0;
-            this.m_iSpinUpStep = 0;
+            m_nSpinUpSteps = ds.UseSpinUp ? (int)(ds.SpinUpYears / ds.TimeStep) : 0;
+            m_iSpinUpStep = 0;
 
             var completedTask = await Task.WhenAny(tcs.Task); //, Task.Delay(timeoutMs ));
             OnRunStateChanged -= Handler;
@@ -248,8 +248,8 @@ namespace Ecopath.EwE
             if (completedTask != tcs.Task)
             {
                 // We hit a timeout; need to log that
-                this.m_logger.LogInformation("EwE - Ecospace initialization timed out; this run is dead in the water");
-                this.ForceStop();
+                m_logger.LogInformation("EwE - Ecospace initialization timed out; this run is dead in the water");
+                ForceStop();
             }
             // Ready when running Ecospace is waiting for further instructions
             return (RunState == RunStates.waiting) ? 1 : -1;
@@ -260,7 +260,7 @@ namespace Ecopath.EwE
         /// </summary>
         public async Task<bool> ContinueAsync(int timeoutMs = 60000)
         {
-            if (this.RunState != RunStates.waiting) return false;
+            if (RunState != RunStates.waiting) return false;
     
             // Need to wait for RunState to switch back to Waiting. Only return after
             var tcs = new TaskCompletionSource();
@@ -270,15 +270,15 @@ namespace Ecopath.EwE
                 if (state == RunStates.waiting)
                     tcs.TrySetResult();
             }
-            this.OnRunStateChanged += Handler;
+            OnRunStateChanged += Handler;
 
             // Carry on
-            this.m_logger.LogInformation("EwE - Continue");
-            this.RunState = RunStates.running;
-            this.m_core.EcospacePaused = false;
+            m_logger.LogInformation("EwE - Continue");
+            RunState = RunStates.running;
+            m_core.EcospacePaused = false;
 
             var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMs));
-            this.OnRunStateChanged -= Handler;
+            OnRunStateChanged -= Handler;
 
             return true;
         }
@@ -297,11 +297,11 @@ namespace Ecopath.EwE
                     tcs.TrySetResult();
             }
 
-            this.OnRunStateChanged += Handler;
+            OnRunStateChanged += Handler;
 
-            this.m_core.StopEcospace(); // Initiate graceful shutdown
+            m_core.StopEcospace(); // Initiate graceful shutdown
 
-            if (this.RunState == RunStates.idle)
+            if (RunState == RunStates.idle)
             {
                 OnRunStateChanged -= Handler;
                 return true;
@@ -313,46 +313,46 @@ namespace Ecopath.EwE
                 return true; // All good
 
             // Timeout hit: force kill
-            this.OnRunStateChanged -= Handler;
-            this.ForceStop();
+            OnRunStateChanged -= Handler;
+            ForceStop();
             return false;
         }
 
         public Task<bool> UpdatePricesAsync(List<SpeciesPrice> speciesPrices)
         {
             // Make prices up for grabs
-            this.m_pricesIn = speciesPrices;
+            m_pricesIn = speciesPrices;
             return Task.FromResult(true);
         }
 
         public Task<bool> UpdateCatchDispositionSummaryAsync(CatchDispositionSummary catchDispositionSummary)
         {
             // Make catch dispositions up for grabs
-            this.m_catchIn = catchDispositionSummary;
+            m_catchIn = catchDispositionSummary;
             return Task.FromResult(true);
         }
 
         public Task<Biomass> GetBiomassAsync()
         {
             // Return a dummy if not available
-            if (this.m_biomassOut == null)
-                this.m_biomassOut = new Biomass() { MeasurementUnit = "kg" };
+            if (m_biomassOut == null)
+                m_biomassOut = new Biomass() { MeasurementUnit = "kg" };
 
             // ToDo: need to clear out biomass once dispatched?
-            return Task.FromResult(this.m_biomassOut);
+            return Task.FromResult(m_biomassOut);
         }
 
         public Task<List<SalesSummary>> GetSalesSummariesAsync(DateTime start, DateTime end)
         {
             // ToDo: need to clear out sales once dispatched?
-            return Task.FromResult(this.m_salesOut);
+            return Task.FromResult(m_salesOut);
         }
 
         public Task<CatchDispositionSummary> GetCatchDispositionSummaryAsync(DateTime start, DateTime end)
         {
-            if (this.m_catchOut == null)
-                this.m_catchOut = new CatchDispositionSummary() { MeasurementUnit = "kg" };
-            return Task.FromResult(this.m_catchOut);
+            if (m_catchOut == null)
+                m_catchOut = new CatchDispositionSummary() { MeasurementUnit = "kg" };
+            return Task.FromResult(m_catchOut);
         }
 
         #endregion // Public interaction
@@ -361,24 +361,24 @@ namespace Ecopath.EwE
 
         private void Clear()
         {
-            this.m_pricesIn = null;
-            this.m_catchIn = null;
+            m_pricesIn = null;
+            m_catchIn = null;
 
-            this.m_catchOut = null;
-            this.m_biomassOut = null;
+            m_catchOut = null;
+            m_biomassOut = null;
         }
 
         private void IntegratePrices()
         {
-            if (this.m_pricesIn == null) return;
-            if (this.m_configuration == null) return;
+            if (m_pricesIn == null) return;
+            if (m_configuration == null) return;
 
-            var ds = this.m_core.EcopathDataStructures;
+            var ds = m_core.EcopathDataStructures;
 
             foreach (var price in m_pricesIn)
             {
                 float pr = (float)price.Price;
-                foreach (var marketinfo in  this.m_configuration.ResolveMarkets(price.GearCode, price.MarketCode))
+                foreach (var marketinfo in  m_configuration.ResolveMarkets(price.GearCode, price.MarketCode))
                 {
                     int iFleet = marketinfo.EwEMapping.Index;
                     foreach (var groupinfo in m_configuration.ResolveGroups(price.SpeciesCode))
@@ -394,7 +394,7 @@ namespace Ecopath.EwE
                         else
                         {
                             // ToDo_JS: decide how to respond to a potential EwE misconfiguration.
-                            this.m_logger.LogWarning("EwE - !! Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.MarketCode, price.SpeciesCode);
+                            m_logger.LogWarning("EwE - !! Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.MarketCode, price.SpeciesCode);
                             //throw new Exception("Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.marketCode, price.SpeciesCode);
                         }
                     }
@@ -402,18 +402,18 @@ namespace Ecopath.EwE
             }
 
             // Done, clear buffer. Prices within EwE will remain fixed until the next change
-            this.m_pricesIn = null;
+            m_pricesIn = null;
         }
 
         private void IntegrateCatchDispositions(int iTime)
         {
-            if (this.m_catchIn == null) return;
-            if (this.m_configuration == null) return;
+            if (m_catchIn == null) return;
+            if (m_configuration == null) return;
 
-            var ds = this.m_core.EcospaceDataStructures;
-            var bm = this.m_core.EcospaceBasemap;
+            var ds = m_core.EcospaceDataStructures;
+            var bm = m_core.EcospaceBasemap;
 
-            foreach (var grid in this.m_catchIn.DispositionGrids)
+            foreach (var grid in m_catchIn.DispositionGrids)
             {
                 // Try to parse species code in grid
                 MultiLevelKey key = MultiLevelKey.FromObject(grid.Species);
@@ -469,7 +469,7 @@ namespace Ecopath.EwE
                 }
             }
             // Catches have been processed
-            this.m_catchIn = null;
+            m_catchIn = null;
             // Recover and normalize species proportions
             foreach (var prop in m_groupSpeciesProportions.Values)
             {
@@ -484,13 +484,13 @@ namespace Ecopath.EwE
         private void CacheBiomassData()
         {
             // Wipe
-            this.m_biomassOut = new Biomass() { MeasurementUnit = "kg" };
-            if (this.m_configuration != null)
+            m_biomassOut = new Biomass() { MeasurementUnit = "kg" };
+            if (m_configuration != null)
             {
-                cEcospaceDataStructures ds = this.m_core.EcospaceDataStructures;
-                cEcospaceBasemap bm = this.m_core.EcospaceBasemap;
+                cEcospaceDataStructures ds = m_core.EcospaceDataStructures;
+                cEcospaceBasemap bm = m_core.EcospaceBasemap;
 
-                foreach (EwEMapping key in this.m_configuration.Mappings(KeyDomain.Species))
+                foreach (EwEMapping key in m_configuration.Mappings(KeyDomain.Species))
                 {
                     Species? species = key.ToObject<Ecopath.Models.Species>(m_configuration.IncludeVocabularies);
                     if (species != null)
@@ -517,7 +517,7 @@ namespace Ecopath.EwE
                                         Biomass = biomassSpecies
                                     });
                                 }
-                        this.m_biomassOut.BiomassGrids.Add(grid);
+                        m_biomassOut.BiomassGrids.Add(grid);
                     }
                 }
             }
@@ -528,39 +528,39 @@ namespace Ecopath.EwE
         /// </summary>
         private void CacheCatchAndSalesData()
         {
-            if (this.m_catchOut == null)
-                this.m_catchOut = new() { MeasurementUnit = "kg" };
+            if (m_catchOut == null)
+                m_catchOut = new() { MeasurementUnit = "kg" };
             else
-                this.m_catchOut.DispositionGrids.Clear();
+                m_catchOut.DispositionGrids.Clear();
 
-            if (this.m_salesOut == null)
-                this.m_salesOut = new() { };
+            if (m_salesOut == null)
+                m_salesOut = new() { };
             else
-                this.m_salesOut.Clear();
+                m_salesOut.Clear();
 
-            if (this.m_configuration == null) return;
+            if (m_configuration == null) return;
 
-            cEcopathDataStructures ecopathds = this.m_core.EcopathDataStructures;
-            cEcospaceDataStructures spaceds = this.m_core.EcospaceDataStructures;
-            cEcospaceBasemap bm = this.m_core.EcospaceBasemap;
+            cEcopathDataStructures ecopathds = m_core.EcopathDataStructures;
+            cEcospaceDataStructures spaceds = m_core.EcospaceDataStructures;
+            cEcospaceBasemap bm = m_core.EcospaceBasemap;
 
             // Tally absolute sales over all catch dispositions
             Dictionary<(int Group, int Fleet), (double Volume, double Value)> TotalSales = new();
             HashSet<int> markets = new();
 
-            foreach (int iGroup in this.m_configuration.FishedGroups)
+            foreach (int iGroup in m_configuration.FishedGroups)
             {
-                EwEMapping? mlkGroup = this.m_configuration.Find(iGroup, KeyDomain.Species);
+                EwEMapping? mlkGroup = m_configuration.Find(iGroup, KeyDomain.Species);
                 float sppProp = mlkGroup?.Proportion ?? 0;
 
-                for (int iFleet = 1; iFleet <= this.m_core.nFleets; iFleet++)
+                for (int iFleet = 1; iFleet <= m_core.nFleets; iFleet++)
                 {
                     // Only report fleets fished by EwE
-                    if (!this.m_configuration.IsExternalFleet(iFleet))
+                    if (!m_configuration.IsExternalFleet(iFleet))
                     {
                         // Tally up the catch dispositions for all the markets this gear code caters to
-                        MultiLevelKey? mlkFleet = this.m_configuration.Find(iFleet, KeyDomain.FleetSegment);
-                        MultiLevelKey? mlkMarket = this.m_configuration.Find(iFleet, KeyDomain.Market);
+                        MultiLevelKey? mlkFleet = m_configuration.Find(iFleet, KeyDomain.FleetSegment);
+                        MultiLevelKey? mlkMarket = m_configuration.Find(iFleet, KeyDomain.Market);
 
                         double[,] catches = new double[spaceds.InRow + 1, spaceds.InCol + 1];
                         double[,] deaddisc = new double[spaceds.InRow + 1, spaceds.InCol + 1];
@@ -622,20 +622,20 @@ namespace Ecopath.EwE
                                             DeadDiscardsBiomass = deaddisc[ir, ic]
                                         });
                                     }
-                            this.m_catchOut.DispositionGrids.Add(grid);
+                            m_catchOut.DispositionGrids.Add(grid);
                         }
                     }
                 }
             }
 
             // Prepare sales
-            for (int iFleet = 1; iFleet <= this.m_core.nFleets; iFleet++)
+            for (int iFleet = 1; iFleet <= m_core.nFleets; iFleet++)
             {
                 // Only report fleets fished by EwE
-                if (!this.m_configuration.IsExternalFleet(iFleet))
+                if (!m_configuration.IsExternalFleet(iFleet))
                 {
-                    MultiLevelKey? mlkFleet = this.m_configuration.Find(iFleet, KeyDomain.FleetSegment);
-                    MultiLevelKey? mlkMarket = this.m_configuration.Find(iFleet, KeyDomain.Market);
+                    MultiLevelKey? mlkFleet = m_configuration.Find(iFleet, KeyDomain.FleetSegment);
+                    MultiLevelKey? mlkMarket = m_configuration.Find(iFleet, KeyDomain.Market);
                     var sales = new SalesSummary()
                     {
                         MarketId = mlkMarket.GetField("marketcode").ToString(m_configuration.IncludeVocabularies),
@@ -645,7 +645,7 @@ namespace Ecopath.EwE
                     };
                     foreach ((int Group, int Fleet) saleKey in TotalSales.Keys.Where(k => k.Fleet == iFleet))
                     {
-                        MultiLevelKey? mlkSpecies = this.m_configuration.Find(saleKey.Group, KeyDomain.Species);
+                        MultiLevelKey? mlkSpecies = m_configuration.Find(saleKey.Group, KeyDomain.Species);
                         if (TotalSales.TryGetValue(saleKey, out var saleTot))
                         {
                             Sale s = new Sale()
@@ -658,7 +658,7 @@ namespace Ecopath.EwE
                             sales.Sales.Add(s);
                         }
                     }
-                    this.m_salesOut.Add(sales);
+                    m_salesOut.Add(sales);
                 }
 
                 //// Sanity check
@@ -679,7 +679,7 @@ namespace Ecopath.EwE
         private double DensityToKg(float dens, int irow, int icol)
         {
             // ToDo_JS: validate model currency unit (And yes, "currency" is biomass unit. Nothing to do with money. Fun times)
-            return dens * 1000 * this.m_core.EcospaceDataStructures.CellArea[irow, icol];
+            return dens * 1000 * m_core.EcospaceDataStructures.CellArea[irow, icol];
         }
 
         /// <summary>
@@ -692,7 +692,7 @@ namespace Ecopath.EwE
         private float KgToDensity(double kg, int irow, int icol)
         {
             // ToDo_JS: validate actual model currency unit
-            float area = this.m_core.EcospaceDataStructures.CellArea[irow, icol];
+            float area = m_core.EcospaceDataStructures.CellArea[irow, icol];
             if (area == 0) area = 1; // Can happen
             return (float) kg / (area * 1000);
         }
@@ -704,28 +704,28 @@ namespace Ecopath.EwE
         private void RunEcospace()
         {
             cCore.EcoSpaceInterfaceDelegate? dgt = null;
-            this.m_core.RunEcospace(ref dgt);
+            m_core.RunEcospace(ref dgt);
         }
 
         private void ForceStop()
         {
-            this.m_logger.LogInformation("EwE - !! Force stop received");
+            m_logger.LogInformation("EwE - !! Force stop received");
             try
             {
-                if (this.m_thread != null && m_thread.IsAlive)
-                    this.m_thread.Interrupt();
+                if (m_thread != null && m_thread.IsAlive)
+                    m_thread.Interrupt();
             }
             catch (Exception ex)
             {
                 //_logger.LogInformation("EwE - exception ...");
             }
 
-            this.RunState = RunStates.idle; // Manually reset to idle if needed
+            RunState = RunStates.idle; // Manually reset to idle if needed
         }
 
         public IPlugin? GetPlugin(System.Type t)
         { 
-            cPluginManager pm = this.m_core.PluginManager;
+            cPluginManager pm = m_core.PluginManager;
             List<IPlugin> plugins = (List<IPlugin>)pm.GetPlugins(t);
             if (plugins.Count > 0)
                 return plugins[0];
@@ -742,7 +742,7 @@ namespace Ecopath.EwE
         /// -------------------------------------------------------------------
         private void BridgeCallback(cEcospaceBridgePlugin.EventType e, int iTime)
         {
-            if (this.RunState == RunStates.stopping) return;
+            if (RunState == RunStates.stopping) return;
 
             try
             {
@@ -757,20 +757,20 @@ namespace Ecopath.EwE
 
                     case cEcospaceBridgePlugin.EventType.BeginTimeStep:
                         // Prices need to be integerated into the start of a time step for EwE effort distributions
-                        this.IntegratePrices();
+                        IntegratePrices();
 
-                        cEcospaceDataStructures ds = this.m_core.EcospaceDataStructures;
+                        cEcospaceDataStructures ds = m_core.EcospaceDataStructures;
                         if (ds.bInSpinUp)
                         {
                             // Tick
-                            this.m_iSpinUpStep += 1;
-                            if (this.m_iSpinUpStep % cCore.N_MONTHS == 0)
-                                this.m_logger.LogInformation("EwE - finished spinup year {0}", (int) (this.m_iSpinUpStep / cCore.N_MONTHS));
+                            m_iSpinUpStep += 1;
+                            if (m_iSpinUpStep % cCore.N_MONTHS == 0)
+                                m_logger.LogInformation("EwE - finished spinup year {0}", (int) (m_iSpinUpStep / cCore.N_MONTHS));
                         }
                         else
                         {
                             if (iTime % cCore.N_MONTHS == 0)
-                                this.m_logger.LogInformation("EwE - finished year {0}", this.m_core.EcospaceTimestepToAbsoluteTime(iTime).Year);
+                                m_logger.LogInformation("EwE - finished year {0}", m_core.EcospaceTimestepToAbsoluteTime(iTime).Year);
                         }
                         break;
 
@@ -781,32 +781,32 @@ namespace Ecopath.EwE
                     case cEcospaceBridgePlugin.EventType.EndTimeStep:
 
                         // Do we need to pause at the start of the next time step?
-                        if (this.MustPauseNext(iTime + 1))
+                        if (MustPauseNext(iTime + 1))
                         {
                             // Prepare data for sending out
-                            this.CacheBiomassData();
-                            this.CacheCatchAndSalesData();
+                            CacheBiomassData();
+                            CacheCatchAndSalesData();
 
-                            this.m_logger.LogInformation("EwE - pausing at timestep {0}", iTime + 1);
-                            this.RunState = RunStates.waiting;
-                            this.m_core.EcospacePaused = true;
+                            m_logger.LogInformation("EwE - pausing at timestep {0}", iTime + 1);
+                            RunState = RunStates.waiting;
+                            m_core.EcospacePaused = true;
                         }
                         break;
 
                     case cEcospaceBridgePlugin.EventType.EffortDistrPost:
                         // Effort has been distributed, and Ecospace is about to calculate ecosystem dynamics and fishing
                         // This is the perfect moment to integrate any remotely calculated catch dispositions into the running core
-                        this.IntegrateCatchDispositions(iTime);
+                        IntegrateCatchDispositions(iTime);
                         break;
 
                     case cEcospaceBridgePlugin.EventType.EndRun:
-                        this.m_logger.LogInformation("EwE - end run callback");
+                        m_logger.LogInformation("EwE - end run callback");
                         
                         // Clear all modifications made to core data, if any
-                        this.m_core.DiscardChanges();
+                        m_core.DiscardChanges();
                         // Correctly reset the state and clean up
-                        this.RunState = RunStates.idle;
-                        this.m_thread = null;
+                        RunState = RunStates.idle;
+                        m_thread = null;
                         break;
 
                     default:
@@ -816,7 +816,7 @@ namespace Ecopath.EwE
             }
             catch (Exception ex)
             {
-                this.m_logger.LogInformation("EwE - exception {0} on bridgecallback {1}", ex.Message, e.ToString());
+                m_logger.LogInformation("EwE - exception {0} on bridgecallback {1}", ex.Message, e.ToString());
             }
         }
 
@@ -825,7 +825,7 @@ namespace Ecopath.EwE
             // Do not halt while in spin-up
             cEcospaceDataStructures ds = m_core.EcospaceDataStructures;
             if (m_iSpinUpStep + 1 < m_nSpinUpSteps) return false;
-            DateTime dt = this.m_core.EcospaceTimestepToAbsoluteTime(iTime);
+            DateTime dt = m_core.EcospaceTimestepToAbsoluteTime(iTime);
             return (dt.Year >= m_configuration.StartYear);
         }
 
