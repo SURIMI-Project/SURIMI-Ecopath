@@ -85,6 +85,18 @@ namespace Utilities
         /// <param name="knownNames"></param>
         /// <param name="minScore"></param>
         /// <returns></returns>
+        public static int TokenSetFuzzyMatch(string input, string compare, int minScore = 80)
+        {
+            return Fuzz.TokenSetRatio(NormalizeName(input), NormalizeName(compare));
+        }
+
+        /// <summary>
+        /// Performs a fuzzy match of words within a collection
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="knownNames"></param>
+        /// <param name="minScore"></param>
+        /// <returns></returns>
         public static (string BestMatch, int Score) TokenSetFuzzyMatch(string input, IEnumerable<string> knownNames, int minScore = 80)
         {
             string normInput = NormalizeName(input);
