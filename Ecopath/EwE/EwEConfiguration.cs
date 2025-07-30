@@ -118,8 +118,8 @@ namespace Ecopath.EwE
             m_mappings.Add(new EwEMapping("gearcode=TB; flag=FRA", KeyDomain.FleetSegment, 5));
             m_mappings.Add(new EwEMapping("gearcode=TM; flag=FRA", KeyDomain.FleetSegment, 6));
             m_mappings.Add(new EwEMapping("gearcode=PS; flag=FRA", KeyDomain.FleetSegment, 7));
-            m_mappings.Add(new EwEMapping("gearcode==EwE:Artisanal; flag=FRA", KeyDomain.FleetSegment, 8));
-            m_mappings.Add(new EwEMapping("gearcode==EwE:Recreational; flag=FRA", KeyDomain.FleetSegment, 9));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:Artisanal; flag=FRA", KeyDomain.FleetSegment, 8));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:Recreational; flag=FRA", KeyDomain.FleetSegment, 9));
 
             // Register fleet segments as gear + market code pairs to match fleet > market deliveries
             m_mappings.Add(new EwEMapping("gearcode=TB; marketcode=ESP", KeyDomain.Market, 1));
@@ -131,8 +131,8 @@ namespace Ecopath.EwE
             m_mappings.Add(new EwEMapping("gearcode=TB; marketcode=FRA", KeyDomain.Market, 5));
             m_mappings.Add(new EwEMapping("gearcode=TM; marketcode=FRA", KeyDomain.Market, 6));
             m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=FRA", KeyDomain.Market, 7));
-            m_mappings.Add(new EwEMapping("gearcode==EwE:Artisanal; marketcode=FRA", KeyDomain.Market, 8));
-            m_mappings.Add(new EwEMapping("gearcode==EwE:Recreational; marketcode=FRA", KeyDomain.Market, 9));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:Artisanal; marketcode=FRA", KeyDomain.Market, 8));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:Recreational; marketcode=FRA", KeyDomain.Market, 9));
 
 
             for (int iGroup = 1; iGroup <= core.nGroups; iGroup++)
