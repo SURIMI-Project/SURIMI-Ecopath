@@ -1,6 +1,5 @@
-﻿using Microsoft.AspNetCore.DataProtection.KeyManagement;
+﻿using FluentAssertions;
 using Xunit;
-using FluentAssertions;
 
 
 public class StaticKeyResolverTests
@@ -72,4 +71,19 @@ public class StaticKeyResolverTests
         matches.Should().NotBeEmpty("because the key matches a mapping");
         matches.First().Key.Domain.Should().Be(KeyDomain.Species);
     }
+
+    // Example of a theory test with inline data
+    //[Theory]
+    //[InlineData(1, 2, 3)]
+    //[InlineData(-4, -6, -10)]
+    //[InlineData(-2, 2, 0)]
+    //[InlineData(int.MinValue, -1, int.MaxValue)]
+    //public void CanAddTheory(int value1, int value2, int expected)
+    //{
+    //    var calculator = new Calculator();
+
+    //    var result = calculator.Add(value1, value2);
+
+    //    Assert.Equal(expected, result);
+    //}
 }
