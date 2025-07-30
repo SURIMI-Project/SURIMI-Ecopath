@@ -1,5 +1,6 @@
 using Ecopath.EwE;
 using Ecopath.Services;
+using EwECore;
 
 namespace Ecopath;
 
@@ -17,6 +18,8 @@ public class Program
         });
 
         builder.Services.AddSingleton<CheckSimulationService>(); // Add CheckSimulationService as a Singleton
+        builder.Services.AddSingleton<cCore>(); //<ICore, cCore>();  // better would it be when cCore derives from ICore, but this is not the case
+        builder.Services.AddSingleton<IEwEConfiguration, EwEConfiguration>();
         builder.Services.AddSingleton<IEwEController, EwEController>();
 
         var app = builder.Build();
