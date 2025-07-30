@@ -1,7 +1,7 @@
 ﻿/// <summary>
 /// Field-specific matchers
 /// </summary>
-public class MatcherRegistry
+public class FieldMatcherRegistry
 {
     private readonly Dictionary<string, IFieldMatcher> m_matchers = new();
 

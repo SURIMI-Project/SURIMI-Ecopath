@@ -6,7 +6,7 @@ using Utilities;
 public class ASFISSpeciesVocabulary 
     : ISpeciesCodeVocabulary
 {
-    private Dictionary<string, string> m_keys = new();
+    private Dictionary<string, MultiLevelKey> m_keys = new();
 
     public KeyDomain KeyDomain => KeyDomain.Species;
 
@@ -32,11 +32,12 @@ public class ASFISSpeciesVocabulary
                     dt.Load(dr);
                     foreach (DataRow dataRow in dt.Rows)
                     {
+                        var key = MultiLevelKey.FromDataRow(dataRow);
                         string code = (string)dataRow["Alpha3_Code"];
                         string scname = (string)dataRow["Scientific_Name"];
 
                         if (!string.IsNullOrWhiteSpace(code) && !string.IsNullOrWhiteSpace(scname))
-                            m_keys[NameUtilities.NormalizeName(scname)] = code;
+                            m_keys[NameUtilities.NormalizeName(scname)] = key;
                     }
                 }
                 catch (Exception ex)
@@ -54,9 +55,12 @@ public class ASFISSpeciesVocabulary
 
     public string CodeToSpecies(string speciescode)
     {
-        foreach (string key in m_keys.Keys)
-            if (string.Compare(m_keys[key], speciescode, StringComparison.OrdinalIgnoreCase) == 0)
-                return key;
+        foreach (string scnane in m_keys.Keys)
+        {
+            MultiLevelKey key = m_keys[scnane];
+            if ((key != null) && (string.Compare(key.GetField("Alpha3_Code")!.ToString(false), speciescode, StringComparison.OrdinalIgnoreCase) == 0))
+                return scnane;
+        }
         return string.Empty;
     }
 
@@ -67,7 +71,7 @@ public class ASFISSpeciesVocabulary
         if (string.IsNullOrWhiteSpace(resolved))
             return string.Empty;
 
-        return m_keys.TryGetValue(resolved, out var code) ? code : string.Empty;
+        return m_keys.TryGetValue(resolved, out MultiLevelKey? key) ? key.GetField("Alpha3_Code")!.ToString(false) : string.Empty;
     }
 
 }

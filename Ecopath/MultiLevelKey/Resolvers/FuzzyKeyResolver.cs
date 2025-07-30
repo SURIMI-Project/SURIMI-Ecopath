@@ -7,7 +7,7 @@ public class FuzzyKeyResolver : IKeyResolver
 {
     private readonly IEnumerable<MultiLevelKey> m_mappings;
     private readonly IEnumerable<KeyFieldDescriptor> m_fieldDescriptors;
-    private readonly MatcherRegistry? m_matcherRegistry;
+    private readonly FieldMatcherRegistry? m_matcherRegistry;
 
     /// <summary>
     /// 
@@ -15,7 +15,7 @@ public class FuzzyKeyResolver : IKeyResolver
     /// <param name="mappings"></param>
     /// <param name="descriptors"></param>
     /// <param name="matcherRegistry"></param>
-    public FuzzyKeyResolver(IEnumerable<MultiLevelKey> mappings, IEnumerable<KeyFieldDescriptor> descriptors, MatcherRegistry? matcherRegistry = null)
+    public FuzzyKeyResolver(IEnumerable<MultiLevelKey> mappings, IEnumerable<KeyFieldDescriptor> descriptors, FieldMatcherRegistry? matcherRegistry = null)
     {
         m_mappings = mappings;
         m_fieldDescriptors = descriptors;
