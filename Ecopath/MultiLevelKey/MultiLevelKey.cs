@@ -104,6 +104,9 @@ public class MultiLevelKey
     public void SetField(string key, string value, bool bRemoveVocabulary = false)
     {
         if (string.IsNullOrWhiteSpace(key)) return;
+
+        key = ToSafeKey(key);
+
         if (string.IsNullOrWhiteSpace(value))
         {
             this.Fields.Remove(key);
