@@ -13,6 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="cVariableMetadata_log.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="BSR.Surimi.Surimi-Protocol.Grpc.Csharp" Version="1.73.10101.13+01790b97f17e" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="FuzzySharp" Version="2.0.2" />
