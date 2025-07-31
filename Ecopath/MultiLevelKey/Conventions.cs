@@ -6,6 +6,17 @@
     Country
 }
 
+public enum KeyPurpose
+{
+    NotSet,
+    SpeciesName,
+    LifeStage,
+    AgeClass,
+    LengthClass,
+    GearType,
+    Country
+}
+
 public class SpeciesFields
 {
     public static readonly string SpeciesCode = "speciescode";

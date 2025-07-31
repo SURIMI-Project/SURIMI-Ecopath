@@ -643,7 +643,7 @@ namespace Ecopath.EwE
                     MultiLevelKey? mlkMarket = m_configuration.Find(iFleet, KeyDomain.Market);
                     var sales = new SalesSummary()
                     {
-                        MarketId = mlkMarket.GetField("marketcode").ToString(m_configuration.IncludeVocabularies),
+                        MarketId = mlkMarket!.GetField("marketcode")!.ToString(m_configuration.IncludeVocabularies),
                         MeasurementUnit = "kg",
                         Currency = "EUR", // No conversion here
                         Sales = new List<Sale>()

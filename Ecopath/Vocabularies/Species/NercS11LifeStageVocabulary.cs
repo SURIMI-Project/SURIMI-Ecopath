@@ -7,14 +7,18 @@ public class NERCLifeStageVocabulary : ILifeStageVocabulary
     private Dictionary<string, MultiLevelKey> m_keys = new();
 
     public KeyDomain KeyDomain => KeyDomain.Species;
+    public KeyPurpose KeyPurpose => KeyPurpose.LifeStage;
+
     public string VocabularyName => "NERC.S11";
+
+    public IEnumerable<MultiLevelKey> Records => m_keys.Values;
 
     public bool Load()
     {
         // Live link, keep around for when reloading will appear:
         // https://vocab.nerc.ac.uk/collection/S11/current/?_profile=nvs&_mediatype=application/ld+json
 
-        string path = @"Includes\S11_lifestages.jsonld";
+        string path = @"Includes\NercS11_lifestages.jsonld";
 
         try
         {
@@ -24,7 +28,18 @@ public class NERCLifeStageVocabulary : ILifeStageVocabulary
             foreach (var concept in skos["@graph"])
             {
                 string id = concept["@id"] ?? "";
-                string label = concept["prefLabel"]?["@value"] ?? "";
+                string label = string.Empty;
+
+                var bucket = concept["skos:prefLabel"];
+                try
+                {
+                    if (bucket != null)
+                       label = bucket["@value"] ?? "";
+                }
+                catch (Exception ex)
+                {
+                    // Swallow this
+                }
 
                 if (id.Contains("/S11") && !string.IsNullOrEmpty(label))
                 {

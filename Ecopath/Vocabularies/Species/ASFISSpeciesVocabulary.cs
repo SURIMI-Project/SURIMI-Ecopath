@@ -14,8 +14,12 @@ public class ASFISSpeciesVocabulary
     private const string COL_NAME = "Scientific_Name";
 
     public KeyDomain KeyDomain => KeyDomain.Species;
+    public KeyPurpose KeyPurpose => KeyPurpose.SpeciesName;
+    public string KeyField => SpeciesFields.SpeciesCode;
 
     public string VocabularyName => "ASFIS";
+
+    public IEnumerable<MultiLevelKey> Records => m_keys.Values;
 
     public bool Load()
     {

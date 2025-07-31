@@ -13,7 +13,26 @@ public class SURIMILifestageVocabulary : ILifeStageVocabulary
 
     public KeyDomain KeyDomain => KeyDomain.Species;
 
+    public KeyPurpose KeyPurpose => KeyPurpose.LifeStage;
+
     public string VocabularyName => "surimi.lifestage";
+
+
+    public IEnumerable<MultiLevelKey> Records
+    { 
+        get
+        {
+            List<MultiLevelKey> recs = new();
+            foreach (string key in m_keys.Keys)
+            {
+                MultiLevelKey tmp = new() { Domain = KeyDomain.Species };
+                tmp.SetField(SpeciesFields.Stage, key);
+                recs.Add(tmp); 
+            }
+            return recs;
+        }
+    }
+
 
     public (string match, int score) MatchLifestage(string stage, int iMinScore = 70)
     {

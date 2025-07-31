@@ -13,8 +13,11 @@ public class ISO3166CountryCodeVocabulary : ICountryCodeVocabulary
     private const string COL_NAME = "name";
 
     KeyDomain IControlledVocabulary.KeyDomain => KeyDomain.Country;
+    public KeyPurpose KeyPurpose => KeyPurpose.Country;
 
     string IControlledVocabulary.VocabularyName => "ISO-3166";
+
+    public IEnumerable<MultiLevelKey> Records => m_keys.Values;
 
     public bool Load()
     {

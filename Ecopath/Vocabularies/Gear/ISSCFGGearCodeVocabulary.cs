@@ -1,8 +1,12 @@
-﻿public class ISSCFGGearCodeVocabulary : IGearCodeVocabulary
+﻿
+public class ISSCFGGearCodeVocabulary : IGearCodeVocabulary
 {
     KeyDomain IControlledVocabulary.KeyDomain => KeyDomain.FleetSegment;
+    public KeyPurpose KeyPurpose => KeyPurpose.GearType;
 
     string IControlledVocabulary.VocabularyName => "ISSCFG";
+
+    public IEnumerable<MultiLevelKey> Records => new List<MultiLevelKey>{ };
 
     public bool Load()
     {
