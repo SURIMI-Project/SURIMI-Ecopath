@@ -1,4 +1,5 @@
-﻿using Ecopath.Models;
+﻿using Ecopath.EwE.Wrapper;
+using Ecopath.Models;
 using EwEBridge.Ecospace;
 using EwECore;
 using EwEPlugin;
@@ -42,7 +43,7 @@ namespace Ecopath.EwE
         #region Private vars 
 
         /// <summary>The <see cref="cCore"/> to operate on.</summary>
-        private readonly cCore m_core;
+        private readonly IEwECore m_core;
         /// <summary>The Ecospace run thread, if any.</summary>
         private Thread? m_thread;
         /// <summary>The framework logger. Very pretty.</summary>
@@ -74,7 +75,7 @@ namespace Ecopath.EwE
 
         #endregion // Private vars 
 
-        public EwEController(ILogger<EwEController> logger, IEwEConfiguration configuration, cCore core)
+        public EwEController(ILogger<EwEController> logger, IEwEConfiguration configuration, IEwECore core)
         {
             m_configuration = configuration;
             m_core = core;
@@ -86,7 +87,7 @@ namespace Ecopath.EwE
             Directory.SetCurrentDirectory(System.AppDomain.CurrentDomain.BaseDirectory);
             m_logger = logger;
 
-            m_core.PluginManager = new cPluginManager();
+            //m_core.PluginManager = new cPluginManager();
             m_logger.LogInformation("EwE loaded {0} plug-in(s)", m_core.PluginManager.LoadPlugins());
 
             IPlugin? pi = GetPlugin(typeof(cEcospaceBridgePlugin));
@@ -730,7 +731,7 @@ namespace Ecopath.EwE
 
         public IPlugin? GetPlugin(System.Type t)
         { 
-            cPluginManager pm = m_core.PluginManager;
+            IPluginManager pm = m_core.PluginManager;
             List<IPlugin> plugins = (List<IPlugin>)pm.GetPlugins(t);
             if (plugins.Count > 0)
                 return plugins[0];
