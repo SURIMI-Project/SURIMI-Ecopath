@@ -5,11 +5,19 @@ using Utilities;
 
 public class ISO3166CountryCodeVocabulary : ICountryCodeVocabulary
 {
-    private Dictionary<string, string> m_keys = new();
+    /// <summary>
+    /// Scientific name -> complete record in the form of a MultiLevelKey
+    /// </summary>
+    private Dictionary<string, MultiLevelKey> m_keys = new();
+    private const string COL_CODE = "alpha-3";
+    private const string COL_NAME = "name";
 
     KeyDomain IControlledVocabulary.KeyDomain => KeyDomain.Country;
+    public KeyPurpose KeyPurpose => KeyPurpose.Country;
 
     string IControlledVocabulary.VocabularyName => "ISO-3166";
+
+    public IEnumerable<MultiLevelKey> Records => m_keys.Values;
 
     public bool Load()
     {
@@ -23,19 +31,20 @@ public class ISO3166CountryCodeVocabulary : ICountryCodeVocabulary
             using (var dr = new CsvDataReader(csv))
             {
                 DataTable dt = new();
-                dt.Columns.Add("alpha-3", typeof(string));
-                dt.Columns.Add("name", typeof(string));
+                dt.Columns.Add(COL_CODE, typeof(string));
+                dt.Columns.Add(COL_NAME, typeof(string));
 
                 try
                 {
                     dt.Load(dr);
                     foreach (DataRow dataRow in dt.Rows)
                     {
-                        string code = dataRow["alpha-3"].ToString() ?? string.Empty;
-                        string scname = dataRow["name"].ToString() ?? string.Empty;
+                        var key = MultiLevelKey.FromDataRow(dataRow);
+                        string code = dataRow[COL_CODE].ToString() ?? string.Empty;
+                        string scname = dataRow[COL_NAME].ToString() ?? string.Empty;
 
                         if (!string.IsNullOrWhiteSpace(code) && !string.IsNullOrWhiteSpace(scname))
-                            m_keys[NameUtilities.NormalizeName(scname)] = code;
+                            m_keys[NameUtilities.NormalizeName(scname)] = key;
                     }
                 }
                 catch (Exception ex)
@@ -52,9 +61,12 @@ public class ISO3166CountryCodeVocabulary : ICountryCodeVocabulary
 
     string ICountryCodeVocabulary.CodeToCountrys(string countrycode)
     {
-        foreach (string key in m_keys.Keys)
-            if (string.Compare(m_keys[key], countrycode, StringComparison.OrdinalIgnoreCase) == 0)
-                return key;
+        foreach (string scnane in m_keys.Keys)
+        {
+            MultiLevelKey key = m_keys[scnane];
+            if ((key != null) && (string.Compare(key.GetField(COL_CODE)!.ToString(false), countrycode, StringComparison.OrdinalIgnoreCase) == 0))
+                return scnane;
+        }
         return string.Empty;
     }
 
@@ -65,6 +77,6 @@ public class ISO3166CountryCodeVocabulary : ICountryCodeVocabulary
         if (string.IsNullOrWhiteSpace(resolved))
             return string.Empty;
 
-        return m_keys.TryGetValue(resolved, out var code) ? code : string.Empty;
+        return m_keys.TryGetValue(resolved, out MultiLevelKey? key) ? key.GetField(COL_CODE)!.ToString(false) : string.Empty;
     }
 }

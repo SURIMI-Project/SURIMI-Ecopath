@@ -6,6 +6,8 @@ namespace Utilities
 {
     public class NameUtilities
     {
+        private const float penaltyFactor = 0.1f;
+
         /// <summary>
         /// Normalize a name by changing any punctuation with spaces, and converting
         /// the name to invariant lowercase.
@@ -85,15 +87,39 @@ namespace Utilities
         /// <param name="knownNames"></param>
         /// <param name="minScore"></param>
         /// <returns></returns>
-        public static (string BestMatch, int Score) TokenSetFuzzyMatch(string input, IEnumerable<string> knownNames, int minScore = 80)
+        public static int TokenSetFuzzyMatch(string input, string compare, int minScore = 80)
         {
             string normInput = NormalizeName(input);
+            string normCompare = NormalizeName(compare);
 
+            int rawScore = Fuzz.TokenSetRatio(normInput, normCompare);
+
+            var inputTokens = new HashSet<string>(normInput.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            var compareTokens = new HashSet<string>(normCompare.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+
+            int shared = inputTokens.Intersect(compareTokens).Count();
+            int noise = Math.Max(compareTokens.Count - shared, 0);
+            double noiseRatio = compareTokens.Count > 0 ? (double)noise / compareTokens.Count : 0.0;
+
+            double adjustedScore = rawScore * (1.0 - noiseRatio * penaltyFactor);
+
+            return (int)Math.Round(adjustedScore);
+        }
+
+        /// <summary>
+        /// Performs a fuzzy match of words within a collection
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="knownNames"></param>
+        /// <param name="minScore"></param>
+        /// <returns></returns>
+        public static (string BestMatch, int Score) TokenSetFuzzyMatch(string input, IEnumerable<string> knownNames, int minScore = 80)
+        {
             var best = knownNames
                 .Select(name => new
                 {
                     Name = name,
-                    Score = Fuzz.TokenSetRatio(normInput, NormalizeName(name))
+                    Score = TokenSetFuzzyMatch(input, name)
                 })
                 .OrderByDescending(x => x.Score)
                 .FirstOrDefault();
