@@ -10,6 +10,32 @@ public class GenericVocabularyMatcher : IVocabularyMatcher
 
     public VocabularyMatchResult Match(MultiLevelKey input, IControlledVocabulary sourceVocab, IControlledVocabulary targetVocab, int minScore = 80)
     {
+        // Early bail-out
+        if (!CanMatch(sourceVocab, targetVocab))
+            VocabularyMatchResult.NoMatch();
+
+        // ToDo: implement the use of foreign keys
+        // ... Note that the sourceVocab is only needed to provide the foreign keys
+        // Check for foreign key match
+
+        //foreach (var kvp in input.Fields)
+        //{
+        //    if (source.ForeignKeyMap.TryGetValue(kvp.Key, out var referencedVocab)
+        //        && referencedVocab == target.VocabularyName)
+        //    {
+        //        var direct = target.Records.FirstOrDefault(r => r.Code == kvp.Value);
+        //        if (direct != null)
+        //        {
+        //            return new VocabularyMatchResult
+        //            {
+        //                MatchedRecord = direct,
+        //                Score = 100,
+        //                Justification = $"Matched via foreign key '{kvp.Key}'"
+        //            };
+        //        }
+        //    }
+        //}
+
         VocabularyMatchResult best = VocabularyMatchResult.NoMatch();
 
         foreach (string nameIn in input.FieldNames())
