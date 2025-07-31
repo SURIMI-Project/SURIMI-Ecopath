@@ -1,17 +1,38 @@
-﻿using System.Text.RegularExpressions;
-using Utilities;
+﻿using Utilities;
 
-public class DwCLifestageVocabulary : ILifestageVocabulary
+/// <summary>
+/// A friendly and legible controlled dictionary to express life stages
+/// </summary>
+public class SURIMILifestageVocabulary : ILifeStageVocabulary
 {
     Dictionary<string, string[]> m_keys = new();
 
-    public DwCLifestageVocabulary()
+    public SURIMILifestageVocabulary()
     {
     }
 
     public KeyDomain KeyDomain => KeyDomain.Species;
 
-    public string VocabularyName => "dwc.lifestage";
+    public KeyPurpose KeyPurpose => KeyPurpose.LifeStage;
+
+    public string VocabularyName => "surimi.lifestage";
+
+
+    public IEnumerable<MultiLevelKey> Records
+    { 
+        get
+        {
+            List<MultiLevelKey> recs = new();
+            foreach (string key in m_keys.Keys)
+            {
+                MultiLevelKey tmp = new() { Domain = KeyDomain.Species };
+                tmp.SetField(SpeciesFields.Stage, key);
+                recs.Add(tmp); 
+            }
+            return recs;
+        }
+    }
+
 
     public (string match, int score) MatchLifestage(string stage, int iMinScore = 70)
     {
@@ -55,5 +76,15 @@ public class DwCLifestageVocabulary : ILifestageVocabulary
         m_keys["egg"] = ["egg"];
 
         return true;
+    }
+
+    public string CodeToLifeStage(string lifeStageCode)
+    {
+        return lifeStageCode;
+    }
+
+    public string LifeStageToCode(string LifeStage)
+    {
+        return LifeStage;
     }
 }

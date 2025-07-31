@@ -80,7 +80,7 @@ namespace Ecopath.EwE
 
             // Register available look-up vocabularies
             m_vocabularies.Register(new ASFISSpeciesVocabulary());
-            m_vocabularies.Register(new DwCLifestageVocabulary());
+            m_vocabularies.Register(new SURIMILifestageVocabulary());
             m_vocabularies.Register(new ISSCFGGearCodeVocabulary());
             m_vocabularies.Register(new ISO3166CountryCodeVocabulary());
         }
@@ -267,7 +267,7 @@ namespace Ecopath.EwE
         {
             // The name of the vocabulary is implied here, but should be read from the species code
             ISpeciesCodeVocabulary vocSpecies = m_vocabularies.Get<ISpeciesCodeVocabulary>("asfis");
-            ILifestageVocabulary? vocLifeStage = m_vocabularies.Get<ILifestageVocabulary>("dwc.lifestage");
+            ILifeStageVocabulary? vocLifeStage = m_vocabularies.Get<ILifeStageVocabulary>("surimi.lifestage");
 
             for (int iTaxa = 1; iTaxa <= core.nTaxon; iTaxa++)
             {
