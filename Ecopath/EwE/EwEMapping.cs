@@ -1,4 +1,5 @@
-﻿using EwECore;
+﻿using Ecopath.EwE.Wrapper;
+using EwECore;
 using EwEUtils.Core;
 using System.Diagnostics;
 
@@ -19,7 +20,7 @@ public class EwEMapping : MultiLevelKey
     public int Index { get; set;  }
     public float Proportion { get; set; }
 
-    public string ToInfoString(cCore core)
+    public string ToInfoString(IEwECore core)
     {
         cCoreInputOutputBase? item = null;
         

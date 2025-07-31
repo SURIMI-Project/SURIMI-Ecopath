@@ -1,5 +1,5 @@
-﻿using Ecopath.Generic;
-using EwECore;
+﻿using Ecopath.EwE.Wrapper;
+using Ecopath.Generic;
 
 namespace Ecopath.EwE
 {
@@ -15,7 +15,7 @@ namespace Ecopath.EwE
         int StartYear { get; set; }
 
         IEnumerable<EwEMapping> Mappings(KeyDomain domain);
-        bool Load(cCore core);
+        bool Load(IEwECore core);
         IEnumerable<EwEMappingMatch> ResolveMarkets(string gearcode, string marketcode);
         IEnumerable<EwEMappingMatch> ResolveGroups(string speciescode);
         IEnumerable<EwEMappingMatch> ResolveGroups(MultiLevelKey key);

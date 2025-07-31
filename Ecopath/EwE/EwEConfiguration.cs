@@ -1,4 +1,5 @@
-﻿using EwECore;
+﻿using Ecopath.EwE.Wrapper;
+using EwECore;
 using EwECore.Auxiliary;
 
 namespace Ecopath.EwE
@@ -100,7 +101,7 @@ namespace Ecopath.EwE
 
         #region Persistence
 
-        public bool Load(cCore core)
+        public bool Load(IEwECore core)
         {
             m_mappings.Clear();
             m_fishedGroups.Clear();
@@ -140,7 +141,7 @@ namespace Ecopath.EwE
                     m_fishedGroups.Add(iGroup);
 
             this.ReadSpeciesMappings(core);
-            this.ReadFleetMappings(core);
+            this.ReadFleetMappings();
 
             //m_mappings.Add(new EwEMapping("speciescode=ASFIS:MUR; stage=dwc:juvenile", KeyDomain.Species, 22));       // Mullet (j)
             //m_mappings.Add(new EwEMapping("speciescode=ASFIS:MUR; stage=dwc:adult", KeyDomain.Species, 23));          // Mullet (a)
@@ -161,10 +162,10 @@ namespace Ecopath.EwE
             return true;
         }
 
-        private cAuxiliaryData GetConfigBucket(cCore core)
+        private cAuxiliaryData GetConfigBucket(IEwECore core)
         {
             cEcospaceModelParameters parms = core.EcospaceModelParameters;
-            return core.get_AuxillaryData("SURIMI_link_" + parms.DBID);
+            return core.AuxillaryData("SURIMI_link_" + parms.DBID);
         }
 
         #endregion // Persistence
@@ -262,7 +263,7 @@ namespace Ecopath.EwE
         /// Load the species -> FAO code mappings from the model
         /// </summary>
         /// <param name="core"></param>
-        private void ReadSpeciesMappings(cCore core)
+        private void ReadSpeciesMappings(IEwECore core)
         {
             // The name of the vocabulary is implied here, but should be read from the species code
             ISpeciesCodeVocabulary vocSpecies = m_vocabularies.Get<ISpeciesCodeVocabulary>("asfis");
@@ -338,7 +339,7 @@ namespace Ecopath.EwE
             }
         }
         
-        private void ReadFleetMappings(cCore core)
+        private void ReadFleetMappings()
         {
             // The name of the vocabulary is implied here, but should be read from the fields
             IGearCodeVocabulary? vocGear = m_vocabularies.Get<IGearCodeVocabulary>("ISSCFG");
