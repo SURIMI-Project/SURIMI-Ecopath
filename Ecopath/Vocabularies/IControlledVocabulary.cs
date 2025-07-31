@@ -8,4 +8,14 @@
     bool Load();
 
     IEnumerable<MultiLevelKey> Records { get; }
+
+    // ToDo: add foreign keys if provided (e.g, FB / SLB / AquaMaps / SAUP)
+#if false
+
+    /// <summary>
+    /// Dictionary(fieldName -> [vocabulary_name]:[field_name]) to facilitate direct look-ups
+    /// </summary>
+    Dictionary<string, string> ForeignKeyMap { get; }
+
+#endif
 }
