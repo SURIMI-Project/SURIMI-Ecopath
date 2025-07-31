@@ -1,6 +1,6 @@
 using Ecopath.EwE;
+using Ecopath.EwE.Wrapper;
 using Ecopath.Services;
-using EwECore;
 
 namespace Ecopath;
 
@@ -17,8 +17,8 @@ public class Program
             options.Interceptors.Add<ExceptionMetadataInterceptor>();
         });
 
-        builder.Services.AddSingleton<CheckSimulationService>(); // Add CheckSimulationService as a Singleton
-        builder.Services.AddSingleton<cCore>(); //<ICore, cCore>();  // better would it be when cCore derives from ICore, but this is not the case
+        builder.Services.AddSingleton<CheckSimulationService>();
+        builder.Services.AddSingleton<IEwECore, EwE.Wrapper.EwECore>();
         builder.Services.AddSingleton<IEwEConfiguration, EwEConfiguration>();
         builder.Services.AddSingleton<IEwEController, EwEController>();
 

@@ -9,7 +9,7 @@ public class StaticKeyResolverTests
     }
 
     [Fact]
-    public void FindAllMatchesReturnsNothing()
+    public void FindAllMatches_ReturnsNothing()
     {
         // Arrange
         List<EwEMapping> m_mappings = new();
@@ -31,7 +31,6 @@ public class StaticKeyResolverTests
         m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Length, false, 3));
         m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Age, false, 3));
 
-
         var resolver = new StaticKeyResolver(m_mappings, m_keyFieldDescriptors.Get(KeyDomain.Species));
 
         // Act
@@ -42,7 +41,7 @@ public class StaticKeyResolverTests
         var match = resolver.FindAllMatches(key, KeyDomain.Species);
 
         // Assert
-        match.Count().Should().Be(0, "because have no clue");
+        match.Count().Should().Be(0, "because I have no clue");
     }
 
     [Fact]

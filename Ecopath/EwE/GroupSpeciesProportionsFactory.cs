@@ -1,8 +1,9 @@
-﻿using EwECore;
+﻿using Ecopath.EwE.Wrapper;
+using EwECore;
 
 public static class GroupSpeciesProportionsFactory
 {
-    public static GroupSpeciesProportions Create(cCore core, int iGroup, IEnumerable<MultiLevelKey> mappings)
+    public static GroupSpeciesProportions Create(IEwECore core, int iGroup, IEnumerable<MultiLevelKey> mappings)
     {
         cEcopathDataStructures pathDS = core.EcopathDataStructures;
         cEcospaceDataStructures spaceDS = core.EcospaceDataStructures;
