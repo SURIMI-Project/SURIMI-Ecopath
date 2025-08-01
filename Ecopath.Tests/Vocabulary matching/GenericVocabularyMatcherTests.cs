@@ -21,7 +21,7 @@ public class GenericVocabularyMatcherTests
     public void TestMatchIncompatibleVocabularies()
     {
         SURIMILifestageVocabulary v1 = new();
-        ASFISSpeciesVocabulary v2 = new();
+        ASFISSpeciesCodeVocabulary v2 = new();
         GenericVocabularyMatcher m = new();
 
         m.CanMatch(v1, v2).Should().BeFalse();
@@ -40,7 +40,7 @@ public class GenericVocabularyMatcherTests
         MultiLevelKey key = new();
         key.SetField(SpeciesFields.Lifestage, "juvenile");
 
-        // This is a bloody big deal: a SURIMI lifestage code can be matched to a record of a totally independent vocabulary
+        // This is a bloody big deal: a SURIMI lifestage code can be matched to a record from a totally independent vocabulary
         var result = m.Match(key, v1, v2);
         result.Score.Should().BeGreaterThan(70);
     }

@@ -46,7 +46,7 @@ public class FuzzyKeyResolver : IKeyResolver
                 return 0;
 
             var matcher = m_matcherRegistry?.Get(descr.FieldName) ?? new ExactFieldMatcher();
-            double similarity = matcher.Score(descr.FieldName, valueA!.ToString(true), valueB!.ToString(true));
+            double similarity = matcher.Score(valueA!.ToString(true), valueB!.ToString(true));
 
             score += (int)(descr.Weight * similarity);
         }

@@ -3,23 +3,22 @@ using System.Data;
 using System.Globalization;
 using Utilities;
 
-public class ISO3166CountryCodeVocabulary : ICountryCodeVocabulary
+public class ISO3166CountryCodeVocabulary 
+    : ControlledVocabularyBase, ICountryCodeVocabulary
 {
     /// <summary>
     /// Scientific name -> complete record in the form of a MultiLevelKey
     /// </summary>
-    private Dictionary<string, MultiLevelKey> m_keys = new();
     private const string COL_CODE = "alpha-3";
     private const string COL_NAME = "name";
 
-    KeyDomain IControlledVocabulary.KeyDomain => KeyDomain.Country;
-    public KeyPurpose KeyPurpose => KeyPurpose.Country;
+    public new KeyDomain KeyDomain => KeyDomain.Country;
 
-    string IControlledVocabulary.VocabularyName => "ISO-3166";
+    public new KeyPurpose KeyPurpose => KeyPurpose.Country;
 
-    public IEnumerable<MultiLevelKey> Records => m_keys.Values;
+    public new string VocabularyName => "ISO-3166";
 
-    public bool Load()
+    public override bool Load()
     {
         if (m_keys.Count > 0)
             return true;
@@ -46,6 +45,7 @@ public class ISO3166CountryCodeVocabulary : ICountryCodeVocabulary
                         if (!string.IsNullOrWhiteSpace(code) && !string.IsNullOrWhiteSpace(scname))
                             m_keys[NameUtilities.NormalizeName(scname)] = key;
                     }
+                    m_fieldIndex = VocabularyFieldIndex.FromData(m_keys.Values);
                 }
                 catch (Exception ex)
                 {

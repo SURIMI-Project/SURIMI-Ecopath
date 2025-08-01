@@ -14,7 +14,7 @@ public class AliasMatcher : IFieldMatcher
             set.Add(alias);
     }
 
-    public double Score(string field, string valueA, string valueB)
+    public double Score(string valueA, string valueB)
     {
         foreach (var kvpAliases in m_aliases)
         {

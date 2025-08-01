@@ -1,14 +1,14 @@
 ﻿
-public class ISSCFGGearCodeVocabulary : IGearCodeVocabulary
+public class ISSCFGGearCodeVocabulary 
+    : ControlledVocabularyBase, IGearCodeVocabulary
 {
+
     KeyDomain IControlledVocabulary.KeyDomain => KeyDomain.FleetSegment;
-    public KeyPurpose KeyPurpose => KeyPurpose.GearType;
+    public new KeyPurpose KeyPurpose => KeyPurpose.GearType;
 
-    string IControlledVocabulary.VocabularyName => "ISSCFG";
+    public new string VocabularyName => "ISSCFG";
 
-    public IEnumerable<MultiLevelKey> Records => new List<MultiLevelKey>{ };
-
-    public bool Load()
+    public override bool Load()
     {
         return true;
     }

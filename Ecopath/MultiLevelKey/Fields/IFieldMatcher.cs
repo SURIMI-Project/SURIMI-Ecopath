@@ -4,5 +4,5 @@
 public interface IFieldMatcher
 {
     /// Returns a semantic similarity score between 0.0 and 1.0
-    double Score(string field, string valueA, string valueB);
+    double Score(string valueA, string valueB);
 }
