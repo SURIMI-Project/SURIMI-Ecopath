@@ -36,3 +36,18 @@ public class MarketFields
 {
     public static readonly string MarketCode = "marketcode";
 }
+
+[Flags]
+public enum MatchStrategy
+{
+    None = 0,
+    DontBother = None,
+    Exact = 1 << 0,
+    Synonym = 1 << 1,
+    Fuzzy = 1 << 2,
+    Keyword = 1 << 3,
+    ForeignKey = 1 << 4,
+    TokenOverlap = 1 << 5,
+    Regex = 1 << 6,
+    NumericRange = 1 << 7
+}

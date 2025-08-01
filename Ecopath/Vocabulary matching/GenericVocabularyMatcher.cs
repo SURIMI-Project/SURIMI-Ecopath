@@ -102,13 +102,15 @@ public class GenericVocabularyMatcher : IVocabularyMatcher
                     foreach (var r in vocabB.Records)
                     {
                         var fieldTest = r.GetField(foreignFieldHint);
+                        // Unfortunately, every record field needs to be converted to string anew...
                         if ((fieldTest != null) && matcher.Score(fieldValue, fieldTest.ToString(false)) == 1)
                             return new VocabularyMatchResult() { Score = 100, Justification = "Matched via FK", MatchedRecord = r };
                     }
                     // ToDo: log this
                     Console.WriteLine("Can't find foreign key hint {0} in vocabulary {1}", foreignFieldHint, vocabB.VocabularyName);
                     
-                    // foreignKeyHint failed but that could be expected; let's continue with brute-force key-by-key matching
+                    // The foreignKeyHint wasn't found in the records, but is to be expected for separately managed vocabularies.
+                    // Therefore, let's continue with brute-force key-by-key matching - we might get lucky
                 }
 
                 // Fallback: check all fields
