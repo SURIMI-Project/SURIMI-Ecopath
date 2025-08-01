@@ -79,7 +79,7 @@ namespace Ecopath.EwE
             m_keyFieldDescriptors.Register(KeyDomain.FleetSegment, new KeyFieldDescriptor(MarketFields.MarketCode, true, 10));
 
             // Register available look-up vocabularies
-            m_vocabularies.Register(new ASFISSpeciesVocabulary());
+            m_vocabularies.Register(new ASFISSpeciesCodeVocabulary());
             m_vocabularies.Register(new SURIMILifestageVocabulary());
             m_vocabularies.Register(new ISSCFGGearCodeVocabulary());
             m_vocabularies.Register(new ISO3166CountryCodeVocabulary());

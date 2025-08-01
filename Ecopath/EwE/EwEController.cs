@@ -851,7 +851,7 @@ namespace Ecopath.EwE
 
             var group = this.m_core.get_EcopathGroupInputs(iGroup);
             var iStanza = group.iStanza;
-            bool hasStanzaKeys = (key.FieldNames().Count() > 1);
+            bool hasStanzaKeys = (key.FieldNames.Count() > 1);
 
             if (iStanza < 0 || hasStanzaKeys)
                 return 1f;

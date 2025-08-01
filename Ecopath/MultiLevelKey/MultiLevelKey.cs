@@ -86,6 +86,13 @@ public class MultiLevelKey
         return new MultiLevelKey() { Fields = fields };
     }
 
+    public static MultiLevelKey FromString(string value)
+    {
+        var k = new MultiLevelKey();
+        k.Parse(value);
+        return k;
+    }
+
     public bool Parse(string keyStr)
     {
         if (string.IsNullOrWhiteSpace(keyStr)) return false;
@@ -127,7 +134,9 @@ public class MultiLevelKey
         return null;
     }
 
-    public IEnumerable<string> FieldNames() =>this.Fields.Keys;
+    public IEnumerable<string> FieldNames =>this.Fields.Keys;
+
+    public IEnumerable<MultiLevelKeyField> FieldValues => this.Fields.Values;
 
     /// <summary>
     /// Returns a canonical string representation of the key

@@ -1,19 +1,15 @@
 ﻿using Newtonsoft.Json;
 using Utilities;
 
-public class NERCLifeStageVocabulary : ILifeStageVocabulary
+public class NERCLifeStageVocabulary 
+    : ControlledVocabularyBase, ILifeStageVocabulary
 {
-    // Code -> selected fields (ID, label)
-    private Dictionary<string, MultiLevelKey> m_keys = new();
+    public new KeyDomain KeyDomain => KeyDomain.Species;
+    public new KeyPurpose KeyPurpose => KeyPurpose.LifeStage;
 
-    public KeyDomain KeyDomain => KeyDomain.Species;
-    public KeyPurpose KeyPurpose => KeyPurpose.LifeStage;
+    public new string VocabularyName => "NERC.S11";
 
-    public string VocabularyName => "NERC.S11";
-
-    public IEnumerable<MultiLevelKey> Records => m_keys.Values;
-
-    public bool Load()
+    public override bool Load()
     {
         // Live link, keep around for when reloading will appear:
         // https://vocab.nerc.ac.uk/collection/S11/current/?_profile=nvs&_mediatype=application/ld+json
@@ -50,6 +46,7 @@ public class NERCLifeStageVocabulary : ILifeStageVocabulary
                     m_keys[label.ToLowerInvariant()] = key;
                 }
             }
+            m_fieldIndex = VocabularyFieldIndex.FromData(m_keys.Values);
             return m_keys.Count > 0;
         }
         catch (Exception ex)

@@ -3,25 +3,18 @@ using System.Data;
 using System.Globalization;
 using Utilities;
 
-public class ASFISSpeciesVocabulary 
-    : ISpeciesCodeVocabulary
+public class ASFISSpeciesCodeVocabulary 
+    : ControlledVocabularyBase, ISpeciesCodeVocabulary
 {
-    /// <summary>
-    /// Scientific name -> complete record in the form of a MultiLevelKey
-    /// </summary>
-    private Dictionary<string, MultiLevelKey> m_keys = new();
     private const string COL_CODE = "Alpha3_Code";
     private const string COL_NAME = "Scientific_Name";
 
-    public KeyDomain KeyDomain => KeyDomain.Species;
-    public KeyPurpose KeyPurpose => KeyPurpose.SpeciesName;
-    public string KeyField => SpeciesFields.SpeciesCode;
+    public new KeyDomain KeyDomain => KeyDomain.Species;
+    public new KeyPurpose KeyPurpose => KeyPurpose.SpeciesName;
 
-    public string VocabularyName => "ASFIS";
+    public new string VocabularyName => "ASFIS";
 
-    public IEnumerable<MultiLevelKey> Records => m_keys.Values;
-
-    public bool Load()
+    public override bool Load()
     {
         if (m_keys.Count > 0) return true;
 
@@ -48,6 +41,8 @@ public class ASFISSpeciesVocabulary
                         if (!string.IsNullOrWhiteSpace(code) && !string.IsNullOrWhiteSpace(scname))
                             m_keys[NameUtilities.NormalizeName(scname)] = key;
                     }
+
+                    m_fieldIndex = VocabularyFieldIndex.FromData(m_keys.Values);
                 }
                 catch (Exception ex)
                 {
