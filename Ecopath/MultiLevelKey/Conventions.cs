@@ -46,8 +46,7 @@ public enum MatchStrategy
     Synonym = 1 << 1,
     Fuzzy = 1 << 2,
     Keyword = 1 << 3,
-    ForeignKey = 1 << 4,
-    TokenOverlap = 1 << 5,
-    Regex = 1 << 6,
-    NumericRange = 1 << 7
+    TokenOverlap = 1 << 4,
+    Regex = 1 << 5,
+    NumericRange = 1 << 6
 }

@@ -13,9 +13,17 @@ public abstract class ControlledVocabularyBase: IControlledVocabulary
 
     public IEnumerable<MultiLevelKey> Records => m_keys.Values;
 
-    public VocabularyFieldIndex? FieldIndex => m_fieldIndex;
+    public VocabularyFieldIndex FieldIndex => m_fieldIndex;
 
     public Dictionary<string, string> ForeignKeyMap => m_foreignKeyMap;
 
-    public abstract bool Load();
+    public bool Load()
+    {
+        if (!LoadFromSource())
+            return false;
+        m_fieldIndex = VocabularyFieldIndex.FromData(this.m_keys.Values);
+        return true;
+    }
+
+    protected abstract bool LoadFromSource();
 }

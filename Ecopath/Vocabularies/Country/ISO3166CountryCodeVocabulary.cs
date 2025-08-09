@@ -18,7 +18,7 @@ public class ISO3166CountryCodeVocabulary
 
     public new string VocabularyName => "ISO-3166";
 
-    public override bool Load()
+    protected override bool LoadFromSource()
     {
         if (m_keys.Count > 0)
             return true;

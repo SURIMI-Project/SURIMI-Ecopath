@@ -14,7 +14,7 @@ public class ASFISSpeciesCodeVocabulary
 
     public new string VocabularyName => "ASFIS";
 
-    public override bool Load()
+    protected override bool LoadFromSource()
     {
         if (m_keys.Count > 0) return true;
 

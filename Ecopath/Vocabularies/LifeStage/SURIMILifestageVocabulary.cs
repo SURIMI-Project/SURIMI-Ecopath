@@ -36,7 +36,7 @@ public class SURIMILifestageVocabulary
         return (string.Empty, 0);
     }
 
-    public override bool Load()
+    protected override bool LoadFromSource()
     {
         m_keys.Clear();
 

@@ -8,7 +8,7 @@ public class ISSCFGGearCodeVocabulary
 
     public new string VocabularyName => "ISSCFG";
 
-    public override bool Load()
+    protected override bool LoadFromSource()
     {
         return true;
     }
