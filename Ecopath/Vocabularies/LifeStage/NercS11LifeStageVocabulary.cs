@@ -9,7 +9,7 @@ public class NERCLifeStageVocabulary
 
     public new string VocabularyName => "NERC.S11";
 
-    public override bool Load()
+    protected override bool LoadFromSource()
     {
         // Live link, keep around for when reloading will appear:
         // https://vocab.nerc.ac.uk/collection/S11/current/?_profile=nvs&_mediatype=application/ld+json
