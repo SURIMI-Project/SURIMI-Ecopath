@@ -66,17 +66,17 @@ namespace Ecopath.EwE
 #endif
 
             // Register the different species fields that the application may be interested in
-            m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.SpeciesCode, true, 10));
-            m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Stage, false, 3));
-            m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Length, false, 3));
-            m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Age, false, 3));
+            m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.SpeciesCode, true, 10, purpose: KeyPurpose.Species));
+            m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Stage, false, 3, purpose: KeyPurpose.Lifestage));
+            m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Length, false, 3, purpose: KeyPurpose.Length));
+            m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Age, false, 3, purpose: KeyPurpose.Age));
 
             // Register the different gear fields that the application may be interested in
-            m_keyFieldDescriptors.Register(KeyDomain.FleetSegment, new KeyFieldDescriptor(FishingFields.GearCode, true, 10));
-            m_keyFieldDescriptors.Register(KeyDomain.FleetSegment, new KeyFieldDescriptor(FishingFields.Flag, false, 3));
+            m_keyFieldDescriptors.Register(KeyDomain.FleetSegment, new KeyFieldDescriptor(FishingFields.GearCode, true, 10, purpose: KeyPurpose.Gear));
+            m_keyFieldDescriptors.Register(KeyDomain.FleetSegment, new KeyFieldDescriptor(FishingFields.Flag, false, 3, purpose: KeyPurpose.Country));
 
             // Register the different market fields that the application may be interested in
-            m_keyFieldDescriptors.Register(KeyDomain.FleetSegment, new KeyFieldDescriptor(MarketFields.MarketCode, true, 10));
+            m_keyFieldDescriptors.Register(KeyDomain.FleetSegment, new KeyFieldDescriptor(MarketFields.MarketCode, true, 10, purpose: KeyPurpose.Market));
 
             // Register available look-up vocabularies
             m_vocabularies.Register(new ASFISSpeciesCodeVocabulary());

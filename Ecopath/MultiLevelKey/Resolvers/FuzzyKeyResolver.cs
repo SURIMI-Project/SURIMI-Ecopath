@@ -7,7 +7,6 @@ public class FuzzyKeyResolver : IKeyResolver
 {
     private readonly IEnumerable<MultiLevelKey> m_mappings;
     private readonly IEnumerable<KeyFieldDescriptor> m_fieldDescriptors;
-    private readonly FieldMatcherRegistry? m_matcherRegistry;
 
     /// <summary>
     /// 
@@ -15,11 +14,10 @@ public class FuzzyKeyResolver : IKeyResolver
     /// <param name="mappings"></param>
     /// <param name="descriptors"></param>
     /// <param name="matcherRegistry"></param>
-    public FuzzyKeyResolver(IEnumerable<MultiLevelKey> mappings, IEnumerable<KeyFieldDescriptor> descriptors, FieldMatcherRegistry? matcherRegistry = null)
+    public FuzzyKeyResolver(IEnumerable<MultiLevelKey> mappings, IEnumerable<KeyFieldDescriptor> descriptors)
     {
         m_mappings = mappings;
         m_fieldDescriptors = descriptors;
-        m_matcherRegistry = matcherRegistry;
     }
 
     public IEnumerable<MultiLevelKeyMatch> FindAllMatches(MultiLevelKey input, KeyDomain domain)
@@ -35,6 +33,7 @@ public class FuzzyKeyResolver : IKeyResolver
     private int MatchScore(MultiLevelKey a, MultiLevelKey b)
     {
         int score = 0;
+        FuzzyFieldMatcher matcher = new();
 
         foreach (KeyFieldDescriptor descr in m_fieldDescriptors) 
         {
@@ -45,8 +44,7 @@ public class FuzzyKeyResolver : IKeyResolver
             if (descr.IsRequired && (valueA == null || valueB == null))
                 return 0;
 
-            var matcher = m_matcherRegistry?.Get(descr.FieldName) ?? new ExactFieldMatcher();
-            double similarity = matcher.Score(valueA!.ToString(true), valueB!.ToString(true));
+            double similarity = matcher.Score(valueA!.ToString(true), valueB!.ToString(true)) * 100;
 
             score += (int)(descr.Weight * similarity);
         }

@@ -9,14 +9,14 @@ public class ASFISSpeciesCodeVocabulary
     private const string COL_CODE = "Alpha3_Code";
     private const string COL_NAME = "Scientific_Name";
 
-    public new KeyDomain KeyDomain => KeyDomain.Species;
-    public new KeyPurpose KeyPurpose => KeyPurpose.SpeciesName;
-
-    public new string VocabularyName => "ASFIS";
+    public override IEnumerable<string> FieldNames => [COL_CODE, COL_NAME];
+    public override string VocabularyName => "ASFIS";
+    public override KeyDomain KeyDomain => KeyDomain.Country;
+    public override KeyPurpose KeyPurpose => KeyPurpose.Country;
 
     protected override bool LoadFromSource()
     {
-        if (m_keys.Count > 0) return true;
+        if (m_data.Count > 0) return true;
 
         string fin = @"Includes\ASFIS_sp_2024.csv";
         using (var reader = new StreamReader(fin))
@@ -39,29 +39,26 @@ public class ASFISSpeciesCodeVocabulary
                         string scname = (string)dataRow[COL_NAME];
 
                         if (!string.IsNullOrWhiteSpace(code) && !string.IsNullOrWhiteSpace(scname))
-                            m_keys[NameUtilities.NormalizeName(scname)] = key;
+                            m_data[NameUtilities.NormalizeName(scname)] = key;
                     }
-
-                    m_fieldIndex = VocabularyFieldIndex.FromData(m_keys.Values);
                 }
                 catch (Exception ex)
                 {
-                    m_keys.Clear();
+                    m_data.Clear();
                     return false;
-
                 }
-                return (m_keys.Count > 0);
+                return (m_data.Count > 0);
             }
         }
     }
     public (string match, int score) MatchSpeciesName(string speciesname, int iMinScore = 70) 
-        => NameUtilities.FuzzyMatch(speciesname, this.m_keys.Keys, iMinScore);
+        => NameUtilities.FuzzyMatch(speciesname, this.m_data.Keys, iMinScore);
 
     public string CodeToSpecies(string speciescode)
     {
-        foreach (string scnane in m_keys.Keys)
+        foreach (string scnane in m_data.Keys)
         {
-            MultiLevelKey key = m_keys[scnane];
+            MultiLevelKey key = m_data[scnane];
             if ((key != null) && (string.Compare(key.GetField(COL_CODE)!.ToString(false), speciescode, StringComparison.OrdinalIgnoreCase) == 0))
                 return scnane;
         }
@@ -70,12 +67,12 @@ public class ASFISSpeciesCodeVocabulary
 
     public string SpeciesToCode(string speciesname)
     {
-        string resolved = NameUtilities.FuzzyMatch(speciesname, this.m_keys.Keys).BestMatch;
+        string resolved = NameUtilities.FuzzyMatch(speciesname, this.m_data.Keys).BestMatch;
 
         if (string.IsNullOrWhiteSpace(resolved))
             return string.Empty;
 
-        return m_keys.TryGetValue(resolved, out MultiLevelKey? key) ? key.GetField(COL_CODE)!.ToString(false) : string.Empty;
+        return m_data.TryGetValue(resolved, out MultiLevelKey? key) ? key.GetField(COL_CODE)!.ToString(false) : string.Empty;
     }
 
 }

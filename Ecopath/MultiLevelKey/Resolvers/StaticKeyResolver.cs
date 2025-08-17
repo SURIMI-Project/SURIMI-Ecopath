@@ -27,6 +27,7 @@ public class StaticKeyResolver : IKeyResolver
     private int MatchScore(MultiLevelKey a, MultiLevelKey b)
     {
         int score = 0;
+        ExactFieldMatcher matcher = new();
 
         foreach (KeyFieldDescriptor descr in m_fieldDescriptors)
         {
@@ -41,9 +42,7 @@ public class StaticKeyResolver : IKeyResolver
             {
                 // No fuzzy matching
                 if (!string.IsNullOrWhiteSpace(fva!.Value) && !string.IsNullOrWhiteSpace(fvb!.Value))
-                {
-                    score += string.CompareOrdinal(fva!.Value, fvb!.Value) == 0 ? descr.Weight : 0;
-                }
+                    score += (matcher.Score(fva!.Value, fvb!.Value) == 1) ? descr.Weight : 0;
             }
         }
         return score;

@@ -6,15 +6,19 @@
     Country
 }
 
-public enum KeyPurpose
+[Flags]
+public enum KeyPurpose : ulong
 {
-    NotSet,
-    SpeciesName,
-    LifeStage,
-    AgeClass,
-    LengthClass,
-    GearType,
-    Country
+    NotSet = 0,
+    Species = 1UL << 0,
+    Lifestage = 1UL << 1,
+    Age = 1UL << 2,
+    Length = 1UL << 3,
+    Gear = 1UL << 4,
+    Fleet = 1UL << 5,
+    Country = 1UL << 6,
+    Market = 1UL << 7,
+    // reserve some spare bits for internal growth
 }
 
 public class SpeciesFields
