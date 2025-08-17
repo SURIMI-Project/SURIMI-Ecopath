@@ -2,11 +2,11 @@
 public class ISSCFGGearCodeVocabulary 
     : ControlledVocabularyBase, IGearCodeVocabulary
 {
+    public override IEnumerable<string> FieldNames => [];
+    public override string VocabularyName => "ISSCFG";
+    public override KeyDomain KeyDomain => KeyDomain.FleetSegment;
+    public override KeyPurpose KeyPurpose => KeyPurpose.Fleet | KeyPurpose.Gear;
 
-    KeyDomain IControlledVocabulary.KeyDomain => KeyDomain.FleetSegment;
-    public new KeyPurpose KeyPurpose => KeyPurpose.GearType;
-
-    public new string VocabularyName => "ISSCFG";
 
     protected override bool LoadFromSource()
     {

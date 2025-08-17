@@ -10,20 +10,20 @@ public class SURIMILifestageVocabulary
     {
     }
 
-    public new KeyDomain KeyDomain => KeyDomain.Species;
+    public override IEnumerable<string> FieldNames => [SpeciesFields.Stage];
+    public override string VocabularyName => "surimi.lifestage";
+    public override KeyDomain KeyDomain => KeyDomain.Species;
+    public override KeyPurpose KeyPurpose => KeyPurpose.Lifestage;
 
-    public new KeyPurpose KeyPurpose => KeyPurpose.LifeStage;
-
-    public new string VocabularyName => "surimi.lifestage";
 
     public (string match, int score) MatchLifestage(string stage, int iMinScore = 70)
     {
         int bestScore = 0;
         string bestKey = "";
 
-        foreach (string key in m_keys.Keys)
+        foreach (string key in m_data.Keys)
         {
-            string compare = m_keys[key].GetField(SpeciesFields.Stage)!.ToString(false);
+            string compare = m_data[key].GetField(SpeciesFields.Stage)!.ToString(false);
             var score = NameUtilities.TokenSetFuzzyMatch(stage, compare);
             if (score > bestScore)
             {
@@ -38,14 +38,12 @@ public class SURIMILifestageVocabulary
 
     protected override bool LoadFromSource()
     {
-        m_keys.Clear();
+        m_data.Clear();
 
-        MultiLevelKey tmp = new() { Domain = KeyDomain.Species };
-
-        m_keys["juvenile"] = MultiLevelKey.FromString (SpeciesFields.Stage + "=young juvenile small");
-        m_keys["adult"] = MultiLevelKey.FromString(SpeciesFields.Stage + "=adult large old");
-        m_keys["larva"] = MultiLevelKey.FromString(SpeciesFields.Stage + "=larva spawn hatchling");
-        m_keys["egg"] = MultiLevelKey.FromString(SpeciesFields.Stage + "=egg");
+        m_data["juvenile"] = MultiLevelKey.FromString (SpeciesFields.Stage + "=young juvenile small");
+        m_data["adult"] = MultiLevelKey.FromString(SpeciesFields.Stage + "=adult large old");
+        m_data["larva"] = MultiLevelKey.FromString(SpeciesFields.Stage + "=larva spawn hatchling");
+        m_data["egg"] = MultiLevelKey.FromString(SpeciesFields.Stage + "=egg");
 
         return true;
     }

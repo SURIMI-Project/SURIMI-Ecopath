@@ -8,8 +8,9 @@
     bool Load();
 
     IEnumerable<MultiLevelKey> Records { get; }
+    IEnumerable<string> FieldNames { get; }
 
-    VocabularyFieldIndex? FieldIndex { get; }
+    KeyFieldDescriptor? GetKeyFieldDescriptor(string FieldName);
 
     /// <summary>
     /// Dictionary(fieldName -> [vocabulary_name]:[field_name]) to facilitate direct look-ups

@@ -1,27 +1,52 @@
 ﻿
 public abstract class ControlledVocabularyBase: IControlledVocabulary
 {
-    protected Dictionary<string, MultiLevelKey> m_keys = new();
+    /// <summary>
+    /// The data in the vocabulary
+    /// </summary>
+    protected Dictionary<string, MultiLevelKey> m_data = new();
+
+    /// <summary>
+    /// Any foreign key mappings to other vocabularies
+    /// </summary>
     protected Dictionary<string, string> m_foreignKeyMap = new();
-    protected VocabularyFieldIndex? m_fieldIndex = null;
 
-    public KeyDomain KeyDomain => throw new NotImplementedException();
+    /// <summary>
+    /// Data statistics, per column name
+    /// </summary>
+    protected Dictionary<string, KeyFieldDescriptor> m_fieldStats = new();
 
-    public KeyPurpose KeyPurpose => throw new NotImplementedException();
+    public abstract KeyDomain KeyDomain { get; }
 
-    public string VocabularyName => throw new NotImplementedException();
+    public abstract KeyPurpose KeyPurpose { get; }
 
-    public IEnumerable<MultiLevelKey> Records => m_keys.Values;
+    public abstract string VocabularyName { get; }
 
-    public VocabularyFieldIndex FieldIndex => m_fieldIndex;
+    public IEnumerable<MultiLevelKey> Records => m_data.Values;
 
     public Dictionary<string, string> ForeignKeyMap => m_foreignKeyMap;
+
+    public abstract IEnumerable<string> FieldNames { get; }
+
+    public KeyFieldDescriptor? GetKeyFieldDescriptor(string FieldName)
+    {
+        if (!FieldNames.Contains(FieldName))
+            return null;
+        return m_fieldStats[FieldName];
+    }
 
     public bool Load()
     {
         if (!LoadFromSource())
             return false;
-        m_fieldIndex = VocabularyFieldIndex.FromData(this.m_keys.Values);
+
+        MultiLevelKeyIndexer indexer = new();
+        foreach (string fieldName in FieldNames)
+        {
+            m_fieldStats[fieldName] = new KeyFieldDescriptor(fieldName);
+            indexer.BuildIndex(fieldName, Records, m_fieldStats[fieldName]);
+        }
+
         return true;
     }
 

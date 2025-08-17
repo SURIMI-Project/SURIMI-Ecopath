@@ -4,10 +4,13 @@ using Utilities;
 public class NERCLifeStageVocabulary 
     : ControlledVocabularyBase, ILifeStageVocabulary
 {
-    public new KeyDomain KeyDomain => KeyDomain.Species;
-    public new KeyPurpose KeyPurpose => KeyPurpose.LifeStage;
+    private const string COL_CODE = "ID";
+    private const string COL_NAME = "Label";
 
-    public new string VocabularyName => "NERC.S11";
+    public override IEnumerable<string> FieldNames => [COL_CODE, COL_NAME];
+    public override string VocabularyName => "NERC.S11";
+    public override KeyDomain KeyDomain => KeyDomain.Species;
+    public override KeyPurpose KeyPurpose => KeyPurpose.Lifestage;
 
     protected override bool LoadFromSource()
     {
@@ -43,15 +46,14 @@ public class NERCLifeStageVocabulary
                     key.SetField("ID", id);
                     key.SetField("Label", label);
 
-                    m_keys[label.ToLowerInvariant()] = key;
+                    m_data[label.ToLowerInvariant()] = key;
                 }
             }
-            m_fieldIndex = VocabularyFieldIndex.FromData(m_keys.Values);
-            return m_keys.Count > 0;
+            return m_data.Count > 0;
         }
         catch (Exception ex)
         {
-            m_keys.Clear();
+            m_data.Clear();
             return false;
         }
     }
@@ -70,9 +72,9 @@ public class NERCLifeStageVocabulary
         int bestScore = 0;
         string bestKey = "";
 
-        foreach (string key in m_keys.Keys)
+        foreach (string key in m_data.Keys)
         {
-            string compare = m_keys[key].GetField("Label")!.ToString(false);
+            string compare = m_data[key].GetField("Label")!.ToString(false);
             var score = NameUtilities.TokenSetFuzzyMatch(stage, compare);
             if (score > bestScore)
             {
@@ -87,7 +89,7 @@ public class NERCLifeStageVocabulary
 
     public string CodeToLifeStage(string lifeStageCode)
     {
-        return m_keys.TryGetValue(NameUtilities.NormalizeName(lifeStageCode), out var key) ? key.GetField("Label")!.ToString(false) : string.Empty;
+        return m_data.TryGetValue(NameUtilities.NormalizeName(lifeStageCode), out var key) ? key.GetField("Label")!.ToString(false) : string.Empty;
     }
 
     public string LifeStageToCode(string LifeStage)
