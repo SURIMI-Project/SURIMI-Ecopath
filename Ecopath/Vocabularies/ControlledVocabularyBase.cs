@@ -89,6 +89,10 @@ public abstract class ControlledVocabularyBase: IControlledVocabulary
             indexer.BuildIndex(fieldName, Records, m_fieldStats[fieldName]);
         }
 
+        // Just to be sure
+        foreach (MultiLevelKey key in Records)
+            key.Domain = this.KeyDomain;
+
         return true;
     }
 

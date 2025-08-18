@@ -1,4 +1,5 @@
 ﻿using Ecopath.Utilities;
+using Microsoft.Extensions.FileSystemGlobbing;
 
 public class GenericVocabularyMatcher : IVocabularyMatcher
 {
@@ -18,23 +19,26 @@ public class GenericVocabularyMatcher : IVocabularyMatcher
 
         // 2. Fallback: Use StrategyBasedMatcher
         StrategyBasedMatcher matcher = new();
-
         foreach (string sourceField in record.FieldNames)
         {
             var sourceValue = record.GetField(sourceField)?.ToString(false);
             if (string.IsNullOrWhiteSpace(sourceValue))
                 continue;
 
-            var descriptor = vocabB.GetKeyFieldDescriptor(sourceField);
-            if (descriptor == null)
-                continue;
-
-            var match = matcher.FindBestMatch(sourceValue, vocabB.Records, descriptor, minscore);
-
-            if (match != null && match.Score > Math.Max(best.Score, (int) minscore))
+            IEnumerable<StrategyKeyResolver.FieldMapping> mappings = FindCompatibleMappings(sourceField, MatchStrategy.Exact, vocabB);
+            if (mappings.Count() > 0)
             {
-                best = match;
-                match.Justification = $"Matched on field '{sourceField}' using strategy {match.StrategyUsed}";
+                var inputKey = new MultiLevelKey();
+                inputKey.SetField(sourceField, sourceValue);
+
+                var resolver = new StrategyKeyResolver(vocabB.Records, mappings);
+                var match = resolver.FindBestMatch(inputKey, vocabB.KeyDomain);
+
+                if (match != null && match.Score > Math.Max(best.Score, (int)minscore))
+                {
+                    best = match;
+                    match.Justification = $"Matched on field '{sourceField}' using strategy {match.StrategyUsed}";
+                }
             }
         }
 
@@ -89,23 +93,8 @@ public class GenericVocabularyMatcher : IVocabularyMatcher
             }
 
             // Fallback: Try any field with MatchStrategy.Exact
-            List<StrategyKeyResolver.FieldMapping> mappings = new();
-            foreach (string fn in vocabB.FieldNames)
-            {
-                var descr = vocabB.GetKeyFieldDescriptor(fn);
-                if (descr!.Strategy == MatchStrategy.Exact)
-                {
-                    // Use localField here, as the field name will show up in the match results
-                    mappings.Add(new StrategyKeyResolver.FieldMapping(localField, fn)
-                    {
-                        Weight = 1,
-                        IsRequired = false,
-                        Matcher = matcher // Might as well reuse the exact matcher here
-                    });
-                }
-            }
-
-            if (mappings.Count > 0)
+            IEnumerable<StrategyKeyResolver.FieldMapping> mappings = FindCompatibleMappings(localField, MatchStrategy.Exact, vocabB);
+            if (mappings.Any())
             {
                 var inputKey = new MultiLevelKey();
                 inputKey.SetField(localField, inputValue);
@@ -125,4 +114,30 @@ public class GenericVocabularyMatcher : IVocabularyMatcher
     }
 
     #endregion // Internal FK Logic
+
+    #region Internal helpers
+
+    private IEnumerable<StrategyKeyResolver.FieldMapping> FindCompatibleMappings(string localField, MatchStrategy strategySource, IControlledVocabulary vocab)
+    {
+        List<StrategyKeyResolver.FieldMapping> mappings = new();
+        foreach (string fn in vocab.FieldNames)
+        {
+            var descrDest = vocab.GetKeyFieldDescriptor(fn);
+            foreach (MatchStrategy strategy in Enum.GetValues(typeof(MatchStrategy)))
+            {
+                if ((strategy & strategySource) > 0 && (strategy & descrDest!.Strategy) > 0)
+                {
+                    mappings.Add(new StrategyKeyResolver.FieldMapping(localField, fn)
+                    {
+                        Weight = 1,
+                        IsRequired = false,
+                        Strategy = strategy
+                    });
+                }
+            }
+        }
+        return mappings;
+    }
+
+    #endregion // Internal helpers
 }
