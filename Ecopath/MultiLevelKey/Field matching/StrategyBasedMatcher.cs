@@ -63,15 +63,9 @@ public class StrategyBasedMatcher
 
                 if (realScore >= minScore)
                 {
-                    if (!results.TryGetValue(match.Key, out var existing) || match.Score > existing.Score)
+                    if (!results.TryGetValue(match.MatchedKey, out var existing) || match.Score > existing.Score)
                     {
-                        results[match.Key] = new MatchResult
-                        {
-                            SourceValue = sourceValue,
-                            MatchedKey = match.Key,
-                            Score = realScore,
-                            StrategyUsed = strategy
-                        };
+                        results[match.MatchedKey] = match;
                     }
                 }
             }
