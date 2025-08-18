@@ -68,7 +68,7 @@ public class StrategyKeyResolverTests
 
         // Assert
         matches.Should().NotBeEmpty("because the key matches a mapping");
-        matches.First().Key.Domain.Should().Be(KeyDomain.Species);
+        matches.First().MatchedKey.Domain.Should().Be(KeyDomain.Species);
     }
 
     // Example of a theory test with inline data

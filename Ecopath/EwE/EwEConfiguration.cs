@@ -188,14 +188,14 @@ namespace Ecopath.EwE
         {
             var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.Get(KeyDomain.Species));
             foreach (var match in resolver.FindAllMatches(key, KeyDomain.Species))
-                yield return new EwEMappingMatch((EwEMapping)match.Key, match.Score);
+                yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
         }
 
         public IEnumerable<EwEMappingMatch> ResolveFleets(Ecopath.Models.FleetSegment fleetsegment)
         {
             var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.Get(KeyDomain.FleetSegment));
             foreach (var match in resolver.FindAllMatches(MultiLevelKey.FromObject(fleetsegment), KeyDomain.FleetSegment))
-                yield return new EwEMappingMatch((EwEMapping)match.Key, match.Score);
+                yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
         }
 
         public IEnumerable<EwEMappingMatch> ResolveMarkets(string gearcode, string marketcode)
@@ -206,7 +206,7 @@ namespace Ecopath.EwE
 
             var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.Get(KeyDomain.Market));
             foreach (var match in resolver.FindAllMatches(key, KeyDomain.Market))
-                yield return new EwEMappingMatch((EwEMapping)match.Key, match.Score);
+                yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
         }
 
         public EwEMapping? Find(int iIndex, KeyDomain domain)

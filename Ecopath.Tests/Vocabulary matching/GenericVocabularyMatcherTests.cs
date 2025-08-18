@@ -12,9 +12,8 @@ public class GenericVocabularyMatcherTests
     {
         SURIMILifestageVocabulary v1 = new();
         NERCLifeStageVocabulary v2 = new();
-        GenericVocabularyMatcher m = new();
 
-        m.CanMatch(v1, v2 ).Should().BeTrue();
+        Ecopath.Utilities.MatchHelpers.CanMatch(v1, v2 ).Should().BeTrue();
     }
 
     [Fact]
@@ -22,9 +21,8 @@ public class GenericVocabularyMatcherTests
     {
         SURIMILifestageVocabulary v1 = new();
         ASFISSpeciesCodeVocabulary v2 = new();
-        GenericVocabularyMatcher m = new();
 
-        m.CanMatch(v1, v2).Should().BeFalse();
+        Ecopath.Utilities.MatchHelpers.CanMatch(v1, v2).Should().BeFalse();
     }
 
     [Fact]
