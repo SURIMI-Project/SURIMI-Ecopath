@@ -186,14 +186,14 @@ namespace Ecopath.EwE
 
         public IEnumerable<EwEMappingMatch> ResolveGroups(MultiLevelKey key)
         {
-            StaticKeyResolver resolver = new(this.m_mappings, this.m_keyFieldDescriptors.Get(KeyDomain.Species));
+            var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.Get(KeyDomain.Species));
             foreach (var match in resolver.FindAllMatches(key, KeyDomain.Species))
                 yield return new EwEMappingMatch((EwEMapping)match.Key, match.Score);
         }
 
         public IEnumerable<EwEMappingMatch> ResolveFleets(Ecopath.Models.FleetSegment fleetsegment)
         {
-            StaticKeyResolver resolver = new StaticKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.Get(KeyDomain.FleetSegment));
+            var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.Get(KeyDomain.FleetSegment));
             foreach (var match in resolver.FindAllMatches(MultiLevelKey.FromObject(fleetsegment), KeyDomain.FleetSegment))
                 yield return new EwEMappingMatch((EwEMapping)match.Key, match.Score);
         }
@@ -204,7 +204,7 @@ namespace Ecopath.EwE
             key.SetField("GearCode", gearcode);
             key.SetField("MarketCode", marketcode);
 
-            StaticKeyResolver resolver = new StaticKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.Get(KeyDomain.Market));
+            var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.Get(KeyDomain.Market));
             foreach (var match in resolver.FindAllMatches(key, KeyDomain.Market))
                 yield return new EwEMappingMatch((EwEMapping)match.Key, match.Score);
         }
@@ -266,15 +266,19 @@ namespace Ecopath.EwE
         private void ReadSpeciesMappings(IEwECore core)
         {
             // The name of the vocabulary is implied here, but should be read from the species code
-            ISpeciesCodeVocabulary vocSpecies = m_vocabularies.Get<ISpeciesCodeVocabulary>("asfis");
-            ILifeStageVocabulary? vocLifeStage = m_vocabularies.Get<ILifeStageVocabulary>("surimi.lifestage");
+            IControlledVocabulary? vocSpecies = m_vocabularies.Get("asfis");
+            IControlledVocabulary? vocLifeStage = m_vocabularies.Get("surimi.lifestage");
+
+            if (vocSpecies == null ||  vocLifeStage == null) return;
+
+            GenericVocabularyMatcher m = new();
 
             for (int iTaxa = 1; iTaxa <= core.nTaxon; iTaxa++)
             {
                 cTaxon taxon = core.get_Taxon(iTaxa);
                 var code = taxon.CodeFAO;
                 if (String.IsNullOrEmpty(code))
-                    code = vocSpecies.SpeciesToCode(taxon.Common);
+                    code = vocSpecies.FindCode(taxon.Common);
 
                 if (!string.IsNullOrEmpty(code))
                 {
@@ -298,7 +302,7 @@ namespace Ecopath.EwE
                                 key.SetField(SpeciesFields.SpeciesCode, vocSpecies.VocabularyName + ":" + code);
 
                                 // Try to infer the stage from the group name
-                                string ls = vocLifeStage.MatchLifestage(grp.Name).match;
+                                string ls = vocLifeStage.FindCode(grp.Name);
                                 key.SetField(SpeciesFields.Lifestage, vocLifeStage.VocabularyName + ":" + ls);
                                 key.Index = iGroup;
                                 key.Proportion = 1;
@@ -342,8 +346,8 @@ namespace Ecopath.EwE
         private void ReadFleetMappings()
         {
             // The name of the vocabulary is implied here, but should be read from the fields
-            IGearCodeVocabulary? vocGear = m_vocabularies.Get<IGearCodeVocabulary>("ISSCFG");
-            ICountryCodeVocabulary vocCountry = m_vocabularies.Get<ICountryCodeVocabulary>("ISO-3166");
+            IControlledVocabulary vocGear = m_vocabularies.Get("ISSCFG");
+            IControlledVocabulary vocCountry = m_vocabularies.Get("ISO-3166");
 
         }
         #endregion // Smarts

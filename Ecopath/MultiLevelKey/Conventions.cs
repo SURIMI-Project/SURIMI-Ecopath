@@ -1,5 +1,6 @@
 ﻿public enum KeyDomain
 {
+    NotSet = 0,
     Species,
     FleetSegment,
     Market,
@@ -45,7 +46,6 @@ public class MarketFields
 public enum MatchStrategy
 {
     None = 0,
-    DontBother = None,
     Exact = 1 << 0,
     Synonym = 1 << 1,
     Fuzzy = 1 << 2,

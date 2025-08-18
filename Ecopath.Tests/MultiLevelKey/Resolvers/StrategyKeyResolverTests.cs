@@ -2,9 +2,9 @@
 using Xunit;
 
 
-public class StaticKeyResolverTests
+public class StrategyKeyResolverTests
 {
-    public StaticKeyResolverTests()
+    public StrategyKeyResolverTests()
     {
     }
 
@@ -31,7 +31,7 @@ public class StaticKeyResolverTests
         m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Length, false, 3));
         m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Age, false, 3));
 
-        var resolver = new StaticKeyResolver(m_mappings, m_keyFieldDescriptors.Get(KeyDomain.Species));
+        var resolver = new StrategyKeyResolver(m_mappings, m_keyFieldDescriptors.Get(KeyDomain.Species));
 
         // Act
         MultiLevelKey key = new();
@@ -57,7 +57,7 @@ public class StaticKeyResolverTests
         m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.SpeciesCode, true, 10));
         m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Stage, false, 3));
 
-        var resolver = new StaticKeyResolver(m_mappings, m_keyFieldDescriptors.Get(KeyDomain.Species));
+        var resolver = new StrategyKeyResolver(m_mappings, m_keyFieldDescriptors.Get(KeyDomain.Species));
 
         // Act
         MultiLevelKey key = new();

@@ -1,18 +1,20 @@
 ﻿using CsvHelper;
+using Ecopath.Utilities;
 using System.Data;
 using System.Globalization;
-using Utilities;
 
 public class ASFISSpeciesCodeVocabulary 
-    : ControlledVocabularyBase, ISpeciesCodeVocabulary
+    : ControlledVocabularyBase
 {
     private const string COL_CODE = "Alpha3_Code";
     private const string COL_NAME = "Scientific_Name";
 
-    public override IEnumerable<string> FieldNames => [COL_CODE, COL_NAME];
     public override string VocabularyName => "ASFIS";
-    public override KeyDomain KeyDomain => KeyDomain.Country;
-    public override KeyPurpose KeyPurpose => KeyPurpose.Country;
+    public override KeyDomain KeyDomain => KeyDomain.Species;
+    public override KeyPurpose KeyPurpose => KeyPurpose.Species;
+
+    public override IEnumerable<string> FieldNames => [COL_CODE, COL_NAME];
+    public override string CodeFieldName => COL_CODE;
 
     protected override bool LoadFromSource()
     {
@@ -39,7 +41,7 @@ public class ASFISSpeciesCodeVocabulary
                         string scname = (string)dataRow[COL_NAME];
 
                         if (!string.IsNullOrWhiteSpace(code) && !string.IsNullOrWhiteSpace(scname))
-                            m_data[NameUtilities.NormalizeName(scname)] = key;
+                            m_data[StringHelpers.NormalizeName(scname)] = key;
                     }
                 }
                 catch (Exception ex)
@@ -51,28 +53,4 @@ public class ASFISSpeciesCodeVocabulary
             }
         }
     }
-    public (string match, int score) MatchSpeciesName(string speciesname, int iMinScore = 70) 
-        => NameUtilities.FuzzyMatch(speciesname, this.m_data.Keys, iMinScore);
-
-    public string CodeToSpecies(string speciescode)
-    {
-        foreach (string scnane in m_data.Keys)
-        {
-            MultiLevelKey key = m_data[scnane];
-            if ((key != null) && (string.Compare(key.GetField(COL_CODE)!.ToString(false), speciescode, StringComparison.OrdinalIgnoreCase) == 0))
-                return scnane;
-        }
-        return string.Empty;
-    }
-
-    public string SpeciesToCode(string speciesname)
-    {
-        string resolved = NameUtilities.FuzzyMatch(speciesname, this.m_data.Keys).BestMatch;
-
-        if (string.IsNullOrWhiteSpace(resolved))
-            return string.Empty;
-
-        return m_data.TryGetValue(resolved, out MultiLevelKey? key) ? key.GetField(COL_CODE)!.ToString(false) : string.Empty;
-    }
-
 }
