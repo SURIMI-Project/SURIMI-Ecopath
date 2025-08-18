@@ -39,5 +39,5 @@ public class MatchResult
         return $"{SourceField}:{SourceFieldValue} → {TargetField}:{TargetFieldValue} [{Score}] {StrategyUsed} ({Justification})";
     }
 
-    public static MatchResult NoMatch => new MatchResult { Score = 0, Justification = "No match" }; }
+    public static MatchResult NoMatch => new MatchResult { Score = 0, Justification = "No match" }; 
 }
