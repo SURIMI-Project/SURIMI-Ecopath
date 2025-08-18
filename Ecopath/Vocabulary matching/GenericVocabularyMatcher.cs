@@ -29,9 +29,9 @@ public class GenericVocabularyMatcher : IVocabularyMatcher
             if (descriptor == null)
                 continue;
 
-            var match = matcher.FindBestMatch(sourceValue, vocabB.Records, descriptor, minScore);
+            var match = matcher.FindBestMatch(sourceValue, vocabB.Records, descriptor, minscore);
 
-            if (match != null && match.Score > Math.Max(best.Score, minScore))
+            if (match != null && match.Score > Math.Max(best.Score, (int) minscore))
             {
                 best = match;
                 match.Justification = $"Matched on field '{sourceField}' using strategy {match.StrategyUsed}";
