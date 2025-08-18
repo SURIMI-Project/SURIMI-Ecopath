@@ -26,7 +26,7 @@
         descriptor.DistinctValueCount = distinct;
         descriptor.NonZeroRatio = nonZeroRatio;
         descriptor.UniquenessRatio = uniquenessRatio;
-        descriptor.Strategies = InferStrategies(values, avgLen, distinct, uniquenessRatio, nonZeroRatio);
+        descriptor.Strategy = InferStrategies(values, avgLen, distinct, uniquenessRatio, nonZeroRatio);
 
         return true;
     }
@@ -45,17 +45,17 @@
     {
         // Very sparse fields: skip outright
         if (nonZeroRatio < 0.1)
-            return MatchStrategy.DontBother;
+            return MatchStrategy.None;
 
         // Quick structural signals
         bool mostlyNumeric = values.All(v => v.All(char.IsDigit));
-        double upperRatio = UppercaseRatio(values);         // 0..1
+        double upperRatio = UppercaseRatio(values);           // 0..1
         double avgWordCount = AverageWordCount(values);       // ~0 for codes
-        bool looksLikeUri = values.Any(LooksLikeUriOrDoi);  // any URI/DOI present?
+        bool looksLikeUri = values.Any(LooksLikeUriOrDoi);    // any URI/DOI present?
 
         // URIs/DOIs: almost never worth cross-vocab matching
         if (looksLikeUri)
-            return MatchStrategy.DontBother;
+            return MatchStrategy.None;
 
         MatchStrategy strategy = MatchStrategy.None;
 
@@ -73,7 +73,7 @@
         }
 
         // Long text or very high distinct count → keyword/token overlap
-        if (avgLen > 25 || distinct > 100)
+        if (avgLen > 25 && distinct > 100)
             strategy |= MatchStrategy.Keyword | MatchStrategy.TokenOverlap;
 
         // Pure numeric fields: enable numeric-range semantics (optional downstream)
@@ -123,7 +123,8 @@
         // very lightweight checks to avoid regex overhead unless needed
         if (s.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
             s.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
-            s.StartsWith("doi:", StringComparison.OrdinalIgnoreCase))
+            s.StartsWith("doi:", StringComparison.OrdinalIgnoreCase) ||
+            s.Contains("//"))
             return true;
 
         // optional: compact regex for http(s) or doi (keep simple to avoid false positives)

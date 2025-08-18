@@ -1,4 +1,7 @@
-﻿public class MultiLevelKeyField
+﻿/// <summary>
+/// Helper class, mediates between a multi-level field, its vocabulary and its value.
+/// </summary>
+public class MultiLevelKeyField
 {
     public MultiLevelKeyField(string value, string vocabulary)
     {

@@ -1,60 +1,33 @@
-﻿using Utilities;
-
-/// <summary>
-/// A friendly and legible controlled dictionary to express life stages
+﻿/// <summary>
+/// A friendly and legible controlled dictionary to express life stages.
 /// </summary>
 public class SURIMILifestageVocabulary 
-    : ControlledVocabularyBase, ILifeStageVocabulary
+    : ControlledVocabularyBase
 {
-    public SURIMILifestageVocabulary()
-    {
-    }
+    private const string COL_CODE = "id";
+    private const string COL_VALUES = "values";
 
-    public override IEnumerable<string> FieldNames => [SpeciesFields.Stage];
+    public override IEnumerable<string> FieldNames => [COL_CODE, COL_VALUES];
+    public override string CodeFieldName => COL_CODE;
     public override string VocabularyName => "surimi.lifestage";
     public override KeyDomain KeyDomain => KeyDomain.Species;
     public override KeyPurpose KeyPurpose => KeyPurpose.Lifestage;
-
-
-    public (string match, int score) MatchLifestage(string stage, int iMinScore = 70)
-    {
-        int bestScore = 0;
-        string bestKey = "";
-
-        foreach (string key in m_data.Keys)
-        {
-            string compare = m_data[key].GetField(SpeciesFields.Stage)!.ToString(false);
-            var score = NameUtilities.TokenSetFuzzyMatch(stage, compare);
-            if (score > bestScore)
-            {
-                bestKey = key;
-                bestScore = score;
-            }
-        }
-        if (bestScore >= iMinScore)
-            return (bestKey, bestScore);
-        return (string.Empty, 0);
-    }
 
     protected override bool LoadFromSource()
     {
         m_data.Clear();
 
-        m_data["juvenile"] = MultiLevelKey.FromString (SpeciesFields.Stage + "=young juvenile small");
-        m_data["adult"] = MultiLevelKey.FromString(SpeciesFields.Stage + "=adult large old");
-        m_data["larva"] = MultiLevelKey.FromString(SpeciesFields.Stage + "=larva spawn hatchling");
-        m_data["egg"] = MultiLevelKey.FromString(SpeciesFields.Stage + "=egg");
+        AddValue(COL_CODE + "=juvenile;" + COL_VALUES + "=young juvenile small");
+        AddValue(COL_CODE + "=adult;" + COL_VALUES + "=adult large old");
+        AddValue(COL_CODE + "=larva;" + COL_VALUES + "=larva spawn hatchling");
+        AddValue(COL_CODE + "=egg;" + COL_VALUES + "=egg");
 
         return true;
     }
 
-    public string CodeToLifeStage(string lifeStageCode)
+    private void AddValue(string value)
     {
-        return lifeStageCode;
-    }
-
-    public string LifeStageToCode(string LifeStage)
-    {
-        return LifeStage;
+        var key = MultiLevelKey.FromString(value);
+        m_data[key.GetField(COL_CODE)!.Value] = key;
     }
 }

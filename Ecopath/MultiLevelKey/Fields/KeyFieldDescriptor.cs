@@ -18,7 +18,7 @@ public class KeyFieldDescriptor
         IsRequired = isRequired;
         Weight = weight;
         Purpose = purpose;
-        Strategies = strategy;
+        Strategy = strategy;
     }
 
     /// <summary>
@@ -29,12 +29,12 @@ public class KeyFieldDescriptor
     /// <summary>
     /// Flag, stating whether this field is mandatory
     /// </summary>
-    public bool IsRequired { get; }
+    public bool IsRequired { get; } 
 
     /// <summary>
     /// The weight to allocate to field matches [1, 100]
     /// </summary>
-    public int Weight {  get; }
+    public int Weight { get; } 
 
     /// <summary>
     /// The purpose of this field
@@ -44,12 +44,12 @@ public class KeyFieldDescriptor
     /// <summary>
     /// The knowledge domain this field is obtained from
     /// </summary>
-    public KeyDomain Domain { get; set; }
+    public KeyDomain Domain { get; set; } 
 
     /// <summary>
     /// Bit flags that identify the most likely matching stratey for matching across vocabularies
     /// </summary>
-    public MatchStrategy Strategies { get; set; }
+    public MatchStrategy Strategy { get; set; } 
 
     public int AvgLength { get; set; }
     public int DistinctValueCount { get; set; }

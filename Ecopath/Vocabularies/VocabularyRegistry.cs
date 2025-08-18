@@ -1,9 +1,10 @@
-﻿using Utilities;
+﻿using Ecopath.Utilities;
 
-/// =====================================================
+/// ===========================================================================
 /// <summary>
-/// Registry of named vocabularies, organized by <see cref="KeyDomain"/>
+/// Registry of named vocabularies.
 /// </summary>
+/// ===========================================================================
 public class VocabularyRegistry
 {
     private readonly Dictionary<string, IControlledVocabulary> m_vocabularies = new();
@@ -14,45 +15,42 @@ public class VocabularyRegistry
     public void Register(IControlledVocabulary vocab)
     {
         if (vocab == null) throw new ArgumentNullException(nameof(vocab));
-        m_vocabularies[NameUtilities.NormalizeName(vocab.VocabularyName)] = vocab;
+        m_vocabularies[StringHelpers.NormalizeName(vocab.VocabularyName)] = vocab;
+        vocab.Load();
     }
 
-    /// <summary>
-    /// Try to get a vocabulary of type T by name.
-    /// </summary>
-    public bool TryGet<T>(string name, out T? vocab) where T : class, IControlledVocabulary
+    public IEnumerable<IControlledVocabulary> GetCompatibleVocabularies(IControlledVocabulary source)
     {
-        if (m_vocabularies.TryGetValue(NameUtilities.NormalizeName(name), out var found))
+        List<IControlledVocabulary> matches = new();
+        GenericVocabularyMatcher m = new();
+
+        foreach (IControlledVocabulary vocabulary in m_vocabularies.Values)
         {
-            vocab = found as T;
-            if (vocab != null)
-            { 
-                // Load when obtained?
-                vocab.Load();
-                return true;
-            }
+            // No need for invariant intercomparisons, but hey
+            if (MatchHelpers.CanMatch(source, vocabulary) && string.CompareOrdinal(source.VocabularyName, vocabulary.VocabularyName) != 0)
+                matches.Add(vocabulary);
         }
-
-        vocab = null;
-        return false;
+        return matches;
     }
 
     /// <summary>
-    /// Get a vocabulary of type T by name or throw.
+    /// Try to get a vocabulary by name.
     /// </summary>
-    public T Get<T>(string name) where T : class, IControlledVocabulary
+    public IControlledVocabulary? Get(string name) 
     {
-        if (!TryGet<T>(NameUtilities.NormalizeName(name), out var vocab))
-            throw new InvalidOperationException(
-                $"Vocabulary '{name}' not found or not of type {typeof(T).Name}.");
-          return vocab!;
+        m_vocabularies.TryGetValue(StringHelpers.NormalizeName(name), out IControlledVocabulary? vocab);
+        return vocab;
     }
 
     /// <summary>
-    /// List all registered vocabularies (names and types).
+    /// Try to get a vocabulary by KeyDomain.
     /// </summary>
-    public IEnumerable<(string Name, Type Type)> List()
-    {
-        return m_vocabularies.Select(kv => (kv.Key, kv.Value.GetType()));
-    }
+    public IEnumerable<IControlledVocabulary> GetByDomain(KeyDomain domain) =>
+        m_vocabularies.Values.Where(v => v.KeyDomain == domain);
+
+    /// <summary>
+    /// Try to get a vocabulary by KeyPurpose
+    /// </summary>
+    public IEnumerable<IControlledVocabulary> GetByPurpose(KeyPurpose purpose) =>
+        m_vocabularies.Values.Where(v => v.KeyPurpose == purpose);
 }
