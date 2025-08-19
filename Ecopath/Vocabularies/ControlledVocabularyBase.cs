@@ -85,7 +85,7 @@ public abstract class ControlledVocabularyBase: IControlledVocabulary
         MultiLevelKeyIndexer indexer = new();
         foreach (string fieldName in FieldNames)
         {
-            m_fieldStats[fieldName] = new KeyFieldDescriptor(fieldName);
+            m_fieldStats[fieldName] = new KeyFieldDescriptor(fieldName, KeyDomain, KeyPurpose);
             indexer.BuildIndex(fieldName, Records, m_fieldStats[fieldName]);
         }
 

@@ -66,17 +66,17 @@ namespace Ecopath.EwE
 #endif
 
             // Register the different species fields that the application may be interested in
-            m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.SpeciesCode, true, 10, purpose: KeyPurpose.Species));
-            m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Stage, false, 3, purpose: KeyPurpose.Lifestage));
-            m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Length, false, 3, purpose: KeyPurpose.Length));
-            m_keyFieldDescriptors.Register(KeyDomain.Species, new KeyFieldDescriptor(SpeciesFields.Age, false, 3, purpose: KeyPurpose.Age));
+            m_keyFieldDescriptors.Register(new KeyFieldDescriptor(SpeciesFields.SpeciesCode, KeyDomain.Species, KeyPurpose.Species, true, 10));
+            m_keyFieldDescriptors.Register(new KeyFieldDescriptor(SpeciesFields.Stage, KeyDomain.Species, KeyPurpose.Lifestage, false, 3));
+            m_keyFieldDescriptors.Register(new KeyFieldDescriptor(SpeciesFields.Length, KeyDomain.Species, KeyPurpose.Length, false, 3));
+            m_keyFieldDescriptors.Register(new KeyFieldDescriptor(SpeciesFields.Age, KeyDomain.Species, KeyPurpose.Age, false, 3));
 
             // Register the different gear fields that the application may be interested in
-            m_keyFieldDescriptors.Register(KeyDomain.FleetSegment, new KeyFieldDescriptor(FishingFields.GearCode, true, 10, purpose: KeyPurpose.Gear));
-            m_keyFieldDescriptors.Register(KeyDomain.FleetSegment, new KeyFieldDescriptor(FishingFields.Flag, false, 3, purpose: KeyPurpose.Country));
+            m_keyFieldDescriptors.Register(new KeyFieldDescriptor(FishingFields.GearCode, KeyDomain.FleetSegment, KeyPurpose.Gear, true, 10));
+            m_keyFieldDescriptors.Register(new KeyFieldDescriptor(FishingFields.Flag, KeyDomain.FleetSegment, KeyPurpose.Country, false, 3));
 
             // Register the different market fields that the application may be interested in
-            m_keyFieldDescriptors.Register(KeyDomain.FleetSegment, new KeyFieldDescriptor(MarketFields.MarketCode, true, 10, purpose: KeyPurpose.Market));
+            m_keyFieldDescriptors.Register(new KeyFieldDescriptor(MarketFields.MarketCode, KeyDomain.FleetSegment, KeyPurpose.Market, true, 10));
 
             // Register available look-up vocabularies
             m_vocabularies.Register(new ASFISSpeciesCodeVocabulary());
@@ -186,14 +186,14 @@ namespace Ecopath.EwE
 
         public IEnumerable<EwEMappingMatch> ResolveGroups(MultiLevelKey key)
         {
-            var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.Get(KeyDomain.Species));
+            var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.GetAll(KeyDomain.Species));
             foreach (var match in resolver.FindAllMatches(key, KeyDomain.Species))
                 yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
         }
 
         public IEnumerable<EwEMappingMatch> ResolveFleets(Ecopath.Models.FleetSegment fleetsegment)
         {
-            var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.Get(KeyDomain.FleetSegment));
+            var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.GetAll(KeyDomain.FleetSegment));
             foreach (var match in resolver.FindAllMatches(MultiLevelKey.FromObject(fleetsegment), KeyDomain.FleetSegment))
                 yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
         }
@@ -204,7 +204,7 @@ namespace Ecopath.EwE
             key.SetField("GearCode", gearcode);
             key.SetField("MarketCode", marketcode);
 
-            var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.Get(KeyDomain.Market));
+            var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.GetAll(KeyDomain.Market));
             foreach (var match in resolver.FindAllMatches(key, KeyDomain.Market))
                 yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
         }

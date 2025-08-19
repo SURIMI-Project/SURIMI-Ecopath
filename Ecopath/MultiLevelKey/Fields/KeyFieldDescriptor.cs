@@ -12,7 +12,7 @@ public class KeyFieldDescriptor
     /// <param name="domain"></param>
     /// <param name="purpose"></param>
     /// <param name="strategy">Matching strategy, "exact" by default.</param>
-    public KeyFieldDescriptor(string fieldName, bool isRequired = false, int weight = 1, KeyPurpose purpose = KeyPurpose.NotSet, MatchStrategy strategy = MatchStrategy.Exact)
+    public KeyFieldDescriptor(string fieldName, KeyDomain domain, KeyPurpose purpose, bool isRequired = false, int weight = 1, MatchStrategy strategy = MatchStrategy.Exact)
     {
         FieldName = fieldName;
         IsRequired = isRequired;
@@ -44,7 +44,7 @@ public class KeyFieldDescriptor
     /// <summary>
     /// The knowledge domain this field is obtained from
     /// </summary>
-    public KeyDomain Domain { get; set; } 
+    public KeyDomain Domain { get; } 
 
     /// <summary>
     /// Bit flags that identify the most likely matching stratey for matching across vocabularies

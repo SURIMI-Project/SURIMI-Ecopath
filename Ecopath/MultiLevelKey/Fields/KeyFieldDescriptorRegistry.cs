@@ -3,18 +3,24 @@
 /// </summary>
 public class KeyFieldDescriptorRegistry
 {
-    private readonly Dictionary<KeyDomain, List<KeyFieldDescriptor>> m_descriptors = new();
+    private readonly Dictionary<(KeyDomain, string), KeyFieldDescriptor> Descriptors = new();
 
-    public void Register(KeyDomain domain, KeyFieldDescriptor descriptor)
+    public void Register(KeyFieldDescriptor descriptor)
     {
-        if (!m_descriptors.TryGetValue(domain, out var descriptors))
-            m_descriptors[domain] = descriptors = new List<KeyFieldDescriptor>();
-        descriptors.Add(descriptor);
-        // For now, set this via the registry. descriptor field may disappear entirely
-        descriptor.Domain = domain;
+        var key = (descriptor.Domain, descriptor.FieldName);
+        Descriptors[key] = descriptor;
     }
 
-    public IEnumerable<KeyFieldDescriptor> Get(KeyDomain domain) =>
-        m_descriptors.TryGetValue(domain, out var matcher) ? matcher : new List<KeyFieldDescriptor>();
-}
+    public KeyFieldDescriptor? Get(KeyDomain domain, string fieldName)
+    {
+        Descriptors.TryGetValue((domain, fieldName), out var descriptor);
+        return descriptor;
+    }
 
+    public IEnumerable<KeyFieldDescriptor> GetAll(KeyDomain domain)
+    {
+        return Descriptors
+            .Where(kvp => kvp.Key.Item1 == domain)
+            .Select(kvp => kvp.Value);
+    }
+ }
