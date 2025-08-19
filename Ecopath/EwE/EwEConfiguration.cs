@@ -1,4 +1,9 @@
-﻿using Ecopath.EwE.Wrapper;
+﻿using ControlledVocabularies.Core;
+using ControlledVocabularies.Descriptors;
+using ControlledVocabularies.Match;
+using ControlledVocabularies.Resolve;
+using ControlledVocabularies.Vocabularies;
+using Ecopath.EwE.Wrapper;
 using EwECore;
 using EwECore.Auxiliary;
 

@@ -1,5 +1,6 @@
 ﻿using Ecopath.EwE.Wrapper;
 using EwECore;
+using ControlledVocabularies.Core;
 
 public static class GroupSpeciesProportionsFactory
 {

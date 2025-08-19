@@ -1,6 +1,9 @@
-﻿using FluentAssertions;
+﻿using ControlledVocabularies.Core;
+using ControlledVocabularies.Match;
+using ControlledVocabularies.Utils;
+using ControlledVocabularies.Vocabularies;
+using FluentAssertions;
 using Xunit;
-
 public class GenericVocabularyMatcherTests
 {
     public GenericVocabularyMatcherTests()
@@ -13,7 +16,7 @@ public class GenericVocabularyMatcherTests
         SURIMILifestageVocabulary v1 = new();
         NERCLifeStageVocabulary v2 = new();
 
-        Ecopath.Utilities.MatchHelpers.CanMatch(v1, v2 ).Should().BeTrue();
+       MatchHelpers.CanMatch(v1, v2 ).Should().BeTrue();
     }
 
     [Fact]
@@ -22,7 +25,7 @@ public class GenericVocabularyMatcherTests
         SURIMILifestageVocabulary v1 = new();
         ASFISSpeciesCodeVocabulary v2 = new();
 
-        Ecopath.Utilities.MatchHelpers.CanMatch(v1, v2).Should().BeFalse();
+        MatchHelpers.CanMatch(v1, v2).Should().BeFalse();
     }
 
     [Fact]

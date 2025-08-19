@@ -1,6 +1,6 @@
-﻿using Ecopath.EwE.Wrapper;
+﻿using ControlledVocabularies.Core;
+using Ecopath.EwE.Wrapper;
 using EwECore;
-using EwEUtils.Core;
 using System.Diagnostics;
 
 public class EwEMapping : MultiLevelKey

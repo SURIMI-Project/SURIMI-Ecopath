@@ -9,10 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="MultiLevelKey\Fields\AliasFieldMatcher.cs" />
-    <Compile Remove="MultiLevelKey\Fields\FieldMatcherRegistry.cs" />
-    <Compile Remove="Vocabularies\IVocabularyFieldIndex.cs" />
-    <Compile Remove="Vocabularies\VocabularyFieldIndex.cs" />
+    <Compile Remove="Controlled Vocabularies\IVocabularyFieldIndex.cs" />
+    <Compile Remove="Controlled Vocabularies\VocabularyFieldIndex.cs" />
   </ItemGroup>
 
   <ItemGroup>

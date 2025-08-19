@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Xunit;
+using ControlledVocabularies.Vocabularies;
 
 public class SURIMILifestageVocabularyTest
 {

@@ -1,6 +1,8 @@
-﻿using FluentAssertions;
+﻿using ControlledVocabularies.Core;
+using ControlledVocabularies.Descriptors;
+using ControlledVocabularies.Resolve;
+using FluentAssertions;
 using Xunit;
-
 
 public class StrategyKeyResolverTests
 {

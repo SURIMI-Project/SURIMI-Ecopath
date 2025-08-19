@@ -1,6 +1,7 @@
 using Ecopath.EwE;
 using Ecopath.EwE.Wrapper;
 using Ecopath.Services;
+using ControlledVocabularies.Descriptors;
 
 namespace Ecopath;
 
@@ -21,6 +22,7 @@ public class Program
         builder.Services.AddSingleton<IEwECore, EwE.Wrapper.EwECore>();
         builder.Services.AddSingleton<IEwEConfiguration, EwEConfiguration>();
         builder.Services.AddSingleton<IEwEController, EwEController>();
+        builder.Services.AddSingleton<IKeyFieldDescriptorRegistry, KeyFieldDescriptorRegistry>();
 
         var app = builder.Build();
 
