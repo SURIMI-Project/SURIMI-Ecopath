@@ -1,5 +1,6 @@
 ﻿using Ecopath.EwE.Wrapper;
 using Ecopath.Generic;
+using ControlledVocabularies.Core;
 
 namespace Ecopath.EwE
 {
