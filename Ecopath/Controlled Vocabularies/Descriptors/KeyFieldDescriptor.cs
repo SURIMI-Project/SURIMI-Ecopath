@@ -1,4 +1,5 @@
 ﻿using ControlledVocabularies.Core;
+using ControlledVocabularies.Vocabularies;
 
 namespace ControlledVocabularies.Descriptors
 {
@@ -54,6 +55,8 @@ namespace ControlledVocabularies.Descriptors
         /// Bit flags that identify the most likely matching stratey for matching across vocabularies
         /// </summary>
         public MatchStrategy Strategy { get; set; }
+
+        public ForeignKeySpec? ForeignKey { get; init; }  // null if not an FK
 
         public int AvgLength { get; set; }
         public int DistinctValueCount { get; set; }

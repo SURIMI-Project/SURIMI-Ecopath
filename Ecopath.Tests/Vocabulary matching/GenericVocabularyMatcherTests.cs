@@ -38,8 +38,7 @@ public class GenericVocabularyMatcherTests
         v2.Load().Should().BeTrue();
 
         GenericVocabularyMatcher m = new();
-        MultiLevelKey key = new();
-        key.SetField(SpeciesFields.Lifestage, "juvenile");
+        MultiLevelKey key = MultiLevelKey.FromPairs([(SpeciesFields.Lifestage, "juvenile")], KeyDomain.Species);
 
         // This is a bloody big deal: a SURIMI lifestage code can be matched to a record from a totally independent vocabulary
         var result = m.Match(key, v1, v2);

@@ -7,8 +7,8 @@ namespace ControlledVocabularies.Resolve
     /// </summary>
     public interface IKeyResolver
     {
-        IEnumerable<KeyResolverMatchResult> FindAllMatches(MultiLevelKey key, KeyDomain domain, int? minscore = null);
-        KeyResolverMatchResult? FindBestMatch(MultiLevelKey input, KeyDomain domain, int? minscore = null);
+        IEnumerable<KeyResolverMatchResult> FindAllMatches(MultiLevelKey key, int? minscore = null);
+        KeyResolverMatchResult? FindBestMatch(MultiLevelKey input,  int? minscore = null);
 
     }
 }

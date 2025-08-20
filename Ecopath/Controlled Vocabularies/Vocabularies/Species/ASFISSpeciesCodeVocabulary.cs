@@ -13,48 +13,33 @@ namespace ControlledVocabularies.Vocabularies
         private const string COL_NAME = "Scientific_Name";
 
         public override string VocabularyName => "ASFIS";
-        public override KeyDomain KeyDomain => KeyDomain.Species;
-        public override KeyPurpose KeyPurpose => KeyPurpose.Species;
+        public override KeyDomain Domain => KeyDomain.Species;
+        public override KeyPurpose Purpose => KeyPurpose.Species;
 
-        public override IEnumerable<string> FieldNames => [COL_CODE, COL_NAME];
         public override string CodeFieldName => COL_CODE;
 
         protected override bool LoadFromSource()
         {
-            if (m_data.Count > 0) return true;
 
             string fin = @"Includes\ASFIS_sp_2024.csv";
-            using (var reader = new StreamReader(fin))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            using var reader = new StreamReader(fin);
+            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            using var dr = new CsvDataReader(csv);
+
+            AddField(COL_CODE, Domain, Purpose, true, 1, MatchStrategy.Exact);
+            AddField(COL_NAME, Domain, Purpose, true, 1, MatchStrategy.Exact | MatchStrategy.Fuzzy | MatchStrategy.TokenOverlap);
+
+            try
             {
-                // Do any configuration to `CsvReader` before creating CsvDataReader.
-                using (var dr = new CsvDataReader(csv))
-                {
-                    DataTable dt = new();
-                    dt.Columns.Add(COL_CODE, typeof(string));
-                    dt.Columns.Add(COL_NAME, typeof(string));
-
-                    try
-                    {
-                        dt.Load(dr);
-                        foreach (DataRow dataRow in dt.Rows)
-                        {
-                            var key = MultiLevelKey.FromDataRow(dataRow);
-                            string code = (string)dataRow[COL_CODE];
-                            string scname = (string)dataRow[COL_NAME];
-
-                            if (!string.IsNullOrWhiteSpace(code) && !string.IsNullOrWhiteSpace(scname))
-                                m_data[StringHelpers.NormalizeName(scname)] = key;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        m_data.Clear();
-                        return false;
-                    }
-                    return (m_data.Count > 0);
-                }
+                this.Table.Load(dr);
+                return true;
             }
+            catch (Exception ex)
+            {
+                // ToDo: log ex.Message or ex.ToString()
+                return false;
+            }
+
         }
     }
 }

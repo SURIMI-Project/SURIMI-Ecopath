@@ -5,34 +5,35 @@ namespace ControlledVocabularies.Vocabularies
     /// <summary>
     /// A friendly and legible controlled dictionary to express life stages.
     /// </summary>
-    public class SURIMILifestageVocabulary
-    : ControlledVocabularyBase
+    public class SURIMILifestageVocabulary : ControlledVocabularyBase
     {
         private const string COL_CODE = "id";
         private const string COL_VALUES = "values";
 
-        public override IEnumerable<string> FieldNames => [COL_CODE, COL_VALUES];
         public override string CodeFieldName => COL_CODE;
         public override string VocabularyName => "surimi.lifestage";
-        public override KeyDomain KeyDomain => KeyDomain.Species;
-        public override KeyPurpose KeyPurpose => KeyPurpose.Lifestage;
+        public override KeyDomain Domain => KeyDomain.Species;
+        public override KeyPurpose Purpose => KeyPurpose.Lifestage;
 
         protected override bool LoadFromSource()
         {
-            m_data.Clear();
+            AddField(COL_CODE, Domain, Purpose, true, 1, MatchStrategy.Exact);
+            AddField(COL_VALUES, Domain, Purpose, true, 1, MatchStrategy.Exact | MatchStrategy.Fuzzy);
 
-            AddValue(COL_CODE + "=juvenile;" + COL_VALUES + "=young juvenile small");
-            AddValue(COL_CODE + "=adult;" + COL_VALUES + "=adult large old");
-            AddValue(COL_CODE + "=larva;" + COL_VALUES + "=larva spawn hatchling");
-            AddValue(COL_CODE + "=egg;" + COL_VALUES + "=egg");
+            AddRow("juvenile", "young juvenile small");
+            AddRow("adult", "adult large old");
+            AddRow("larva", "larva spawn hatchling");
+            AddRow("egg", "egg");
 
             return true;
         }
 
-        private void AddValue(string value)
+        private void AddRow(string code, string values)
         {
-            var key = MultiLevelKey.FromString(value);
-            m_data[key.GetField(COL_CODE)!.Value] = key;
+            var drow = this.Table.NewRow();
+            drow[COL_CODE] = code;
+            drow[COL_VALUES] = values;
+            this.Table.Rows.Add(drow);
         }
     }
 }

@@ -34,49 +34,70 @@ namespace ControlledVocabularies.Match
         /// <returns></returns>
         public IEnumerable<MatchResult> FindAllMatches(string sourceValue, IEnumerable<MultiLevelKey> records, KeyFieldDescriptor descriptor, int? minScore = null)
         {
-            if (minScore == null) minScore = LocalSettings.DefaultMinScore;
+            int threshold = minScore ?? LocalSettings.DefaultMinScore;
 
-            var inputKey = new MultiLevelKey();
-            inputKey.SetField("value", sourceValue);
+            // Not strict as we're using an invented field name here
+            var inputKey = MultiLevelKey.FromPairs([("value", sourceValue)], descriptor.Domain, strict: false);
 
+            Dictionary<MultiLevelKey, MatchResult> results = new();
             string targetField = descriptor.FieldName;
-            int weight = descriptor.Weight;
+            int weight = Math.Max(1, descriptor.Weight); // defensive
             bool isRequired = descriptor.IsRequired;
             MatchStrategy finalStrategy = descriptor.Strategy;
 
-            Dictionary<MultiLevelKey, MatchResult> results = new();
-
-            foreach (MatchStrategy strategy in Enum.GetValues(typeof(MatchStrategy)))
+            foreach (var strategy in EnumerateFlags(finalStrategy))
             {
-                if (!finalStrategy.HasFlag(strategy) || strategy == MatchStrategy.None)
-                    continue;
-
                 var resolver = new StrategyKeyResolver(
                     records,
-                    [
+                    new[]
+                    {
                         new StrategyKeyResolver.FieldMapping("value", targetField)
-                    {
-                        Strategy = strategy,
-                        Weight = weight,
-                        IsRequired = isRequired
-                    }
-                    ]);
-
-                foreach (var match in resolver.FindAllMatches(inputKey, descriptor.Domain))
-                {
-                    double actualScore = match.Score;
-                    int realScore = Math.Clamp((int)actualScore * 100, 0, 100);
-
-                    if (realScore >= minScore)
-                    {
-                        if (!results.TryGetValue(match.MatchedKey, out var existing) || match.Score > existing.Score)
                         {
-                            results[match.MatchedKey] = match;
+                            Strategy   = strategy,
+                            Weight     = weight,
+                            IsRequired = isRequired
                         }
+                    });
+
+                var matches = resolver.FindAllMatches(inputKey);
+
+                // Normalize per strategy
+                int maxScore = matches.Max(m => m.Score);
+                double denom = maxScore > 100 ? maxScore : 100.0;
+
+                foreach (var match in matches)
+                {
+                    // Normalize by actual max for this strategy
+                    int normalized = (int)Math.Round((match.Score / denom) * 100.0);
+                    normalized = Math.Clamp(normalized, 0, 100);
+
+                    if (normalized < threshold) continue;
+
+                    if (!results.TryGetValue(match.MatchedKey, out var existing) || normalized > existing.Score)
+                    {
+                        results[match.MatchedKey] = new MatchResult
+                        {
+                            SourceField = match.SourceField,
+                            SourceFieldValue = match.SourceFieldValue,
+                            TargetField = match.TargetField,
+                            TargetFieldValue = match.TargetFieldValue,
+                            MatchedKey = match.MatchedKey,
+                            Score = normalized,
+                            StrategyUsed = strategy,
+                            Justification = $"Matched on '{targetField}' via {strategy}"
+                        };
                     }
                 }
             }
+
             return results.Values;
+        }
+
+        private static IEnumerable<MatchStrategy> EnumerateFlags(MatchStrategy flags)
+        {
+            foreach (MatchStrategy s in Enum.GetValues(typeof(MatchStrategy)))
+                if (s != MatchStrategy.None && flags.HasFlag(s))
+                    yield return s;
         }
     }
 }

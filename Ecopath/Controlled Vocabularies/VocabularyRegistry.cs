@@ -49,11 +49,21 @@ public class VocabularyRegistry
     /// Try to get a vocabulary by KeyDomain.
     /// </summary>
     public IEnumerable<IControlledVocabulary> GetByDomain(KeyDomain domain) =>
-        m_vocabularies.Values.Where(v => v.KeyDomain == domain);
+        m_vocabularies.Values.Where(v => v.Domain == domain);
 
     /// <summary>
     /// Try to get a vocabulary by KeyPurpose
     /// </summary>
     public IEnumerable<IControlledVocabulary> GetByPurpose(KeyPurpose purpose) =>
-        m_vocabularies.Values.Where(v => v.KeyPurpose == purpose);
+        m_vocabularies.Values.Where(v => v.Purpose == purpose);
+
+    public bool TryGetByNameOrAlias(string name, out IControlledVocabulary? vocab) 
+    { 
+        /* normalize + alias */
+         return m_vocabularies.TryGetValue(StringHelpers.NormalizeName(name), out vocab);
+    }
+
+    public bool TryResolveForeign(ForeignKeySpec fk, out IControlledVocabulary? vocab)
+        => TryGetByNameOrAlias(fk.TargetVocabulary, out vocab);
+
 }

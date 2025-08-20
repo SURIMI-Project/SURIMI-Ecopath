@@ -1,0 +1,23 @@
+﻿namespace Ecopath.Services
+{
+    public static class GlobalServiceLocator 
+    { 
+        private static List<Object> SafeServices = new(); 
+        
+        public static void Register(object service) 
+        { 
+            SafeServices.Add(service); 
+        } 
+
+        public static T? Get<T>() where T : class 
+        { 
+            return SafeServices.OfType<T>().FirstOrDefault() ?? null; 
+        } 
+        
+        public static bool TryGet<T>(out T? service) where T : class 
+        { 
+            service = Get<T>(); return service != null; 
+        } 
+    }
+
+}

@@ -5,18 +5,13 @@ using System.Diagnostics;
 
 public class EwEMapping : MultiLevelKey
 {
-    public EwEMapping() 
-    { 
-        // NOP;
-    }
-
-    public EwEMapping(string key, KeyDomain domain, int index, float proportion = 1) : this()
+    public EwEMapping(string key, KeyDomain domain, int index, float proportion = 1) : base(domain)
     {
         this.Parse(key);
-        this.Domain = domain;
         this.Index = index;
         this.Proportion = proportion;
     }
+
     public int Index { get; set;  }
     public float Proportion { get; set; }
 
