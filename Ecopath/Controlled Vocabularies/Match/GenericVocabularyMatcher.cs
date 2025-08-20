@@ -18,34 +18,31 @@ namespace ControlledVocabularies.Match
 
             // 1. Try FK shortcut
             var fkMatch = TryMatchViaForeignKey(record, vocabA, vocabB);
-            if (fkMatch.Score == 100)
-                return fkMatch;
+            if (fkMatch.Score == 100) return fkMatch;
 
-            // 2. Fallback: Use StrategyBasedMatcher
-            StrategyBasedMatcher matcher = new();
+            // 2) Strategy search across compatible fields/strategies
             foreach (string sourceField in record.FieldNames)
             {
                 var sourceValue = record.GetField(sourceField)?.ToString(false);
-                if (string.IsNullOrWhiteSpace(sourceValue))
-                    continue;
+                if (string.IsNullOrWhiteSpace(sourceValue)) continue;
 
-                IEnumerable<StrategyKeyResolver.FieldMapping> mappings = FindCompatibleMappings(sourceField, MatchStrategy.Exact, vocabB);
-                if (mappings.Count() > 0)
+                // if you have any source-side hinting, pass it here; else leave null
+                var mappings = BuildMappingsForField(sourceField, vocabB /*, sourceHint: null */);
+
+                var inputKey = MultiLevelKey.FromPairs([(sourceField, sourceValue)], vocabB.Domain, strict: false);
+
+                foreach (var map in mappings)
                 {
-                    var inputKey = new MultiLevelKey();
-                    inputKey.SetField(sourceField, sourceValue);
+                    var resolver = new StrategyKeyResolver(vocabB.Records, new[] { map });
+                    var match = resolver.FindBestMatch(inputKey); // ensure this returns the max-scoring row
 
-                    var resolver = new StrategyKeyResolver(vocabB.Records, mappings);
-                    var match = resolver.FindBestMatch(inputKey, vocabB.KeyDomain);
-
-                    if (match != null && match.Score > Math.Max(best.Score, (int)minscore))
+                    if (match != null && match.Score > Math.Max(best.Score, minscore ?? LocalSettings.DefaultMinScore))
                     {
+                        match.Justification = $"Matched '{sourceField}' > '{map.TargetField}' via {map.Strategy}";
                         best = match;
-                        match.Justification = $"Matched on field '{sourceField}' using strategy {match.StrategyUsed}";
                     }
                 }
             }
-
             // 3. Fallback fallback: use brute force???
 
             return best;
@@ -56,59 +53,52 @@ namespace ControlledVocabularies.Match
         private MatchResult TryMatchViaForeignKey(MultiLevelKey record, IControlledVocabulary vocabA, IControlledVocabulary vocabB)
         {
             var matcher = new ExactFieldMatcher();
-            string vocabBName = StringHelpers.NormalizeName(vocabB.VocabularyName); // The API already does this, but it doesn't hurt to be cautious
+            var vocabBNorm = StringHelpers.NormalizeName(vocabB.VocabularyName);
 
-            foreach (var (localField, foreignSpec) in vocabA.ForeignKeyMap)
+            foreach (var fieldName in vocabA.FieldNames)
             {
-                var inputValue = record.GetField(localField)?.ToString(false);
-                if (string.IsNullOrEmpty(inputValue))
-                    continue;
+                var spec = vocabA.GetKeyFieldDescriptor(fieldName)?.ForeignKey;
+                if (spec == null) continue;
 
-                var tokens = foreignSpec.Split(':', StringSplitOptions.RemoveEmptyEntries);
-                string foreignVocabName = StringHelpers.NormalizeName(tokens[0]);
-                string foreignFieldHint = tokens.Length > 1 ? tokens[1] : string.Empty;
+                // Prefer registry alias resolution (if you have it); else normalize and compare:
+                var targetVocabNorm = StringHelpers.NormalizeName(spec.TargetVocabulary);
+                if (matcher.Score(vocabBNorm, targetVocabNorm) < 1) continue;
 
-                // Not a referenced vocabulary?
-                // ToDo: here vocabulary aliases should be considered
-                if (matcher.Score(vocabBName, foreignVocabName) < 1)
-                    continue;
+                var inputValue = record.GetField(fieldName)?.ToString(false);
+                if (string.IsNullOrWhiteSpace(inputValue)) continue;
 
-                // Try specified FK field if hint is available
-                if (!string.IsNullOrEmpty(foreignFieldHint) && vocabB.FieldNames.Contains(foreignFieldHint))
+                // Hint field first
+                if (!string.IsNullOrEmpty(spec.TargetField) && vocabB.FieldNames.Contains(spec.TargetField))
                 {
                     foreach (var r in vocabB.Records)
                     {
-                        if (matcher.Score(r.GetField(foreignFieldHint)!.ToString(false), inputValue) == 1)
+                        if (matcher.Score(r.GetField(spec.TargetField)!.ToString(false), inputValue) == 1)
                         {
-                            return new MatchResult()
+                            return new MatchResult
                             {
                                 Score = 100,
-                                SourceField = localField,
+                                SourceField = fieldName,
                                 SourceFieldValue = inputValue,
-                                TargetField = foreignFieldHint,
+                                TargetField = spec.TargetField,
                                 TargetFieldValue = inputValue,
                                 MatchedKey = r,
                                 StrategyUsed = MatchStrategy.Exact,
-                                Justification = $"Matched via FK hint {foreignFieldHint}"
+                                Justification = $"Matched via FK hint '{spec.TargetField}'"
                             };
                         }
                     }
-                    Console.WriteLine($"Warning: FK hint '{foreignFieldHint}' not found in vocab {vocabB.VocabularyName}");
+                    // log: hint not found
                 }
 
-                // Fallback: Try any field with MatchStrategy.Exact
-                IEnumerable<StrategyKeyResolver.FieldMapping> mappings = FindCompatibleMappings(localField, MatchStrategy.Exact, vocabB);
-                if (mappings.Any())
+                // Fallback: exact on any compatible target field (still one mapping per resolver)
+                var inputKey = MultiLevelKey.FromPairs([(fieldName, inputValue!)], vocabB.Domain, strict: false);
+                foreach (var map in BuildMappingsForField(fieldName, vocabB, sourceHint: MatchStrategy.Exact))
                 {
-                    var inputKey = new MultiLevelKey();
-                    inputKey.SetField(localField, inputValue);
-
-                    var resolver = new StrategyKeyResolver(vocabB.Records, mappings);
-                    var match = resolver.FindBestMatch(inputKey, vocabB.KeyDomain);
-
+                    var resolver = new StrategyKeyResolver(vocabB.Records, new[] { map });
+                    var match = resolver.FindBestMatch(inputKey);
                     if (match != null && match.Score > 0)
                     {
-                        match.Justification = $"Matched via FK fallback using strategy Exact on all compatible fields. See details";
+                        match.Justification = $"Matched via FK fallback (Exact) on '{map.TargetField}'";
                         return match;
                     }
                 }
@@ -121,28 +111,33 @@ namespace ControlledVocabularies.Match
 
         #region Internal helpers
 
-        private IEnumerable<StrategyKeyResolver.FieldMapping> FindCompatibleMappings(string localField, MatchStrategy strategySource, IControlledVocabulary vocab)
+        private static IEnumerable<MatchStrategy> EnumerateFlags(MatchStrategy flags)
         {
-            List<StrategyKeyResolver.FieldMapping> mappings = new();
-            foreach (string fn in vocab.FieldNames)
-            {
-                var descrDest = vocab.GetKeyFieldDescriptor(fn);
-                foreach (MatchStrategy strategy in Enum.GetValues(typeof(MatchStrategy)))
-                {
-                    if ((strategy & strategySource) > 0 && (strategy & descrDest!.Strategy) > 0)
-                    {
-                        mappings.Add(new StrategyKeyResolver.FieldMapping(localField, fn)
-                        {
-                            Weight = 1,
-                            IsRequired = false,
-                            Strategy = strategy
-                        });
-                    }
-                }
-            }
-            return mappings;
+            foreach (MatchStrategy f in Enum.GetValues(typeof(MatchStrategy)))
+                if (f != MatchStrategy.None && flags.HasFlag(f))
+                    yield return f;
         }
 
+        private IEnumerable<StrategyKeyResolver.FieldMapping> BuildMappingsForField(string sourceField, IControlledVocabulary vocabB, MatchStrategy? sourceHint = null)
+        {
+            foreach (string targetField in vocabB.FieldNames)
+            {
+                var descr = vocabB.GetKeyFieldDescriptor(targetField);
+                if (descr == null) continue;
+
+                // If you have a source-side hint, intersect; otherwise just use target flags.
+                var effective = sourceHint.HasValue ? (descr.Strategy & sourceHint.Value) : descr.Strategy;
+                foreach (var strategy in EnumerateFlags(effective))
+                {
+                    yield return new StrategyKeyResolver.FieldMapping(sourceField, targetField)
+                    {
+                        Strategy = strategy,
+                        Weight = Math.Max(1, descr.Weight),
+                        IsRequired = descr.IsRequired
+                    };
+                }
+            }
+        }
         #endregion // Internal helpers
     }
 }

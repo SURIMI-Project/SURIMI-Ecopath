@@ -32,15 +32,15 @@ namespace ControlledVocabularies.Utils
             if (source == target)
                 return false;
 
-            if (source.KeyDomain != target.KeyDomain)
+            if (source.Domain != target.Domain)
                 return false;
 
-            if ((source.KeyPurpose & target.KeyPurpose) != 0)
+            if ((source.Purpose & target.Purpose) != 0)
                 return true;
 
-            if (source.ForeignKeyMap.Values.Any(v =>
-                v.StartsWith(target.VocabularyName, StringComparison.OrdinalIgnoreCase)))
-                return true;
+            //if (source.ForeignKeyMap.Values.Any(v =>
+            //    v.StartsWith(target.VocabularyName, StringComparison.OrdinalIgnoreCase)))
+            //    return true;
 
             return false;
         }

@@ -4,6 +4,7 @@ using ControlledVocabularies.Match;
 using ControlledVocabularies.Resolve;
 using ControlledVocabularies.Vocabularies;
 using Ecopath.EwE.Wrapper;
+using Ecopath.Services;
 using EwECore;
 using EwECore.Auxiliary;
 
@@ -27,7 +28,7 @@ namespace Ecopath.EwE
         /// </list>
         /// </remarks>
         private readonly List<EwEMapping> m_mappings = new();
-        private readonly KeyFieldDescriptorRegistry m_keyFieldDescriptors = new ();
+        private readonly KeyFieldDescriptorRegistry m_keyFieldDescriptors;
         private readonly VocabularyRegistry m_vocabularies = new();
 
         // The EwE indices of externally managed fleets.
@@ -69,6 +70,8 @@ namespace Ecopath.EwE
             SpinupYears = 1;
             StartYear = 2001;
 #endif
+
+            m_keyFieldDescriptors = GlobalServiceLocator.Get<KeyFieldDescriptorRegistry>()!;
 
             // Register the different species fields that the application may be interested in
             m_keyFieldDescriptors.Register(new KeyFieldDescriptor(SpeciesFields.SpeciesCode, KeyDomain.Species, KeyPurpose.Species, true, 10));
@@ -140,22 +143,12 @@ namespace Ecopath.EwE
             m_mappings.Add(new EwEMapping("gearcode=EwE:Artisanal; marketcode=FRA", KeyDomain.Market, 8));
             m_mappings.Add(new EwEMapping("gearcode=EwE:Recreational; marketcode=FRA", KeyDomain.Market, 9));
 
-
             for (int iGroup = 1; iGroup <= core.nGroups; iGroup++)
                 if (core.get_EcopathGroupInputs(iGroup).IsFished)
                     m_fishedGroups.Add(iGroup);
 
             this.ReadSpeciesMappings(core);
             this.ReadFleetMappings();
-
-            //m_mappings.Add(new EwEMapping("speciescode=ASFIS:MUR; stage=dwc:juvenile", KeyDomain.Species, 22));       // Mullet (j)
-            //m_mappings.Add(new EwEMapping("speciescode=ASFIS:MUR; stage=dwc:adult", KeyDomain.Species, 23));          // Mullet (a)
-            //m_mappings.Add(new EwEMapping("speciescode=ASFIS:HKE; stage=dwc:juvenile", KeyDomain.Species, 26));       // European Hake (j)
-            //m_mappings.Add(new EwEMapping("speciescode=ASFIS:HKE; stage=dwc:adult", KeyDomain.Species, 27));          // European Hake (a)
-            //m_mappings.Add(new EwEMapping("speciescode=ASFIS:ANE; stage=dwc:juvenile", KeyDomain.Species, 39));       // Anchovy (j)
-            //m_mappings.Add(new EwEMapping("speciescode=ASFIS:ANE; stage=dwc:adult", KeyDomain.Species, 40));          // Anchovy (a)
-            //m_mappings.Add(new EwEMapping("speciescode=ASFIS:PIL; stage=dwc:juvenile", KeyDomain.Species, 41));       // Sardine (j)
-            //m_mappings.Add(new EwEMapping("speciescode=ASFIS:PIL; stage=dwc:adult", KeyDomain.Species, 42));          // Sardine (a)
 
             m_mappings.Sort(new EwEMappingComparer());
 
@@ -179,38 +172,37 @@ namespace Ecopath.EwE
 
         public IEnumerable<EwEMappingMatch> ResolveGroups(string speciescode)
         {
-            MultiLevelKey key = new();
-            key.SetField("SpeciesCode", speciescode);
+            MultiLevelKey key = MultiLevelKey.FromPairs([(SpeciesFields.SpeciesCode, speciescode)], KeyDomain.Species);
             return ResolveGroups(key);
         }
 
         public IEnumerable<EwEMappingMatch> ResolveGroups(Ecopath.Models.Species species)
         {
-            return ResolveGroups(MultiLevelKey.FromObject(species));
+            return ResolveGroups(MultiLevelKey.FromObject(species, KeyDomain.Species));
         }
 
         public IEnumerable<EwEMappingMatch> ResolveGroups(MultiLevelKey key)
         {
+            if (key.Domain != KeyDomain.Species)
+                yield break;
+
             var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.GetAll(KeyDomain.Species));
-            foreach (var match in resolver.FindAllMatches(key, KeyDomain.Species))
+            foreach (var match in resolver.FindAllMatches(key))
                 yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
         }
 
         public IEnumerable<EwEMappingMatch> ResolveFleets(Ecopath.Models.FleetSegment fleetsegment)
         {
             var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.GetAll(KeyDomain.FleetSegment));
-            foreach (var match in resolver.FindAllMatches(MultiLevelKey.FromObject(fleetsegment), KeyDomain.FleetSegment))
+            foreach (var match in resolver.FindAllMatches(MultiLevelKey.FromObject(fleetsegment, KeyDomain.FleetSegment)))
                 yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
         }
 
         public IEnumerable<EwEMappingMatch> ResolveMarkets(string gearcode, string marketcode)
         {
-            MultiLevelKey key = new();
-            key.SetField("GearCode", gearcode);
-            key.SetField("MarketCode", marketcode);
-
+            MultiLevelKey key = MultiLevelKey.FromPairs([(FishingFields.GearCode, gearcode), (MarketFields.MarketCode, marketcode)], KeyDomain.Market);
             var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.GetAll(KeyDomain.Market));
-            foreach (var match in resolver.FindAllMatches(key, KeyDomain.Market))
+            foreach (var match in resolver.FindAllMatches(key))
                 yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
         }
 
@@ -302,15 +294,12 @@ namespace Ecopath.EwE
                                 // #Yes: add life stage to mappings
                                 cEcoPathGroupInput grp = core.get_EcopathGroupInputs(iGroup);
 
-                                var key = new EwEMapping();
-                                key.Domain = KeyDomain.Species;
+                                var key = new EwEMapping("", KeyDomain.Species, iGroup, 1);
                                 key.SetField(SpeciesFields.SpeciesCode, vocSpecies.VocabularyName + ":" + code);
 
                                 // Try to infer the stage from the group name
                                 string ls = vocLifeStage.FindCode(grp.Name);
                                 key.SetField(SpeciesFields.Lifestage, vocLifeStage.VocabularyName + ":" + ls);
-                                key.Index = iGroup;
-                                key.Proportion = 1;
 
                                 this.m_mappings.Add(key);
                             }
@@ -331,11 +320,8 @@ namespace Ecopath.EwE
 
                         if (this.FishedGroups.Contains(taxon.iGroup))
                         {
-                            var key = new EwEMapping();
-                            key.Domain = KeyDomain.Species;
+                            var key = new EwEMapping("", KeyDomain.Species, taxon.iGroup, taxon.PropB / 100);
                             key.SetField(SpeciesFields.SpeciesCode, vocSpecies.VocabularyName + ":" + code);
-                            key.Index = taxon.iGroup;
-                            key.Proportion = taxon.PropB / 100;
 
                             this.m_mappings.Add(key);
                         }
@@ -351,8 +337,8 @@ namespace Ecopath.EwE
         private void ReadFleetMappings()
         {
             // The name of the vocabulary is implied here, but should be read from the fields
-            IControlledVocabulary vocGear = m_vocabularies.Get("ISSCFG");
-            IControlledVocabulary vocCountry = m_vocabularies.Get("ISO-3166");
+            IControlledVocabulary vocGear = m_vocabularies.Get("ISSCFG")!;
+            IControlledVocabulary vocCountry = m_vocabularies.Get("ISO-3166")!;
 
         }
         #endregion // Smarts

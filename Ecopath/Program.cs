@@ -22,7 +22,6 @@ public class Program
         builder.Services.AddSingleton<IEwECore, EwE.Wrapper.EwECore>();
         builder.Services.AddSingleton<IEwEConfiguration, EwEConfiguration>();
         builder.Services.AddSingleton<IEwEController, EwEController>();
-        builder.Services.AddSingleton<IKeyFieldDescriptorRegistry, KeyFieldDescriptorRegistry>();
 
         var app = builder.Build();
 
@@ -35,6 +34,9 @@ public class Program
         app.MapGrpcService<EcopathMarketService>();
 
         app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
+
+        // Just pretending, to be made real w Rik
+        GlobalServiceLocator.Register(new KeyFieldDescriptorRegistry());
 
         app.Run();
     }

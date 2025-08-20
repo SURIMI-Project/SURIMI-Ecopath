@@ -1,7 +1,6 @@
-﻿using CsvHelper;
-using System.Data;
+﻿using ControlledVocabularies.Core;
+using CsvHelper;
 using System.Globalization;
-using ControlledVocabularies.Core;
 
 namespace ControlledVocabularies.Vocabularies
 {
@@ -14,52 +13,29 @@ namespace ControlledVocabularies.Vocabularies
         private const string COL_NAME = "name";
 
         public override string VocabularyName => "ISO-3166";
-        public override IEnumerable<string> FieldNames => [COL_CODE, COL_NAME];
         public override string CodeFieldName => COL_CODE;
-        public override KeyDomain KeyDomain => KeyDomain.Country;
-        public override KeyPurpose KeyPurpose => KeyPurpose.Country;
+        public override KeyDomain Domain => KeyDomain.Country;
+        public override KeyPurpose Purpose => KeyPurpose.Country;
 
         protected override bool LoadFromSource()
         {
-            if (m_data.Count > 0)
-                return true;
-
             using var reader = new StreamReader(FileName);
             using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
             using var dr = new CsvDataReader(csv);
 
-            DataTable dt = new();
-            dt.Columns.Add(COL_CODE, typeof(string));
-            dt.Columns.Add(COL_NAME, typeof(string));
+            AddField(COL_CODE, Domain, Purpose, true, 1, MatchStrategy.Exact);
+            AddField(COL_NAME, Domain, Purpose, true, 1, MatchStrategy.Exact | MatchStrategy.Fuzzy);
 
             try
             {
-                dt.Load(dr);
-                foreach (DataRow dataRow in dt.Rows)
-                {
-                    var key = MultiLevelKey.FromDataRow(dataRow);
-                    string code = key.GetField(COL_CODE)!.Value;
-                    string scname = key.GetField(COL_NAME)!.Value;
-
-                    if (!string.IsNullOrWhiteSpace(code) && !string.IsNullOrWhiteSpace(scname))
-                    {
-                        m_data[code] = key;
-                    }
-                    else
-                    {
-                        // ToDo: log omission
-                    }
-                }
-
+                this.Table.Load(dr);
+                return true;
             }
             catch (Exception ex)
             {
                 // ToDo: log ex.Message or ex.ToString()
-                m_data.Clear();
                 return false;
             }
-
-            return (m_data.Count > 0);
         }
     }
 }

@@ -29,5 +29,18 @@ namespace ControlledVocabularies.Utils
             // Final lowercase (after all processing)
             return joined.ToLowerInvariant();
         }
+
+        /// <summary>
+        /// Normalize a name by trimming it and converting it to invariant lowercase.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Make keys safe again. Bwaaah
+        /// </remarks>
+        public static string ToSafeKey(string key)
+        {
+            return key.Trim().ToLowerInvariant();
+        }
     }
 }

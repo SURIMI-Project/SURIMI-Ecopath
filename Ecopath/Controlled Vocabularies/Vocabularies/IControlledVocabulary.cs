@@ -20,12 +20,12 @@ namespace ControlledVocabularies.Vocabularies
         /// <summary>
         /// Get what kind of thing this vocabulary is about.
         /// </summary>
-        KeyDomain KeyDomain { get; }
+        KeyDomain Domain { get; }
 
         /// <summary>
         /// Get why this vocabulary exists / how it’s used
         /// </summary>
-        KeyPurpose KeyPurpose { get; }
+        KeyPurpose Purpose { get; }
 
         /// <summary>
         /// The unique name of the vocabulary as commonly indicated.
@@ -62,15 +62,6 @@ namespace ControlledVocabularies.Vocabularies
         /// Lazy index, only index the data when a KeyFieldDescriptor is first requested?
         /// </todo>
         KeyFieldDescriptor? GetKeyFieldDescriptor(string FieldName);
-
-        /// <summary>
-        /// Get keys to other controlled vocabularies. This data is 
-        /// expressed as Dictionary(fieldName -> [vocabulary_name]:[field_name]) to facilitate direct look-ups.
-        /// </summary>
-        /// <todo>
-        /// Rather than exposing the dictionary, let's allow interactions solely through accessor methods
-        /// </todo>
-        Dictionary<string, string> ForeignKeyMap { get; }
 
         /// <summary>
         /// Load the vocabulary.

@@ -28,37 +28,43 @@ namespace ControlledVocabularies.Resolve
             FieldMappings.AddRange(mappings);
         }
 
-        public IEnumerable<KeyResolverMatchResult> FindAllMatches(MultiLevelKey input, KeyDomain domain, int? minscore = null)
+        public IEnumerable<KeyResolverMatchResult> FindAllMatches(MultiLevelKey input, int? minScore = null)
         {
-            if (minscore == null) minscore = LocalSettings.DefaultMinScore;
+            var results = new List<KeyResolverMatchResult>();
+            var threshold = minScore ?? LocalSettings.DefaultMinScore;
 
-            List<KeyResolverMatchResult> matches = new();
-
-            foreach (MultiLevelKey candidate in TargetValues.Where(k => k.Domain == domain))
+            foreach (var candidate in TargetValues)
             {
-                var match = MatchScore(input, candidate);
-                if (match.Score > 0)
-                    matches.Add(match);
+                var r = MatchScore(input, candidate);
+                if (r.Score >= minScore)
+                    results.Add(r);
             }
 
-            if (NormalizeScores && matches.Count > 0)
+            // Stable, deterministic ordering: Score desc, then canonical key asc
+            return results
+                .OrderByDescending(r => r.Score)
+                .ThenBy(r => r.MatchedKey?.ToString(), StringComparer.Ordinal);
+        }
+
+        public KeyResolverMatchResult? FindBestMatch(MultiLevelKey input, int? minScore = null)
+        {
+            KeyResolverMatchResult? best = null;
+            var threshold = minScore ?? LocalSettings.DefaultMinScore;
+
+            foreach (var candidate in TargetValues)
             {
-                int maxScore = matches.Max(m => m.Score);
-                if (maxScore > 0 && maxScore > 100)
+                var r = MatchScore(input, candidate);
+                if (r.Score < threshold) continue;
+
+                if (best == null ||
+                    r.Score > best.Score ||
+                    (r.Score == best.Score && StringComparer.Ordinal.Compare(r.MatchedKey?.ToString(), best.MatchedKey?.ToString()) < 0))
                 {
-                    foreach (var match in matches)
-                        match.Score = (int)(match.Score * (100.0 / maxScore));
+                    best = r;
                 }
             }
 
-            return matches.Where(p => p.Score >= minscore);
-        }
-
-        public KeyResolverMatchResult? FindBestMatch(MultiLevelKey input, KeyDomain domain, int? minscore = null)
-        {
-            return FindAllMatches(input, domain, minscore)
-                .OrderByDescending(m => m.Score)
-                .FirstOrDefault();
+            return best;
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
-﻿using Newtonsoft.Json;
-using ControlledVocabularies.Core;
+﻿using ControlledVocabularies.Core;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace ControlledVocabularies.Vocabularies
 {
@@ -7,13 +8,12 @@ namespace ControlledVocabularies.Vocabularies
     : ControlledVocabularyBase
     {
         private const string COL_CODE = "ID";
-        private const string COL_NAME = "Label";
+        private const string COL_LABEL = "Label";
 
         public override string VocabularyName => "NERC.S11";
-        public override IEnumerable<string> FieldNames => [COL_CODE, COL_NAME];
         public override string CodeFieldName => COL_CODE;
-        public override KeyDomain KeyDomain => KeyDomain.Species;
-        public override KeyPurpose KeyPurpose => KeyPurpose.Lifestage;
+        public override KeyDomain Domain => KeyDomain.Species;
+        public override KeyPurpose Purpose => KeyPurpose.Lifestage;
 
         protected override bool LoadFromSource()
         {
@@ -22,43 +22,44 @@ namespace ControlledVocabularies.Vocabularies
 
             string path = @"Includes\NercS11_lifestages.jsonld";
 
-            try
+            AddField(COL_CODE, Domain, Purpose, isRequired: true, weight: 1, strategy: MatchStrategy.Exact);
+            AddField(COL_LABEL, Domain, Purpose, isRequired: true, weight: 1, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy);
+
+            var root = JObject.Parse(File.ReadAllText(path));
+            var graph = (JArray?)root["@graph"] ?? new JArray();
+
+            foreach (var node in graph.OfType<JObject>())
             {
-                string json = File.ReadAllText(path);
-                dynamic skos = JsonConvert.DeserializeObject(json)!;
+                var type = node["@type"]?.ToString();
+                if (type is null || !type.Contains("Concept", StringComparison.OrdinalIgnoreCase)) continue;
 
-                foreach (var concept in skos["@graph"])
-                {
-                    string id = concept["@id"] ?? "";
-                    string label = string.Empty;
+                var id = node["@id"]?.ToString() ?? "";
+                if (!id.Contains("/S11", StringComparison.OrdinalIgnoreCase)) continue;
 
-                    var bucket = concept["skos:prefLabel"];
-                    try
-                    {
-                        if (bucket != null)
-                            label = bucket["@value"] ?? "";
-                    }
-                    catch (Exception ex)
-                    {
-                        // Swallow this
-                    }
+                // label can be object or array
+                string label = "";
+                var pref = node["skos:prefLabel"];
+                if (pref is JObject o)
+                    label = o["@value"]?.ToString() ?? "";
+                else if (pref is JArray arr)
+                    label = arr.OfType<JObject>()
+                               .FirstOrDefault(x => string.Equals(x["@language"]?.ToString(), "en", StringComparison.OrdinalIgnoreCase))
+                              ?["@value"]?.ToString()
+                           ?? arr.OfType<JObject>().FirstOrDefault()?["@value"]?.ToString()
+                           ?? "";
 
-                    if (id.Contains("/S11") && !string.IsNullOrEmpty(label))
-                    {
-                        var key = new MultiLevelKey();
-                        key.SetField(COL_CODE, id);
-                        key.SetField(COL_NAME, label);
-
-                        m_data[key.GetField(COL_CODE)!.Value] = key;
-                    }
-                }
-                return m_data.Count > 0;
+                if (!string.IsNullOrWhiteSpace(id) && !string.IsNullOrWhiteSpace(label))
+                    AddRow(id, label);
             }
-            catch (Exception ex)
-            {
-                m_data.Clear();
-                return false;
-            }
+            return true;
+        }
+
+        private void AddRow(string code, string label)
+        {
+            var drow = this.Table.NewRow();
+            drow[COL_CODE] = code;
+            drow[COL_LABEL] = label;
+            this.Table.Rows.Add(drow);
         }
     }
 }

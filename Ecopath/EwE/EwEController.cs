@@ -418,7 +418,7 @@ namespace Ecopath.EwE
             foreach (var grid in m_catchIn.DispositionGrids)
             {
                 // Try to parse species code in grid
-                MultiLevelKey key = MultiLevelKey.FromObject(grid.Species);
+                MultiLevelKey key = MultiLevelKey.FromObject(grid.Species, KeyDomain.Species);
                 // Resolve mapping key for grid fleet segment
                 foreach (var fleetinfo in m_configuration.ResolveFleets(grid.FleetSegment))
                 {

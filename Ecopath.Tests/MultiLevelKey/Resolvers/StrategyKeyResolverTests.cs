@@ -36,11 +36,8 @@ public class StrategyKeyResolverTests
         var resolver = new StrategyKeyResolver(m_mappings, m_keyFieldDescriptors.GetAll(KeyDomain.Species));
 
         // Act
-        MultiLevelKey key = new();
-        key.SetField("GearCode", "");
-        key.SetField("MarketCode", "ESAQA");
-
-        var match = resolver.FindAllMatches(key, KeyDomain.Species);
+        MultiLevelKey key = MultiLevelKey.FromPairs([(FishingFields.GearCode, "Bogus"), (MarketFields.MarketCode, "EVen more bogus")], KeyDomain.Species);
+        var match = resolver.FindAllMatches(key);
 
         // Assert
         match.Count().Should().Be(0, "because I have no clue");
@@ -62,11 +59,8 @@ public class StrategyKeyResolverTests
         var resolver = new StrategyKeyResolver(m_mappings, m_keyFieldDescriptors.GetAll(KeyDomain.Species));
 
         // Act
-        MultiLevelKey key = new();
-        key.SetField("speciescode", "ASFIS:MUR");
-        key.SetField("stage", "dwc:juvenile");
-
-        var matches = resolver.FindAllMatches(key, KeyDomain.Species);
+        MultiLevelKey key = MultiLevelKey.FromPairs([(SpeciesFields.SpeciesCode, "ASFIS:MUR"), (SpeciesFields.Lifestage, "surimi:juvenile")], KeyDomain.Species);
+        var matches = resolver.FindAllMatches(key);
 
         // Assert
         matches.Should().NotBeEmpty("because the key matches a mapping");
