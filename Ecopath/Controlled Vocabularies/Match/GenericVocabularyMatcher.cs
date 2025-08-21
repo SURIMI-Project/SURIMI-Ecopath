@@ -1,115 +1,117 @@
 ﻿using ControlledVocabularies.Core;
-using ControlledVocabularies.Utils;
+using ControlledVocabularies.ForeignKeys;
+using ControlledVocabularies.Registries;
 using ControlledVocabularies.Resolve;
+using ControlledVocabularies.Utils;
 using ControlledVocabularies.Vocabularies;
 
 namespace ControlledVocabularies.Match
 {
     public class GenericVocabularyMatcher : IVocabularyMatcher
     {
-        public MatchResult Match(MultiLevelKey record, IControlledVocabulary vocabA, IControlledVocabulary vocabB, int? minscore = null)
+        private readonly IVocabularyRegistry m_registry;
+        private readonly IForeignKeyResolver m_fk;
+
+        public GenericVocabularyMatcher(IVocabularyRegistry? registry = null, IForeignKeyResolver? fkResolver = null)
         {
+            m_registry = registry
+                ?? Ecopath.Services.GlobalServiceLocator.Get<VocabularyRegistry>()
+                ?? throw new InvalidOperationException("No VocabularyRegistry available.");
+
+            m_fk = fkResolver ?? new ForeignKeyResolver(m_registry);
+        }
+
+        /// <summary>
+        /// Match a record from a source vocabulary to a targer or any available vocabulary.
+        /// </summary>
+        /// <param name="record"></param>
+        /// <param name="vocabA"></param>
+        /// <param name="vocabB"></param>
+        /// <param name="minscore"></param>
+        /// <returns></returns>
+        public MatchResult Match(MultiLevelKey record, IControlledVocabulary vocabA, IControlledVocabulary? vocabB = null, int? minscore = null)
+        {
+            var threshold = minscore ?? LocalSettings.DefaultMinScore;
             MatchResult best = MatchResult.NoMatch;
 
-            if (vocabA == null || vocabB == null || !MatchHelpers.CanMatch(vocabA, vocabB))
-                return best;
+            var targets = (vocabB != null)
+                ? new[] { vocabB }
+                : m_registry.GetCompatibleVocabularies(vocabA);
 
-            if (minscore == null) minscore = LocalSettings.DefaultMinScore;
+            foreach (var t in targets)
+            {
+                var mr = MatchAgainst(record, vocabA, t, threshold);
+                if (mr.Score > best.Score)
+                    best = mr;
+            }
+            return best;
+        }
 
-            // 1. Try FK shortcut
-            var fkMatch = TryMatchViaForeignKey(record, vocabA, vocabB);
-            if (fkMatch.Score == 100) return fkMatch;
+        /// <summary>
+        /// Match a record from a source vocabulary to a targer or any available vocabulary.
+        /// </summary>
+        /// <param name="record"></param>
+        /// <param name="vocabA"></param>
+        /// <param name="vocabB"></param>
+        /// <param name="minscore"></param>
+        /// <returns></returns>
+        public MatchResult Match(MultiLevelKey record, string vocabAName, string? vocabBName = null, int? minscore = null)
+        {
+            if (!m_registry.TryGetByNameOrAlias(vocabAName, out var a) || a is null)
+                return MatchResult.NoMatch;
+
+            IControlledVocabulary? b = null;
+            if (!string.IsNullOrWhiteSpace(vocabBName))
+            {
+                if (!m_registry.TryGetByNameOrAlias(vocabBName!, out b))
+                    return MatchResult.NoMatch;
+            }
+
+            return Match(record, a!, b, minscore);
+        }
+
+        #region Internals
+
+        private MatchResult MatchAgainst(MultiLevelKey record, IControlledVocabulary vocabA, IControlledVocabulary vocabB, int threshold)
+        {
+            if (!MatchHelpers.CanMatch(vocabA, vocabB))
+                return NoMatchNamed(vocabA, vocabB, "Incompatible vocabularies (domain/purpose).");
+
+            // 1) FK fast-path (delegated)
+            if (m_fk != null)
+            {
+                var fk = m_fk.TryResolve(record, vocabA, vocabB);
+                if (fk.Score == 100)
+                    return fk; // already contains names
+            }
 
             // 2) Strategy search across compatible fields/strategies
+            MatchResult best = MatchResult.NoMatch;
+
             foreach (string sourceField in record.FieldNames)
             {
                 var sourceValue = record.GetField(sourceField)?.ToString(false);
                 if (string.IsNullOrWhiteSpace(sourceValue)) continue;
 
-                // if you have any source-side hinting, pass it here; else leave null
-                var mappings = BuildMappingsForField(sourceField, vocabB /*, sourceHint: null */);
-
                 var inputKey = MultiLevelKey.FromPairs([(sourceField, sourceValue)], vocabB.Domain, strict: false);
 
-                foreach (var map in mappings)
+                foreach (var map in BuildMappingsForField(sourceField, vocabB))
                 {
                     var resolver = new StrategyKeyResolver(vocabB.Records, new[] { map });
-                    var match = resolver.FindBestMatch(inputKey); // ensure this returns the max-scoring row
+                    var match = resolver.FindBestMatch(inputKey, threshold);
 
-                    if (match != null && match.Score > Math.Max(best.Score, minscore ?? LocalSettings.DefaultMinScore))
+                    if (match != null && match.Score > Math.Max(best.Score, threshold))
                     {
-                        match.Justification = $"Matched '{sourceField}' > '{map.TargetField}' via {map.Strategy}";
+                        match.SourceVocabulary = vocabA.VocabularyName;
+                        match.TargetVocabulary = vocabB.VocabularyName;
+                        match.Justification = $"Matched '{sourceField}' → '{map.TargetField}' via {map.Strategy}";
                         best = match;
                     }
                 }
             }
-            // 3. Fallback fallback: use brute force???
 
             return best;
         }
-
-        #region Internal FK Logic
-
-        private MatchResult TryMatchViaForeignKey(MultiLevelKey record, IControlledVocabulary vocabA, IControlledVocabulary vocabB)
-        {
-            var matcher = new ExactFieldMatcher();
-            var vocabBNorm = StringHelpers.NormalizeName(vocabB.VocabularyName);
-
-            foreach (var fieldName in vocabA.FieldNames)
-            {
-                var spec = vocabA.GetKeyFieldDescriptor(fieldName)?.ForeignKey;
-                if (spec == null) continue;
-
-                // Prefer registry alias resolution (if you have it); else normalize and compare:
-                var targetVocabNorm = StringHelpers.NormalizeName(spec.TargetVocabulary);
-                if (matcher.Score(vocabBNorm, targetVocabNorm) < 1) continue;
-
-                var inputValue = record.GetField(fieldName)?.ToString(false);
-                if (string.IsNullOrWhiteSpace(inputValue)) continue;
-
-                // Hint field first
-                if (!string.IsNullOrEmpty(spec.TargetField) && vocabB.FieldNames.Contains(spec.TargetField))
-                {
-                    foreach (var r in vocabB.Records)
-                    {
-                        if (matcher.Score(r.GetField(spec.TargetField)!.ToString(false), inputValue) == 1)
-                        {
-                            return new MatchResult
-                            {
-                                Score = 100,
-                                SourceField = fieldName,
-                                SourceFieldValue = inputValue,
-                                TargetField = spec.TargetField,
-                                TargetFieldValue = inputValue,
-                                MatchedKey = r,
-                                StrategyUsed = MatchStrategy.Exact,
-                                Justification = $"Matched via FK hint '{spec.TargetField}'"
-                            };
-                        }
-                    }
-                    // log: hint not found
-                }
-
-                // Fallback: exact on any compatible target field (still one mapping per resolver)
-                var inputKey = MultiLevelKey.FromPairs([(fieldName, inputValue!)], vocabB.Domain, strict: false);
-                foreach (var map in BuildMappingsForField(fieldName, vocabB, sourceHint: MatchStrategy.Exact))
-                {
-                    var resolver = new StrategyKeyResolver(vocabB.Records, new[] { map });
-                    var match = resolver.FindBestMatch(inputKey);
-                    if (match != null && match.Score > 0)
-                    {
-                        match.Justification = $"Matched via FK fallback (Exact) on '{map.TargetField}'";
-                        return match;
-                    }
-                }
-            }
-
-            return MatchResult.NoMatch;
-        }
-
-        #endregion // Internal FK Logic
-
-        #region Internal helpers
 
         private static IEnumerable<MatchStrategy> EnumerateFlags(MatchStrategy flags)
         {
@@ -118,18 +120,17 @@ namespace ControlledVocabularies.Match
                     yield return f;
         }
 
-        private IEnumerable<StrategyKeyResolver.FieldMapping> BuildMappingsForField(string sourceField, IControlledVocabulary vocabB, MatchStrategy? sourceHint = null)
+        private IEnumerable<Resolve.StrategyKeyResolver.FieldMapping> BuildMappingsForField(string sourceField, IControlledVocabulary vocabB, MatchStrategy? sourceHint = null)
         {
             foreach (string targetField in vocabB.FieldNames)
             {
                 var descr = vocabB.GetKeyFieldDescriptor(targetField);
                 if (descr == null) continue;
 
-                // If you have a source-side hint, intersect; otherwise just use target flags.
                 var effective = sourceHint.HasValue ? (descr.Strategy & sourceHint.Value) : descr.Strategy;
                 foreach (var strategy in EnumerateFlags(effective))
                 {
-                    yield return new StrategyKeyResolver.FieldMapping(sourceField, targetField)
+                    yield return new Resolve.StrategyKeyResolver.FieldMapping(sourceField, targetField)
                     {
                         Strategy = strategy,
                         Weight = Math.Max(1, descr.Weight),
@@ -138,6 +139,16 @@ namespace ControlledVocabularies.Match
                 }
             }
         }
-        #endregion // Internal helpers
+
+        private static MatchResult NoMatchNamed(IControlledVocabulary a, IControlledVocabulary b, string reason)
+            => new MatchResult() 
+                    {
+                        SourceVocabulary = a.VocabularyName,
+                        TargetVocabulary = b.VocabularyName,
+                        Score = 0,
+                        Justification = reason
+                    };
+
+        #endregion // Internals
     }
 }

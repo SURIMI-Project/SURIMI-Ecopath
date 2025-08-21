@@ -9,9 +9,11 @@ namespace ControlledVocabularies.Match
     {
         public string SourceField { get; set; } = string.Empty;
         public string SourceFieldValue { get; set; } = string.Empty;
+        public string SourceVocabulary { get; set; } = string.Empty;
 
         public string TargetField { get; set; } = string.Empty;
         public string TargetFieldValue { get; set; } = string.Empty;
+        public string TargetVocabulary { get; set; } = string.Empty;
 
         /// <summary>
         /// The record that was found as a match.

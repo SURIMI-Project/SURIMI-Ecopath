@@ -54,6 +54,7 @@
         Keyword = 1 << 3,
         TokenOverlap = 1 << 4,
         Regex = 1 << 5,
-        NumericRange = 1 << 6
+        NumericRange = 1 << 6,
+        ForeignKey = 1 << 7
     }
 }

@@ -1,11 +1,12 @@
 ﻿using ControlledVocabularies.Core;
-using ControlledVocabularies.Utils;
 using CsvHelper;
-using System.Data;
 using System.Globalization;
 
 namespace ControlledVocabularies.Vocabularies
 {
+    /// <summary>
+    /// FAO ASFIS species vocabulary
+    /// </summary>
     public class ASFISSpeciesCodeVocabulary
     : ControlledVocabularyBase
     {
