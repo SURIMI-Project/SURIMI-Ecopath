@@ -95,6 +95,14 @@ namespace ControlledVocabularies.Vocabularies
                 if (descriptor.Strategy == MatchStrategy.None) 
                     descriptor.Strategy = InferStrategies(values, avgLen, distinct, uniquenessRatio, nonZeroRatio);
 
+                var salience = ComputeSalience(avgLen, uniquenessRatio, nonZeroRatio);
+
+                if (descriptor.UseAutoWeight)
+                {
+                    var baseW = BaseWeightFor(descriptor.Strategy);              // 1..10
+                    var auto = (int)Math.Round(baseW * salience);                // still 1..10-ish
+                    descriptor.AutoWeight = Math.Clamp(auto, 1, 10);             // keep it tight
+                }
                 return true;
             }
 
@@ -198,6 +206,29 @@ namespace ControlledVocabularies.Vocabularies
                 // return Regex.IsMatch(s, @"^(https?://|doi:)", RegexOptions.IgnoreCase);
 
                 return false;
+            }
+
+            static int BaseWeightFor(MatchStrategy strategy)
+            {
+                // Choose primary flag by priority (first one that applies).
+                if (strategy.HasFlag(MatchStrategy.Exact)) return 10;
+                if (strategy.HasFlag(MatchStrategy.Synonym)) return 9;   // if used
+                if (strategy.HasFlag(MatchStrategy.Fuzzy)) return 7;
+                if (strategy.HasFlag(MatchStrategy.TokenOverlap)) return 5;
+                if (strategy.HasFlag(MatchStrategy.Keyword)) return 4;
+                if (strategy.HasFlag(MatchStrategy.NumericRange)) return 6;
+                return 3; // conservative default
+            }
+
+            static double ComputeSalience(int avgLen, double uniqueness, double coverage)
+            {
+                // Favor short fields; penalize long prose. Pivot around ~12 chars.
+                double lengthFactor = 12.0 / Math.Max(12.0, avgLen <= 0 ? 12.0 : avgLen); // ~0..1
+                                                                                          // Keep it intuitive and smooth; weights sum to 1
+                const double wLen = 0.6, wUniq = 0.3, wCov = 0.1;
+
+                double raw = (wLen * lengthFactor) + (wUniq * uniqueness) + (wCov * coverage);
+                return Math.Clamp(raw, 0.15, 1.0); // don’t zero out usable columns
             }
 
         }
@@ -305,7 +336,6 @@ namespace ControlledVocabularies.Vocabularies
             }
         }
 
-
         #endregion // Accessors
 
         #region Base functionality
@@ -364,5 +394,6 @@ namespace ControlledVocabularies.Vocabularies
         }
 
         #endregion // Base functionality
+
     }
 }

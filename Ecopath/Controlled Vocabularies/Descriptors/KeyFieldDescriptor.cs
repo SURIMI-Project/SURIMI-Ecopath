@@ -1,5 +1,5 @@
 ﻿using ControlledVocabularies.Core;
-using ControlledVocabularies.Vocabularies;
+using ControlledVocabularies.ForeignKeys;
 
 namespace ControlledVocabularies.Descriptors
 {
@@ -13,15 +13,16 @@ namespace ControlledVocabularies.Descriptors
         /// </summary>
         /// <param name="fieldName"></param>
         /// <param name="isRequired"></param>
-        /// <param name="weight">[1, 100]</param>
+        /// <param name="weight">[1, 100]. Set to 0 to have an indexer cacluclate weights automatically.</param>
         /// <param name="domain"></param>
         /// <param name="purpose"></param>
         /// <param name="strategy">Matching strategy, "exact" by default.</param>
         public KeyFieldDescriptor(string fieldName, KeyDomain domain, KeyPurpose purpose, bool isRequired = false, int weight = 1, MatchStrategy strategy = MatchStrategy.Exact)
         {
+            Domain = domain;
             FieldName = fieldName;
             IsRequired = isRequired;
-            Weight = weight;
+            UserWeight = weight; // 0 = auto
             Purpose = purpose;
             Strategy = strategy;
         }
@@ -39,7 +40,7 @@ namespace ControlledVocabularies.Descriptors
         /// <summary>
         /// The weight to allocate to field matches [1, 100]
         /// </summary>
-        public int Weight { get; }
+        public int UserWeight { get; }
 
         /// <summary>
         /// The purpose of this field
@@ -62,5 +63,12 @@ namespace ControlledVocabularies.Descriptors
         public int DistinctValueCount { get; set; }
         public double UniquenessRatio { get; set; }
         public double NonZeroRatio { get; set; }
+
+        public bool UseAutoWeight => (UserWeight == 0);
+        internal int? AutoWeight { get; set; } // set by indexer
+
+        public int Weight => Math.Clamp(UseAutoWeight ? (AutoWeight ?? 1) : UserWeight, 1, 100);
+
+        public override string ToString() => $"{Domain}.{FieldName} ({Purpose}) w={Weight} [{Strategy}]";
     }
 }

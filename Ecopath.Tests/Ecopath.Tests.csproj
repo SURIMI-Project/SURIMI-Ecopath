@@ -29,4 +29,8 @@
     <ProjectReference Include="..\Ecopath\Ecopath.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Controlled vocabularies\Core\" />
+  </ItemGroup>
+
 </Project>
