@@ -27,7 +27,7 @@ namespace ControlledVocabularies.Vocabularies.Tests
             var v = new ISSCFGGearCodeVocabulary();
             v.Load().Should().BeTrue();
 
-            // "Drifting longlines" → "DL"
+            // "Drifting longlines" := "DL"
             var code = v.FindCode("Drifting longlines");
             code.Should().Be("DL");
         }

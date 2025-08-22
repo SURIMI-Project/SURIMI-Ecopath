@@ -133,40 +133,53 @@ namespace ControlledVocabularies.Vocabularies.Tests
         }
     }
 
+    /// <summary>
+    /// Test vocabulary with a column "ID" and a custom collection of other columns.
+    /// </summary>
     internal sealed class TestSourceWithFields : ControlledVocabularyBase
     {
-        private readonly string _vocabName;
-        private readonly KeyDomain _domain;
-        private readonly KeyPurpose _purpose;
-        private readonly (string field, bool required, MatchStrategy strat)[] _fields;
+        private readonly string m_vocabName;
+        private readonly KeyDomain m_domain;
+        private readonly KeyPurpose m_purpose;
+        /// <summary>
+        /// Yes, this is a ChatGPT generated type. I (JS) would NEVER have thought of this.
+        /// </summary>
+        private readonly (string field, bool required, MatchStrategy strat)[] m_fields;
 
-        public TestSourceWithFields(string vocabName,
-                                    KeyDomain domain,
-                                    KeyPurpose purpose,
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="vocabName"></param>
+        /// <param name="domain"></param>
+        /// <param name="purpose"></param>
+        /// <param name="fields">The columns to add. If not specified, one column "value" will be added.</param>
+        public TestSourceWithFields(string vocabName, KeyDomain domain, KeyPurpose purpose,
                                     params (string field, bool required, MatchStrategy strat)[] fields)
         {
-            _vocabName = vocabName;
-            _domain = domain;
-            _purpose = purpose;
-            _fields = fields.Length > 0
+            m_vocabName = vocabName;
+            m_domain = domain;
+            m_purpose = purpose;
+            m_fields = fields.Length > 0
                 ? fields
                 : new[] { ("value", true, MatchStrategy.Exact) }; // fallback
 
             Load();
         }
 
-        public override string VocabularyName => _vocabName;
-        public override KeyDomain Domain => _domain;
-        public override KeyPurpose Purpose => _purpose;
+        public override string VocabularyName => m_vocabName;
+        public override KeyDomain Domain => m_domain;
+        public override KeyPurpose Purpose => m_purpose;
 
-        // minimal code column to satisfy base class
+        /// <summary>
+        /// Minimal code column to satisfy base class
+        /// </summary>
         public override string CodeFieldName => "id";
 
         protected override bool LoadFromSource()
         {
             AddField(CodeFieldName, Domain, Purpose, isRequired: false, weight: 1, strategy: MatchStrategy.Exact);
 
-            foreach (var (field, required, strat) in _fields)
+            foreach (var (field, required, strat) in m_fields)
                 AddField(field, Domain, Purpose, isRequired: required, weight: 1, strategy: strat);
 
             return true; // no rows by default

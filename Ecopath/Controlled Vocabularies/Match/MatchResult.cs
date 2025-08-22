@@ -42,7 +42,7 @@ namespace ControlledVocabularies.Match
 
         public override string ToString()
         {
-            return $"{SourceField}:{SourceFieldValue} → {TargetField}:{TargetFieldValue} [{Score}] {StrategyUsed} ({Justification})";
+            return $"{SourceField}:{SourceFieldValue} := {TargetField}:{TargetFieldValue} [{Score}] {StrategyUsed} ({Justification})";
         }
 
         public static MatchResult NoMatch => new MatchResult { Score = 0, Justification = "No match" };

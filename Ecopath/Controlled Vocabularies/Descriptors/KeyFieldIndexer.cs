@@ -3,6 +3,9 @@ using ControlledVocabularies.Core;
 
 namespace ControlledVocabularies.Descriptors
 {
+    /// <todo>Expose options (SparseCutoff, CodeLenMax, etc.) via IOptions<KeyFieldIndexerOptions> for tuning.</todo>
+    /// <todo>Emit lightweight telemetry (counts/kinds) in DEBUG for test diagnostics.</todo>
+    /// <todo>Add property-based tests for kind inference & strategy selection across randomized inputs.</todo>
     internal sealed class KeyFieldIndexer : IKeyFieldIndexer
     {
         /// <summary>

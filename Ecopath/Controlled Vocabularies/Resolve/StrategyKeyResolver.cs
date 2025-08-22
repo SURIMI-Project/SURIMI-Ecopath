@@ -5,7 +5,14 @@ using ControlledVocabularies.Utils;
 
 namespace ControlledVocabularies.Resolve
 {
-    public partial class StrategyKeyResolver : IKeyResolver
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <todo>Normalize values only for Exact using FieldKind; keep fuzzy/token matchers label-style.</todo>
+    /// <todo>Add NumericRangeFieldMatcher and wire to MatchStrategy.NumericRange.</todo>
+    /// <todo>Introduce cancellation for long scans; consider early-exit when perfect (100) match is found.</todo>
+    /// <todo>Expose per-field contribution in results for explainability (already partially via Matches list).</todo>
+    public class StrategyKeyResolver : IKeyResolver
     {
         protected readonly IEnumerable<MultiLevelKey> TargetValues;
         protected readonly List<FieldMapping> FieldMappings = new();

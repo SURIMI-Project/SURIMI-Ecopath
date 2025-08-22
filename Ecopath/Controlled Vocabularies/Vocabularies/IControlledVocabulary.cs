@@ -1,20 +1,18 @@
 ﻿using ControlledVocabularies.Core;
 using ControlledVocabularies.Descriptors;
+using ControlledVocabularies.ForeignKeys;
 
 namespace ControlledVocabularies.Vocabularies
 {
     /// <summary>
     /// Defines a publicly used controlled vocabulary.
     /// </summary>
-    /// <todo>Add type safe / reflection friendliness, e.g., Type RecordType { get; }
-    /// </todo>
+    /// <todo>Add type safe / reflection friendliness, e.g., Type RecordType { get; }</todo>
     /// <todo>Support optional metadata fields, e.g, string? SourceUri { get; }; DateTime? LoadedAt { get; }; bool IsDirty { get; }; etc.</todo>
-    /// <todo>
-    /// Add support for namespaces, e.g., 'marine:FAO', 'terrestrial:GBIF', or user-defined vocab groups.
-    /// Could include a 'string Namespace { get; }' or compound key like 'Namespace:VocabularyName'.
-    /// </todo>
-    /// </list>
-    /// </todo>
+    /// <todo>Add support for namespaces, e.g., 'marine:FAO', 'terrestrial:GBIF', or user-defined vocab groups. Could include a 'string Namespace { get; }' or compound key like 'Namespace:VocabularyName'.</todo>
+    /// <todo>Return IReadOnlyList<MultiLevelKey> for Records; document immutability contract.</todo>
+    /// <todo>Document that FieldNames are schema-normalized (FieldPolicy.ForSchema).</todo>
+    /// <todo>Add cancellation to future async methods; avoid blocking on sync-over-async.</todo>
     public interface IControlledVocabulary
     {
         /// <summary>
@@ -85,13 +83,19 @@ namespace ControlledVocabularies.Vocabularies
         /// <paramref name="target"/>.<paramref name="targetFieldName"/>.
         /// Replaces any existing FK for this source field. Returns true if set (or already identical).
         /// </summary>
-        bool SetFK(string sourceFieldName, IControlledVocabulary target, string targetFieldName);
+        bool SetForeignKey(string sourceFieldName, IControlledVocabulary target, string targetFieldName);
 
         /// <summary>
         /// Remove the FK on <paramref name="sourceFieldName"/> if it points to
         /// <paramref name="targetVocabularyName"/> (schema name). If targetVocabularyName is null,
         /// remove whatever FK is present. Returns true if something was removed.
         /// </summary>
-        bool RemoveFK(string sourceFieldName, string? targetVocabularyName = null);
+        bool RemoveForeignKey(string sourceFieldName, string? targetVocabularyName = null);
+
+        IEnumerable<string> GetForeignKeyFieldNames();
+
+        bool TryGetForeignKey(string name, out ForeignKeySpec? spec);
+
+        IEnumerable<(string FieldName, ForeignKeys.ForeignKeySpec Spec)> GetForeignKeys();
     }
 }
