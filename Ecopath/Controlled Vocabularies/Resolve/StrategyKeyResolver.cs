@@ -66,6 +66,9 @@ namespace ControlledVocabularies.Resolve
                     results.Add(r);
             }
 
+            if (results.Count == 0) 
+                return results.ToArray();
+
             // Stable, deterministic ordering: Score desc, then canonical key asc
             return results
                 .OrderByDescending(r => r.Score)
@@ -145,7 +148,8 @@ namespace ControlledVocabularies.Resolve
                             TargetField = map.TargetField,
                             TargetFieldValue = tgtVal,
                             StrategyUsed = map.Strategy,
-                            Justification = "Field match"
+                            Justification = "Field match",
+                            Score = score
                         });
                         total += score;
 
