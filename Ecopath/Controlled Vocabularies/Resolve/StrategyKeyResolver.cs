@@ -1,6 +1,7 @@
 ﻿using ControlledVocabularies.Core;
 using ControlledVocabularies.Descriptors;
 using ControlledVocabularies.Match;
+using ControlledVocabularies.Utils;
 
 namespace ControlledVocabularies.Resolve
 {
@@ -10,6 +11,11 @@ namespace ControlledVocabularies.Resolve
         protected readonly List<FieldMapping> FieldMappings = new();
         public bool NormalizeScores { get; set; } = true;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="targetValues"></param>
+        /// <param name="descriptors"></param>
         public StrategyKeyResolver(IEnumerable<MultiLevelKey> targetValues, IEnumerable<KeyFieldDescriptor> descriptors)
         {
             TargetValues = targetValues;
@@ -18,16 +24,29 @@ namespace ControlledVocabularies.Resolve
                 {
                     Weight = descr.Weight,
                     IsRequired = descr.IsRequired,
-                    Strategy = descr.Strategy
+                    Strategy = descr.Strategy,
+                    Kind = descr.Kind == FieldKind.Unknown ? FieldKind.Label : descr.Kind,
+                    CaseSensitive = descr.CaseSensitive
                 });
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="targetValues"></param>
+        /// <param name="mappings"></param>
         public StrategyKeyResolver(IEnumerable<MultiLevelKey> targetValues, IEnumerable<FieldMapping> mappings)
         {
             TargetValues = targetValues;
             FieldMappings.AddRange(mappings);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="minScore"></param>
+        /// <returns></returns>
         public IEnumerable<KeyResolverMatchResult> FindAllMatches(MultiLevelKey input, int? minScore = null)
         {
             var results = new List<KeyResolverMatchResult>();
@@ -46,6 +65,12 @@ namespace ControlledVocabularies.Resolve
                 .ThenBy(r => r.MatchedKey?.ToString(), StringComparer.Ordinal);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="minScore"></param>
+        /// <returns></returns>
         public KeyResolverMatchResult? FindBestMatch(MultiLevelKey input, int? minScore = null)
         {
             KeyResolverMatchResult? best = null;
@@ -90,6 +115,14 @@ namespace ControlledVocabularies.Resolve
                 {
                     string srcVal = src.Value?.Trim() ?? string.Empty;
                     string tgtVal = tgt.Value?.Trim() ?? string.Empty;
+
+                    // For fuzzy/token overlap leave values as-is; those matchers already do label-like normalization internally.
+                    if (map.Strategy == MatchStrategy.Exact)
+                    {
+                        var kind = map.Kind == FieldKind.Unknown ? FieldKind.Label : map.Kind;
+                        srcVal = FieldPolicy.ForValue(srcVal, kind, map.CaseSensitive);
+                        tgtVal = FieldPolicy.ForValue(tgtVal, kind, map.CaseSensitive);
+                    }
 
                     var matcher = GetMatcherForField(map); // polymorphic
                     double similarity = matcher.Score(srcVal, tgtVal) * 100;

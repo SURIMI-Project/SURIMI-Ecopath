@@ -4,10 +4,18 @@ using ControlledVocabularies.Vocabularies;
 
 namespace ControlledVocabularies.ForeignKeys
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public interface IForeignKeyResolver
     {
-        MatchResult TryResolve(MultiLevelKey record,
-                               IControlledVocabulary source,
-                               IControlledVocabulary target);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="record"></param>
+        /// <param name="source"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        MatchResult TryResolve(MultiLevelKey record, IControlledVocabulary source, IControlledVocabulary target);
     }
 }

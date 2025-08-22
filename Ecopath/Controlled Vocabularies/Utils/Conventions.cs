@@ -57,4 +57,13 @@
         NumericRange = 1 << 6,
         ForeignKey = 1 << 7
     }
+
+    public enum FieldKind
+    {
+        Unknown = 0,
+        Code,      // short, opaque identifiers (ESP, DL, 09.32)
+        Label,     // human-readable strings (Drifting longlines)
+        Uri,       // URLs/DOIs
+        Numeric    // numeric (int/float) treated specially if you add range logic later
+    }
 }

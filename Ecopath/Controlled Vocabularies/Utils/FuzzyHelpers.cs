@@ -1,4 +1,5 @@
-﻿using FuzzySharp;
+﻿using ControlledVocabularies.Core;
+using FuzzySharp;
 
 namespace ControlledVocabularies.Utils
 {
@@ -11,8 +12,8 @@ namespace ControlledVocabularies.Utils
         /// </summary>
         public static double FuzzyRatio(string input, string compare)
         {
-            string normInput = StringHelpers.NormalizeName(input);
-            string normCompare = StringHelpers.NormalizeName(compare);
+            string normInput = FieldPolicy.ForValue(input, FieldKind.Label);
+            string normCompare = FieldPolicy.ForValue(compare, FieldKind.Label);
 
             int rawScore = Fuzz.Ratio(normInput, normCompare);
             return rawScore / 100.0;
@@ -23,8 +24,8 @@ namespace ControlledVocabularies.Utils
         /// </summary>
         public static double TokenSetFuzzyRatio(string input, string compare)
         {
-            string normInput = StringHelpers.NormalizeName(input);
-            string normCompare = StringHelpers.NormalizeName(compare);
+            string normInput = FieldPolicy.ForValue(input, FieldKind.Label);
+            string normCompare = FieldPolicy.ForValue(compare, FieldKind.Label);
 
             int rawScore = Fuzz.TokenSetRatio(normInput, normCompare);
 
@@ -44,7 +45,7 @@ namespace ControlledVocabularies.Utils
         /// </summary>
         public static (string BestMatch, double Score) BestTokenSetMatch(string input, IEnumerable<string> knownNames)
         {
-            string normInput = StringHelpers.NormalizeName(input);
+            string normInput = FieldPolicy.ForValue(input, FieldKind.Label);
 
             var best = knownNames
                 .Select(name => new
@@ -65,6 +66,8 @@ namespace ControlledVocabularies.Utils
         /// </summary>
         public static (string BestMatch, double Score) TokenSetFuzzyMatchWithFallback(string input, IEnumerable<string> knownNames)
         {
+            input = FieldPolicy.ForValue(input, FieldKind.Label);
+
             var direct = BestTokenSetMatch(input, knownNames);
             if (direct.Score >= 0.5) // Can tune this
                 return direct;
@@ -82,7 +85,7 @@ namespace ControlledVocabularies.Utils
 
         private static IEnumerable<string> GenerateNGrams(string input, int maxN = 3)
         {
-            var tokens = StringHelpers.NormalizeName(input).Split(' ');
+            var tokens =input.Split(' ');
             var ngrams = new List<string>();
 
             for (int n = 1; n <= Math.Min(maxN, tokens.Length); n++)

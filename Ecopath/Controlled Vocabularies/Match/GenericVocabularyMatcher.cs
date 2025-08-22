@@ -22,11 +22,12 @@ namespace ControlledVocabularies.Match
         }
 
         /// <summary>
-        /// Match a record from a source vocabulary to a targer or any available vocabulary.
+        /// Match a record from a source vocabulary to a target library.
         /// </summary>
         /// <param name="record"></param>
         /// <param name="vocabA"></param>
-        /// <param name="vocabB"></param>
+        /// <param name="vocabB">The target library to search. If null, all 
+        /// compatible libraries are explored</param>
         /// <param name="minscore"></param>
         /// <returns></returns>
         public MatchResult Match(MultiLevelKey record, IControlledVocabulary vocabA, IControlledVocabulary? vocabB = null, int? minscore = null)
@@ -34,9 +35,7 @@ namespace ControlledVocabularies.Match
             var threshold = minscore ?? LocalSettings.DefaultMinScore;
             MatchResult best = MatchResult.NoMatch;
 
-            var targets = (vocabB != null)
-                ? new[] { vocabB }
-                : m_registry.GetCompatibleVocabularies(vocabA);
+            var targets = (vocabB != null) ? [ vocabB ] : m_registry.GetCompatibleVocabularies(vocabA);
 
             foreach (var t in targets)
             {
@@ -134,7 +133,9 @@ namespace ControlledVocabularies.Match
                     {
                         Strategy = strategy,
                         Weight = Math.Max(1, descr.Weight),
-                        IsRequired = descr.IsRequired
+                        IsRequired = descr.IsRequired,
+                        Kind = descr.Kind == FieldKind.Unknown ? FieldKind.Label : descr.Kind,
+                        CaseSensitive = descr.CaseSensitive
                     };
                 }
             }

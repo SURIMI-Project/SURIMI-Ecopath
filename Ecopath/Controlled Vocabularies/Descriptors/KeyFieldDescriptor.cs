@@ -57,12 +57,15 @@ namespace ControlledVocabularies.Descriptors
         /// </summary>
         public MatchStrategy Strategy { get; set; }
 
-        public ForeignKeySpec? ForeignKey { get; init; }  // null if not an FK
+        public ForeignKeySpec? ForeignKey { get; set; }  // null if not an FK
 
         public int AvgLength { get; set; }
         public int DistinctValueCount { get; set; }
         public double UniquenessRatio { get; set; }
         public double NonZeroRatio { get; set; }
+
+        public FieldKind Kind { get; set; } = FieldKind.Unknown;
+        public bool CaseSensitive { get; init; } = false; // opt-in (true for URIs, most codes remain false)
 
         public bool UseAutoWeight => (UserWeight == 0);
         internal int? AutoWeight { get; set; } // set by indexer

@@ -1,4 +1,5 @@
-﻿using ControlledVocabularies.Descriptors;
+﻿using ControlledVocabularies.Core;
+using ControlledVocabularies.Descriptors;
 using ControlledVocabularies.Vocabularies;
 
 namespace ControlledVocabularies.Utils
@@ -8,18 +9,23 @@ namespace ControlledVocabularies.Utils
         /// <summary>
         /// Returns true if two fields are matchable based on domain and purpose.
         /// </summary>
-        public static bool CanMatch(KeyFieldDescriptor a, KeyFieldDescriptor b)
+        public static bool CanMatch(KeyFieldDescriptor a, KeyFieldDescriptor b, bool enforceKind = false)
         {
-            if (a == null || b == null)
-                return false;
+            if (a == null || b == null) return false;
+            if (a.Domain != b.Domain) return false;
+            if ((a.Purpose & b.Purpose) == 0) return false;
 
-            // 1. Must have same domain
-            if (a.Domain != b.Domain)
-                return false;
+            if (!enforceKind) return true;
 
-            // 2. Must have compatible purpose (bitwise)
-            return (a.Purpose & b.Purpose) != 0;
+            // Unknown acts as wildcard; Code<->Label is usually OK; other mismatches are suspicious
+            bool kindOk =
+                a.Kind == FieldKind.Unknown || b.Kind == FieldKind.Unknown ||
+                a.Kind == b.Kind ||
+                (a.Kind, b.Kind) is (FieldKind.Code, FieldKind.Label) or (FieldKind.Label, FieldKind.Code);
+
+            return kindOk;
         }
+
 
         /// <summary>
         /// Returns true if two vocabularies are considered compatible.

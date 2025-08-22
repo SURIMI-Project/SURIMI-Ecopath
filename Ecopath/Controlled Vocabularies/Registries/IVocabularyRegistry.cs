@@ -12,7 +12,7 @@ namespace ControlledVocabularies.Registries
         /// Add a vocabulary to the registry.
         /// </summary>
         /// <param name="vocab"></param>
-        void Register(IControlledVocabulary vocab);
+        void Register(IControlledVocabulary vocab, string? name = null);
 
         /// <summary>
         /// Remove a vocabulary from the registry.

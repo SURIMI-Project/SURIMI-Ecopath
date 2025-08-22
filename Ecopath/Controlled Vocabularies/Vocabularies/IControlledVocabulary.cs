@@ -79,5 +79,19 @@ namespace ControlledVocabularies.Vocabularies
         /// <param name="input"></param>
         /// <returns></returns>
         string FindCode(string input);
+
+        /// <summary>
+        /// Declare that <paramref name="sourceFieldName"/> in THIS vocabulary references
+        /// <paramref name="target"/>.<paramref name="targetFieldName"/>.
+        /// Replaces any existing FK for this source field. Returns true if set (or already identical).
+        /// </summary>
+        bool SetFK(string sourceFieldName, IControlledVocabulary target, string targetFieldName);
+
+        /// <summary>
+        /// Remove the FK on <paramref name="sourceFieldName"/> if it points to
+        /// <paramref name="targetVocabularyName"/> (schema name). If targetVocabularyName is null,
+        /// remove whatever FK is present. Returns true if something was removed.
+        /// </summary>
+        bool RemoveFK(string sourceFieldName, string? targetVocabularyName = null);
     }
 }
