@@ -21,14 +21,6 @@ namespace ControlledVocabularies.Utils
         }
 
         /// <summary>
-        /// MLK record keys provided by callers. Trim + lowercase only; no punctuation rewrite.
-        /// </summary>
-        /// <param name="s"></param>
-        /// <returns></returns>
-        public static string ForRecordKey(string s)
-            => string.IsNullOrWhiteSpace(s) ? string.Empty : s.Trim().ToLowerInvariant();
-
-        /// <summary>
         /// normalize on demand based on the *type* of value.
         /// Use at comparison time (matchers), not on ingest.
         /// </summary>

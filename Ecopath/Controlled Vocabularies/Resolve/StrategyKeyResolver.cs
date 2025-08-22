@@ -62,7 +62,7 @@ namespace ControlledVocabularies.Resolve
             foreach (var candidate in TargetValues)
             {
                 var r = MatchScore(input, candidate);
-                if (r.Score >= minScore)
+                if (r.Score >= threshold)
                     results.Add(r);
             }
 
