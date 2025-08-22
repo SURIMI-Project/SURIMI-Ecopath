@@ -61,31 +61,34 @@ namespace ControlledVocabularies.Match
 
                 var matches = resolver.FindAllMatches(inputKey);
 
-                // Normalize per strategy
-                int maxScore = matches.Max(m => m.Score);
-                double denom = maxScore > 100 ? maxScore : 100.0;
-
-                foreach (var match in matches)
+                // Normalize per strategy, and make robust to no score
+                if (matches is not null && matches.Count() > 0)
                 {
-                    // Normalize by actual max for this strategy
-                    int normalized = (int)Math.Round((match.Score / denom) * 100.0);
-                    normalized = Math.Clamp(normalized, 0, 100);
+                    int maxScore = matches.Max(m => m.Score);
+                    double denom = maxScore > 100 ? maxScore : 100.0;
 
-                    if (normalized < threshold) continue;
-
-                    if (!results.TryGetValue(match.MatchedKey, out var existing) || normalized > existing.Score)
+                    foreach (var match in matches)
                     {
-                        results[match.MatchedKey] = new MatchResult
+                        // Normalize by actual max for this strategy
+                        int normalized = (int)Math.Round((match.Score / denom) * 100.0);
+                        normalized = Math.Clamp(normalized, 0, 100);
+
+                        if (normalized < threshold) continue;
+
+                        if (!results.TryGetValue(match.MatchedKey, out var existing) || normalized > existing.Score)
                         {
-                            SourceField = match.SourceField,
-                            SourceFieldValue = match.SourceFieldValue,
-                            TargetField = match.TargetField,
-                            TargetFieldValue = match.TargetFieldValue,
-                            MatchedKey = match.MatchedKey,
-                            Score = normalized,
-                            StrategyUsed = strategy,
-                            Justification = $"Matched on '{targetField}' via {strategy}"
-                        };
+                            results[match.MatchedKey] = new MatchResult
+                            {
+                                SourceField = match.SourceField,
+                                SourceFieldValue = match.SourceFieldValue,
+                                TargetField = match.TargetField,
+                                TargetFieldValue = match.TargetFieldValue,
+                                MatchedKey = match.MatchedKey,
+                                Score = normalized,
+                                StrategyUsed = strategy,
+                                Justification = $"Matched on '{targetField}' via {strategy}"
+                            };
+                        }
                     }
                 }
             }

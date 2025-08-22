@@ -2,6 +2,7 @@ using Ecopath.EwE;
 using Ecopath.EwE.Wrapper;
 using Ecopath.Services;
 using ControlledVocabularies.Descriptors;
+using ControlledVocabularies.Registries;
 
 namespace Ecopath;
 
@@ -37,6 +38,7 @@ public class Program
 
         // Just pretending, to be made real w Rik
         GlobalServiceLocator.Register(new KeyFieldDescriptorRegistry());
+        GlobalServiceLocator.Register(new VocabularyRegistry());
 
         app.Run();
     }

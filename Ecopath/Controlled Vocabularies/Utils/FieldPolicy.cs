@@ -16,8 +16,8 @@ namespace ControlledVocabularies.Utils
             if (string.IsNullOrWhiteSpace(s)) return string.Empty;
             var nfc = s.Normalize(NormalizationForm.FormC).ToLowerInvariant();
             // replace non-letters/digits with space; collapse
-            nfc = Regex.Replace(nfc, @"[^\p{L}\p{N}]+", " ");
-            return string.Join(" ", nfc.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            nfc = Regex.Replace(nfc, @"[^\p{L}\p{N}]+", "-");
+            return string.Join("-", nfc.Split("-", StringSplitOptions.RemoveEmptyEntries));
         }
 
         /// <summary>

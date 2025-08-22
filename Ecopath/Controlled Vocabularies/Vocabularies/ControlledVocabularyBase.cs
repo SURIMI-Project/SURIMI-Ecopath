@@ -216,10 +216,11 @@ namespace ControlledVocabularies.Vocabularies
 
             StrategyBasedMatcher matcher = new();
 
+
             foreach (string fieldName in FieldNames)
             {
                 var descr = m_descriptors[fieldName];
-                MatchResult? match = matcher.FindBestMatch(input, m_data.Values, descr);
+                MatchResult? match = matcher.FindBestMatch(input, Records, descr);
 
                 if (match != null)
                 {

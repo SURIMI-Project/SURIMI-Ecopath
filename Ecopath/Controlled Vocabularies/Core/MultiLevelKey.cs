@@ -71,9 +71,17 @@ namespace ControlledVocabularies.Core
         /// <returns></returns>
         public static MultiLevelKey FromDataRow(DataRow row, KeyDomain domainHint, IKeyFieldDescriptorRegistry? registry = null)
         {
-            var pairs = row.Table.Columns.Cast<DataColumn>()
-                           .Select(c => (FieldPolicy.ForSchema(c.ColumnName), row[c] as string));
+            var dt = row.Table;
+            var pairs = new List<(string, string?)>(dt.Columns.Count);
 
+            foreach (DataColumn col in dt.Columns)
+            {
+                if (row.IsNull(col)) continue; // or assign string.Empty if you prefer
+                var value = row[col] as string ?? row[col]?.ToString() ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(value)) continue;
+
+                pairs.Add((FieldPolicy.ForSchema(col.ColumnName), value));
+            }
             return FromPairs(pairs, domainHint, registry);
         }
 
