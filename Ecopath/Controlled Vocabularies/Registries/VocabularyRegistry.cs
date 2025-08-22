@@ -7,28 +7,31 @@ public class VocabularyRegistry : IVocabularyRegistry
 {
     private readonly Dictionary<string, IControlledVocabulary> m_vocabularies = new();
 
-    public void Register(IControlledVocabulary vocab)
+    public void Register(IControlledVocabulary vocab, string? name = null)
     {
         ArgumentNullException.ThrowIfNull(vocab);
-        m_vocabularies[StringHelpers.NormalizeName(vocab.VocabularyName)] = vocab;
+
+        string registryName = name ?? vocab.VocabularyName;
+        m_vocabularies[FieldPolicy.ForSchema(registryName)] = vocab;
         vocab.Load();
     }
 
     public bool Unregister(string name)
-        => m_vocabularies.Remove(StringHelpers.NormalizeName(name));
+        => m_vocabularies.Remove(FieldPolicy.ForSchema(name));
 
     public bool Unregister(IControlledVocabulary vocab)
     {
         ArgumentNullException.ThrowIfNull(vocab);
         return Unregister(vocab.VocabularyName);
     }
+
     public void Clear() => m_vocabularies.Clear();
 
     public IControlledVocabulary? Get(string name)
-        => m_vocabularies.TryGetValue(StringHelpers.NormalizeName(name), out var v) ? v : null;
+        => m_vocabularies.TryGetValue(FieldPolicy.ForSchema(name), out var v) ? v : null;
 
     public bool TryGetByNameOrAlias(string name, out IControlledVocabulary? vocab)
-        => m_vocabularies.TryGetValue(StringHelpers.NormalizeName(name), out vocab);
+        => m_vocabularies.TryGetValue(FieldPolicy.ForSchema(name), out vocab);
 
     public IEnumerable<IControlledVocabulary> GetByDomain(KeyDomain domain)
         => m_vocabularies.Values.Where(v => v.Domain == domain);

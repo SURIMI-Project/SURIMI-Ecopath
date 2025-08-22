@@ -643,6 +643,10 @@ namespace Ecopath.EwE
                 {
                     MultiLevelKey? mlkFleet = m_configuration.Find(iFleet, KeyDomain.FleetSegment);
                     MultiLevelKey? mlkMarket = m_configuration.Find(iFleet, KeyDomain.Market);
+
+                    if (mlkFleet == null || mlkMarket == null)
+                        continue;
+
                     var sales = new SalesSummary()
                     {
                         MarketId = mlkMarket!.GetField("marketcode")!.ToString(m_configuration.IncludeVocabularies),
@@ -653,12 +657,15 @@ namespace Ecopath.EwE
                     foreach ((int Group, int Fleet) saleKey in TotalSales.Keys.Where(k => k.Fleet == iFleet))
                     {
                         MultiLevelKey? mlkSpecies = m_configuration.Find(saleKey.Group, KeyDomain.Species);
+                        if (mlkSpecies == null)
+                            continue;
+
                         if (TotalSales.TryGetValue(saleKey, out var saleTot))
                         {
                             Sale s = new Sale()
                             {
-                                GearCode = mlkFleet.GetField("gearcode").ToString(m_configuration.IncludeVocabularies),
-                                SpeciesCode = mlkSpecies.GetField("speciescde").ToString(m_configuration.IncludeVocabularies),
+                                GearCode = mlkFleet.GetField(FishingFields.GearCode)!.ToString(m_configuration.IncludeVocabularies),
+                                SpeciesCode = mlkSpecies.GetField(SpeciesFields.SpeciesCode)!.ToString(m_configuration.IncludeVocabularies),
                                 Quantity = saleTot.Volume,
                                 Value = saleTot.Value
                             };

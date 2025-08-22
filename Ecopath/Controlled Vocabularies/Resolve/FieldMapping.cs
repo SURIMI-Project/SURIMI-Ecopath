@@ -36,6 +36,9 @@ namespace ControlledVocabularies.Resolve
             /// </summary>
             public int Weight { get; set; } = 1;
 
+            public FieldKind Kind { get; set; } = FieldKind.Unknown;
+            public bool CaseSensitive { get; set; } = false; // optional, defaults to false
+
             /// <summary>
             /// The strategy to use for matching this field pair.
             /// </summary>

@@ -14,8 +14,8 @@ namespace ControlledVocabularies.Core
     {
         #region Private parts 
 
-        private Dictionary<string, MultiLevelKeyField> _fields { get; set; } = new();
-        private Dictionary<string, KeyFieldDescriptor> _descriptors { get; set; } = new();
+        private Dictionary<string, MultiLevelKeyField> m_fields { get; set; } = new();
+        private Dictionary<string, KeyFieldDescriptor> m_descriptors { get; set; } = new();
 
         private bool _strict = false;
 
@@ -50,7 +50,8 @@ namespace ControlledVocabularies.Core
             var pairs = source.GetType()
                               .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                               .Where(p => p.CanRead && p.PropertyType == typeof(string))
-                              .Select(p => (StringHelpers.ToSafeKey(p.Name), (string?)p.GetValue(source)));
+                              .Select(p => (FieldPolicy.ForSchema(p.Name), (string?)p.GetValue(source)));
+
 
             return FromPairs(pairs, domainHint, registry);
         }
@@ -65,7 +66,7 @@ namespace ControlledVocabularies.Core
         public static MultiLevelKey FromDataRow(DataRow row, KeyDomain domainHint, IKeyFieldDescriptorRegistry? registry = null)
         {
             var pairs = row.Table.Columns.Cast<DataColumn>()
-                           .Select(c => (StringHelpers.ToSafeKey(c.ColumnName), row[c] as string));
+                           .Select(c => (FieldPolicy.ForSchema(c.ColumnName), row[c] as string));
 
             return FromPairs(pairs, domainHint, registry);
         }
@@ -82,7 +83,7 @@ namespace ControlledVocabularies.Core
             var pairs = keyStr.Split(';', StringSplitOptions.RemoveEmptyEntries)
                               .Select(kvp => kvp.Split('='))
                               .Where(parts => parts.Length == 2)
-                              .Select(parts => (StringHelpers.ToSafeKey(parts[0]), parts[1]));
+                              .Select(parts => (FieldPolicy.ForSchema(parts[0]), parts[1]));
 
             return FromPairs(pairs!, domainHint, registry);
         }
@@ -96,10 +97,7 @@ namespace ControlledVocabularies.Core
         /// <param name="strict">Flag to enforce the use of registered variables only.</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public static MultiLevelKey FromPairs(IEnumerable<(string field, string? value)> pairs,
-                                      KeyDomain domainHint,
-                                      IKeyFieldDescriptorRegistry? registry = null,
-                                      bool strict = true)
+        public static MultiLevelKey FromPairs(IEnumerable<(string field, string? value)> pairs,  KeyDomain domainHint, IKeyFieldDescriptorRegistry? registry = null, bool strict = true)
         {
             var mlk = new MultiLevelKey(domainHint) { _strict = strict };
 
@@ -126,7 +124,6 @@ namespace ControlledVocabularies.Core
 
         #endregion // Factory methods
 
- 
         public T? ToObject<T>(bool includeVocabulary = true)
         {
             var fields = new Dictionary<string, string>();
@@ -142,7 +139,7 @@ namespace ControlledVocabularies.Core
                         if (prop.CanWrite && prop.PropertyType == typeof(string))
                         {
                             MultiLevelKeyField? val = null;
-                            if (_fields.TryGetValue(StringHelpers.ToSafeKey(prop.Name), out val))
+                            if (m_fields.TryGetValue(FieldPolicy.ForSchema(prop.Name), out val))
                                 prop.SetValue(obj, val.ToString(includeVocabulary));
                             else
                                 prop.SetValue(obj, string.Empty);
@@ -183,11 +180,11 @@ namespace ControlledVocabularies.Core
         {
             if (string.IsNullOrWhiteSpace(key)) return;
 
-            key = StringHelpers.ToSafeKey(key);
+            key = FieldPolicy.ForRecordKey(key);
 
             if (string.IsNullOrWhiteSpace(value))
             {
-                this._fields.Remove(key);
+                this.m_fields.Remove(key);
                 return;
             }
 
@@ -195,10 +192,10 @@ namespace ControlledVocabularies.Core
             string vocab = (iSep == -1 || bPurgeVocabularyName) ? string.Empty : value.Substring(0, iSep);
             value = (iSep == -1) ? value : value.Substring(iSep + 1);
 
-            this._fields[key] = new MultiLevelKeyField(value, vocab);
+            this.m_fields[key] = new MultiLevelKeyField(value, vocab);
 
             // Try to complement a missing KeyFieldDescriptor if allowed
-            if (!this._descriptors.ContainsKey(key) && !_strict)
+            if (!this.m_descriptors.ContainsKey(key) && !_strict)
             {
                 KeyFieldDescriptorRegistry? registry = GlobalServiceLocator.Get<KeyFieldDescriptorRegistry>();
                 if (registry != null)
@@ -206,7 +203,7 @@ namespace ControlledVocabularies.Core
                     KeyFieldDescriptor? descr = registry!.Get(Domain, key) ?? null;
                     if (descr != null)
                     {
-                        this._descriptors[key] = descr;
+                        this.m_descriptors[key] = descr;
                     }
                 }
             }
@@ -214,8 +211,8 @@ namespace ControlledVocabularies.Core
 
          public MultiLevelKeyField? GetField(string key)
         {
-            key = StringHelpers.ToSafeKey(key);
-            if (this._fields.TryGetValue(key, out var value)) return value;
+            key = FieldPolicy.ForRecordKey(key);
+            if (this.m_fields.TryGetValue(key, out var value)) return value;
             return null;
         }
 
@@ -223,16 +220,16 @@ namespace ControlledVocabularies.Core
         {
             if (string.IsNullOrWhiteSpace(key)) return;
 
-            key = StringHelpers.ToSafeKey(key);
+            key = FieldPolicy.ForRecordKey(key);
             if (descriptor == null)
             {
-                this._descriptors.Remove(key);
+                this.m_descriptors.Remove(key);
                 return;
             }
-            _descriptors[key] = descriptor;
+            m_descriptors[key] = descriptor;
         }
 
-        public IEnumerable<string> FieldNames => this._fields.Keys;
+        public IEnumerable<string> FieldNames => this.m_fields.Keys;
 
         public KeyDomain FieldDomain(string field)
         {
@@ -253,10 +250,13 @@ namespace ControlledVocabularies.Core
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.Append(string.Join(";", this._fields.OrderBy(kv => kv.Key).Select(kv => $"{kv.Key}={kv.Value}")));
+
+            sb.Append(string.Join(";", this.m_fields.OrderBy(kv => kv.Key).Select(kv => $"{kv.Key}={kv.Value}")));
             sb.Append($";domain={this.Domain.ToString()}");
+
             if (this.TimeStamp > DateTime.MinValue)
                 sb.Append($"timestamp={this.TimeStamp.ToShortDateString()}");
+
             return sb.ToString().ToLowerInvariant();
         }
 
@@ -266,8 +266,8 @@ namespace ControlledVocabularies.Core
 
         private KeyFieldDescriptor? GetFieldDescriptor(string key)
         {
-            key = StringHelpers.ToSafeKey(key);
-            if (this._descriptors.TryGetValue(key, out var value)) return value;
+            key = FieldPolicy.ForRecordKey(key);
+            if (this.m_descriptors.TryGetValue(key, out var value)) return value;
             return null;
         }
 

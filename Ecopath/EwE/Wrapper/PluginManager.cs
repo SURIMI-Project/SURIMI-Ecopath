@@ -16,7 +16,7 @@ namespace Ecopath.EwE.Wrapper
             m_pluginManager = new cPluginManager(); // Us this only in UnitTests
         }
 
-        public ICollection<IPlugin> GetPlugins(Type t, cPluginAssembly pa = null) => m_pluginManager.GetPlugins(t, pa);
+        public ICollection<IPlugin> GetPlugins(Type t, cPluginAssembly? pa = null) => m_pluginManager.GetPlugins(t, pa);
 
         public int LoadPlugins() => m_pluginManager.LoadPlugins();
     }
