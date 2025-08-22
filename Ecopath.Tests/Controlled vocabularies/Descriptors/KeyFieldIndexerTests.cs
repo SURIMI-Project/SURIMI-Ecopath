@@ -1,5 +1,5 @@
 ﻿using ControlledVocabularies.Core;
-using ControlledVocabularies.Vocabularies.Tests;
+using ControlledVocabularies.Vocabularies;
 using FluentAssertions;
 using Xunit;
 
@@ -10,13 +10,11 @@ namespace ControlledVocabularies.Descriptors.Tests
         [Fact]
         public void Indexer_Infers_Kind_And_Strategy_For_Code()
         {
-            var v = new TestSourceWithFields("T", KeyDomain.Species, KeyPurpose.Species,
-                (SpeciesFields.SpeciesCode, true, MatchStrategy.None));
-
-            v.AddRow((SpeciesFields.SpeciesCode, "ESP"))
-             .AddRow((SpeciesFields.SpeciesCode, "FRA"))
-             .AddRow((SpeciesFields.SpeciesCode, "NOR"));
-
+            var v = new InMemoryVocabulary("T", KeyDomain.Species, KeyPurpose.Species);
+            v.AddField(SpeciesFields.SpeciesCode, KeyPurpose.Species, strategy: MatchStrategy.None);
+            v.AddRow((SpeciesFields.SpeciesCode, "HKE"));
+            v.AddRow((SpeciesFields.SpeciesCode, "GUP"));
+            v.AddRow((SpeciesFields.SpeciesCode, "MUL"));
             v.Load().Should().BeTrue();
 
             var d = v.GetKeyFieldDescriptor(SpeciesFields.SpeciesCode)!;
@@ -27,8 +25,8 @@ namespace ControlledVocabularies.Descriptors.Tests
         [Fact]
         public void Indexer_Infers_Label_With_Fuzzy_And_TokenOverlap()
         {
-            var v = new TestSourceWithFields("T", KeyDomain.Species, KeyPurpose.Species,
-                ("name", true, MatchStrategy.None));
+            var v = new InMemoryVocabulary("T", KeyDomain.Species, KeyPurpose.Species);
+            v.AddField("name", KeyPurpose.NotSet, strategy: MatchStrategy.None);
 
             foreach (var s in Enumerable.Range(0, 150))
                 v.AddRow(("name", $"Drifting longlines variant {s}"));
@@ -44,11 +42,10 @@ namespace ControlledVocabularies.Descriptors.Tests
         [Fact]
         public void Indexer_Infers_Uri_As_NoMatchable()
         {
-            var v = new TestSourceWithFields("T", KeyDomain.Species, KeyPurpose.Species,
-                ("link", false, MatchStrategy.None));
-
-            v.AddRow(("linkA", "https://example.org/A"))
-             .AddRow(("linkB", "https://example.org/B"));
+            var v = new InMemoryVocabulary("T", KeyDomain.Species, KeyPurpose.Species);
+            v.AddField("link", KeyPurpose.Species, strategy:MatchStrategy.None);
+            v.AddRow(("linkA", "https://example.org/A"));
+            v.AddRow(("linkB", "https://example.org/B"));
 
             v.Load().Should().BeTrue();
 

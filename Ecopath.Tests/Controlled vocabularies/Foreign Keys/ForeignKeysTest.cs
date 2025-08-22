@@ -166,15 +166,18 @@ namespace ControlledVocabularies.ForeignKeys.Tests
         [Fact]
         public void Indexer_Infers_Code_Uri_Label()
         {
-            var v = new TestSourceWithFields("T", KeyDomain.Species, KeyPurpose.Species,
-                ("code", true, MatchStrategy.Exact), ("name", true, MatchStrategy.Fuzzy),
-                ("link", false, MatchStrategy.Exact));
+            var v = new InMemoryVocabulary("T", KeyDomain.Species, KeyPurpose.Species);
+            v.AddField("code", KeyPurpose.Species, true, strategy: MatchStrategy.Exact);
+            v.AddField("name", KeyPurpose.Species, true, strategy: MatchStrategy.Fuzzy);
+            v.AddField("link", KeyPurpose.Species, strategy:MatchStrategy.Exact);
+            v.AddField("secret", KeyPurpose.Species, strategy:MatchStrategy.Exact);
 
-            v.AddRow(("code", "ESP"), ("name", "European Union"), ("link", "https://example.org/x"));
+            v.AddRow(("code", "ESP"), ("name", "European Union"), ("link", "https://example.org/x"), ("secret", "777"));
             v.Load().Should().BeTrue();
 
             v.GetKeyFieldDescriptor("code")!.Kind.Should().Be(FieldKind.Code);
             v.GetKeyFieldDescriptor("name")!.Kind.Should().Be(FieldKind.Label);
+            v.GetKeyFieldDescriptor("link")!.Kind.Should().Be(FieldKind.Uri);
             v.GetKeyFieldDescriptor("link")!.Kind.Should().Be(FieldKind.Uri);
         }
 
