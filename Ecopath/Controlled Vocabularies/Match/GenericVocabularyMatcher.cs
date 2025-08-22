@@ -126,7 +126,7 @@ namespace ControlledVocabularies.Match
                     yield return f;
         }
 
-        private IEnumerable<Resolve.StrategyKeyResolver.FieldMapping> BuildMappingsForField(string sourceField, IControlledVocabulary vocabB, MatchStrategy? sourceHint = null)
+        private IEnumerable<FieldMapping> BuildMappingsForField(string sourceField, IControlledVocabulary vocabB, MatchStrategy? sourceHint = null)
         {
             foreach (string targetField in vocabB.FieldNames)
             {
@@ -136,7 +136,7 @@ namespace ControlledVocabularies.Match
                 var effective = sourceHint.HasValue ? (descr.Strategy & sourceHint.Value) : descr.Strategy;
                 foreach (var strategy in EnumerateFlags(effective))
                 {
-                    yield return new Resolve.StrategyKeyResolver.FieldMapping(sourceField, targetField)
+                    yield return new FieldMapping(sourceField, targetField)
                     {
                         Strategy = strategy,
                         Weight = Math.Max(1, descr.Weight),
