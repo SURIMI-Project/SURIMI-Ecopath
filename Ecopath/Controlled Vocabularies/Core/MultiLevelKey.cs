@@ -194,7 +194,7 @@ namespace ControlledVocabularies.Core
         {
             if (string.IsNullOrWhiteSpace(key)) return;
 
-            key = FieldPolicy.ForRecordKey(key);
+            key = FieldPolicy.ForSchema(key);
 
             if (string.IsNullOrWhiteSpace(value))
             {
@@ -225,7 +225,7 @@ namespace ControlledVocabularies.Core
 
          public MultiLevelKeyField? GetField(string key)
         {
-            key = FieldPolicy.ForRecordKey(key);
+            key = FieldPolicy.ForSchema(key);
             if (this.m_fields.TryGetValue(key, out var value)) return value;
             return null;
         }
@@ -234,7 +234,7 @@ namespace ControlledVocabularies.Core
         {
             if (string.IsNullOrWhiteSpace(key)) return;
 
-            key = FieldPolicy.ForRecordKey(key);
+            key = FieldPolicy.ForSchema(key);
             if (descriptor == null)
             {
                 this.m_descriptors.Remove(key);
@@ -280,7 +280,7 @@ namespace ControlledVocabularies.Core
 
         private KeyFieldDescriptor? GetFieldDescriptor(string key)
         {
-            key = FieldPolicy.ForRecordKey(key);
+            key = FieldPolicy.ForSchema(key);
             if (this.m_descriptors.TryGetValue(key, out var value)) return value;
             return null;
         }

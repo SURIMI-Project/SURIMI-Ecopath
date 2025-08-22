@@ -17,13 +17,6 @@ namespace ControlledVocabularies.Utils.Tests
         }
 
         [Fact]
-        public void RecordKey_Does_Not_Rewrite_Punctuation()
-        {
-            FieldPolicy.ForRecordKey("species-code").Should().Be("species-code");
-            FieldPolicy.ForRecordKey(" species code ").Should().Be("species code");
-        }
-
-        [Fact]
         public void Value_Normalization_Respects_Kind()
         {
             FieldPolicy.ForValue(" esp ", FieldKind.Code).Should().Be("ESP");
