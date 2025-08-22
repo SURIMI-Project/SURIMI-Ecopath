@@ -51,7 +51,7 @@ namespace ControlledVocabularies.Match
                     records,
                     new[]
                     {
-                        new StrategyKeyResolver.FieldMapping("value", targetField)
+                        new FieldMapping("value", targetField)
                         {
                             Strategy   = strategy,
                             Weight     = weight,

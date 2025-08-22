@@ -3,6 +3,7 @@ using ControlledVocabularies.Match;
 using ControlledVocabularies.Utils;
 using ControlledVocabularies.Vocabularies;
 using ControlledVocabularies.Registries;
+using ControlledVocabularies.Resolve;
 
 namespace ControlledVocabularies.ForeignKeys
 {
@@ -92,12 +93,12 @@ namespace ControlledVocabularies.ForeignKeys
                 var inputKey = MultiLevelKey.FromPairs([(sourceFieldName, inputValue!)], target.Domain, strict: false);
                 foreach (var fieldname in target.FieldNames)
                 {
-                    var mapping = new ControlledVocabularies.Resolve.StrategyKeyResolver.FieldMapping(sourceFieldName, fieldname)
+                    var mapping = new FieldMapping(sourceFieldName, fieldname)
                     {
                         Strategy = MatchStrategy.Exact,
                         Weight = 1
                     };
-                    var resolver = new ControlledVocabularies.Resolve.StrategyKeyResolver(target.Records, new[] { mapping });
+                    var resolver = new StrategyKeyResolver(target.Records, [ mapping ]);
                     var match = resolver.FindBestMatch(inputKey);
                     if (match != null && match.Score > 0)
                     {
