@@ -48,7 +48,7 @@ namespace ControlledVocabularies.Vocabularies
 
         #endregion // Private classes
 
-        #region State variables
+        #region Private variables
 
            /// <summary>
         /// The data in the vocabulary, cached
@@ -57,7 +57,41 @@ namespace ControlledVocabularies.Vocabularies
 
         protected Dictionary<string, DataTableKeyFieldDescriptor> m_descriptors = new();
 
+        private readonly string m_vocabularyName = "";
+        private readonly KeyDomain m_domain;
+        private readonly KeyPurpose m_purpose;
+
         #endregion // State variables
+
+        #region Constructors
+        protected ControlledVocabularyBase(string vocabularyName, KeyDomain domain, KeyPurpose purpose)
+        {
+            m_vocabularyName = FieldPolicy.ForSchema(vocabularyName ?? "");
+            m_domain = domain;
+            m_purpose = purpose;
+        }
+
+        protected ControlledVocabularyBase() 
+        { 
+        }
+
+        #endregion // Constructors
+
+        #region Optional overrides 
+
+        // make these virtual so static vocabularies can still override if they want
+        public virtual string VocabularyName => m_vocabularyName;
+        public virtual KeyDomain Domain => m_domain;
+        public virtual KeyPurpose Purpose => m_purpose;
+
+        private string m_codeFieldName = "";
+        public virtual string CodeFieldName
+        {
+            get => m_codeFieldName;
+            protected set => m_codeFieldName = FieldPolicy.ForSchema(value ?? "");
+        }
+
+        #endregion // Optional overrides
 
         #region Mandatory overrides
 
@@ -91,20 +125,8 @@ namespace ControlledVocabularies.Vocabularies
             return descriptor;
         }
 
-        /// <inheritdoc cref="IControlledVocabulary.Domain"/>
-        public abstract KeyDomain Domain { get; }
-
-        /// <inheritdoc cref="IControlledVocabulary.Purpose"/>
-        public abstract KeyPurpose Purpose { get; }
-
-        /// <inheritdoc cref="IControlledVocabulary.VocabularyName"/>
-        public abstract string VocabularyName { get; }
-
         /// <inheritdoc cref="IControlledVocabulary.FieldNames"/>
         public IEnumerable<string> FieldNames => m_descriptors.Keys;
-
-        /// <inheritdoc cref="IControlledVocabulary.CodeFieldName"/>
-        public abstract string CodeFieldName { get; }
 
         /// <summary>
         /// The data in the vocabulary, in table format.
@@ -112,7 +134,7 @@ namespace ControlledVocabularies.Vocabularies
         protected DataTable Table { get; set; } = new();
 
         /// <summary>
-        /// Load the vocavulary from its source.
+        /// Load the vocabulary from its source.
         /// </summary>
         /// <returns>True if successful.</returns>
         protected abstract bool LoadFromSource();
