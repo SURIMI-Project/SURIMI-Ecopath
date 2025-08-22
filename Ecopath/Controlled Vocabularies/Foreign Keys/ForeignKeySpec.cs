@@ -7,6 +7,9 @@ namespace ControlledVocabularies.ForeignKeys
     /// Definition of a foreign key from one <see cref="IControlledVocabulary"/> to another.
     /// The target voabulary is indicated by name/alias and a target field hint.
     /// </summary>
+    /// <todo>Keep ForeignKeySpec immutable (init-only); equality already implemented—add tests for null/strict cases.</todo>
+    /// <todo>Surface GetForeignKeyFieldNames/GetForeignKey/TryGetForeignKey/GetForeignKeys for testability & tooling.</todo>
+    /// <todo>Decide on behavior when setting a FK to a non-existent target field (throw vs return false); document.</todo>
     public sealed class ForeignKeySpec : IEquatable<ForeignKeySpec>
     {
         private string m_targetVocabulary = "";

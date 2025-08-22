@@ -1,6 +1,7 @@
 ﻿using ControlledVocabularies.Core;
 using ControlledVocabularies.Descriptors;
 using ControlledVocabularies.Match;
+using ControlledVocabularies.Registries;
 using ControlledVocabularies.Vocabularies;
 using ControlledVocabularies.Vocabularies.Tests;
 using Ecopath.Services;
@@ -23,8 +24,10 @@ namespace ControlledVocabularies.ForeignKeys.Tests
             var src = new TestSourceWithField("speciescode", KeyDomain.Species, KeyPurpose.Species);
             var tgt = new ASFISSpeciesCodeVocabulary(); tgt.Load().Should().BeTrue();
 
-            src.SetFK("speciescode", tgt, "Alpha3_Code").Should().BeTrue();
-            src.SetFK("speciescode", tgt, "Alpha3_Code").Should().BeTrue(); // idempotent
+            src.SetForeignKey("speciescode", tgt, "Alpha3_Code").Should().BeTrue();
+            src.SetForeignKey("speciescode", tgt, "Alpha3_Code").Should().BeTrue(); // idempotent
+
+            src.GetForeignKeyFieldNames().Count().Should().Be(1);   
 
             var d = ((ControlledVocabularyBase)src).GetKeyFieldDescriptor("speciescode")!;
             d.ForeignKey!.TargetVocabulary.Should().Be("asfis");
@@ -38,8 +41,10 @@ namespace ControlledVocabularies.ForeignKeys.Tests
             var t1 = new ISSCFGGearCodeVocabulary(); t1.Load().Should().BeTrue();
             var t2 = new SURIMILifestageVocabulary(); t2.Load().Should().BeTrue();
 
-            src.SetFK("fieldx", t1, "GEAR_CODE").Should().BeTrue();
-            src.SetFK("fieldx", t2, "id").Should().BeTrue(); // replaces t1
+            src.SetForeignKey("fieldx", t1, "GEAR_CODE").Should().BeTrue();
+            src.SetForeignKey("fieldx", t2, "id").Should().BeTrue(); // replaces t1
+
+            src.GetForeignKeyFieldNames().Count().Should().Be(1);
 
             var fk = ((ControlledVocabularyBase)src).GetKeyFieldDescriptor("fieldx")!.ForeignKey!;
             fk.TargetVocabulary.Should().Be("surimi lifestage"); // schema form of "surimi.lifestage"
@@ -52,16 +57,18 @@ namespace ControlledVocabularies.ForeignKeys.Tests
             var src = new TestSourceWithField("flag", KeyDomain.FleetSegment, KeyPurpose.Country);
             var iso = new ISO3166CountryCodeVocabulary(); iso.Load().Should().BeTrue();
 
-            src.SetFK("flag", iso, "alpha-3").Should().BeTrue();
+            src.SetForeignKey("flag", iso, "alpha-3").Should().BeTrue();
 
-            // wrong target name → no remove
-            src.RemoveFK("flag", "ASFIS").Should().BeFalse();
+            // wrong target name := no remove
+            src.RemoveForeignKey("flag", "ASFIS").Should().BeFalse();
 
-            // correct target name → remove
-            src.RemoveFK("flag", "ISO-3166").Should().BeTrue();
+            // correct target name := remove
+            src.RemoveForeignKey("flag", "ISO-3166").Should().BeTrue();
 
-            // already gone → false
-            src.RemoveFK("flag").Should().BeFalse();
+            // already gone := false
+            src.RemoveForeignKey("flag").Should().BeFalse();
+
+            src.GetForeignKeyFieldNames().Count().Should().Be(0);
         }
 
         [Fact]
@@ -69,7 +76,7 @@ namespace ControlledVocabularies.ForeignKeys.Tests
         {
             var registry = GlobalServiceLocator.Get<VocabularyRegistry>()!;
             var target = new TestSpeciesVocabulary();        // has code "COD"
-            var source = new TestSourceWithFKVocabulary();   // FK → TestSpeciesVocabulary.code
+            var source = new TestSourceWithFKVocabulary();   // FK := TestSpeciesVocabulary.code
 
             registry.Register(target);
             registry.Register(source);
@@ -104,8 +111,7 @@ namespace ControlledVocabularies.ForeignKeys.Tests
             registry.Register(speciesB);
             registry.Register(source);
 
-            var record = MultiLevelKey.FromPairs([("speciescode", "COD")], KeyDomain.Species, registry: null, strict: false
-            );
+            var record = MultiLevelKey.FromPairs([("speciescode", "COD")], KeyDomain.Species, registry: null, strict: false);
 
             var matcher = new GenericVocabularyMatcher();
             var result = matcher.Match(record, source, vocabB: null, minscore: 80);
@@ -125,8 +131,7 @@ namespace ControlledVocabularies.ForeignKeys.Tests
             registry.Register(lifestage);
             registry.Register(source);
 
-            var record = MultiLevelKey.FromPairs([("speciescode", "COD")], KeyDomain.Species, registry: null, strict: false
-            );
+            var record = MultiLevelKey.FromPairs([("speciescode", "COD")], KeyDomain.Species, registry: null, strict: false);
 
             var matcher = new GenericVocabularyMatcher();
             var result = matcher.Match(record, source, lifestage, minscore: 80);
@@ -147,8 +152,7 @@ namespace ControlledVocabularies.ForeignKeys.Tests
             registry.Register(species);
             registry.Register(source);
 
-            var record = MultiLevelKey.FromPairs([("speciescode", "COD")], KeyDomain.Species, registry: null, strict: false
-            );
+            var record = MultiLevelKey.FromPairs([("speciescode", "COD")], KeyDomain.Species, registry: null, strict: false);
 
             var matcher = new GenericVocabularyMatcher();
             var byObjects = matcher.Match(record, registry.Get("TestSource")!, registry.Get("TestSpecies")!, 80);

@@ -5,6 +5,8 @@ namespace ControlledVocabularies.Descriptors
     /// <summary>
     /// Field-specific descriptors, organized per <see cref="KeyDomain"/>.
     /// </summary>
+    /// <todo>Return read-only snapshots for GetAll(domain); avoid exposing internal mutables.</todo>
+    /// <todo>Make thread-safe (concurrent reads) or document single-writer, multi-reader expectations.</todo>
     public class KeyFieldDescriptorRegistry : IKeyFieldDescriptorRegistry
     {
         private readonly Dictionary<(KeyDomain, string), KeyFieldDescriptor> Descriptors = new();

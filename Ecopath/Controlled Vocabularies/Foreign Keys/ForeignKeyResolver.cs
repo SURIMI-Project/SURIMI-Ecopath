@@ -9,6 +9,10 @@ namespace ControlledVocabularies.ForeignKeys
     /// <summary>
     /// Basic foreign key resolver.
     /// </summary>
+    /// <todo>Normalize exact compares with FieldPolicy.ForValue(..., FieldKind.Code); avoid double-normalization elsewhere.</todo>
+    /// <todo>Honor Strict flag; only fall back to fuzzy/token overlap when Strict=false.</todo>
+    /// <todo>Use registry alias resolution when available; still work without registry.</todo>
+    /// <todo>Add cancellation tokens if doing any heavy scans in future.</todo>
     internal sealed class ForeignKeyResolver : IForeignKeyResolver
     {
         private readonly IVocabularyRegistry m_registry;
@@ -78,7 +82,7 @@ namespace ControlledVocabularies.ForeignKeys
                                 Score = 100,
                                 MatchedKey = r,
                                 StrategyUsed = MatchStrategy.Exact,
-                                Justification = $"FK '{sourceFieldName}'→{target.VocabularyName}.{spec.TargetField}"
+                                Justification = $"FK '{sourceFieldName}':={target.VocabularyName}.{spec.TargetField}"
                             };
                         }
                     }
@@ -100,7 +104,7 @@ namespace ControlledVocabularies.ForeignKeys
                         // Complement fields not filled out byt the resolver
                         match.SourceVocabulary = source.VocabularyName;
                         match.TargetVocabulary = target.VocabularyName;
-                        match.Justification = $"FK fallback (Exact) '{sourceFieldName}'→{target.VocabularyName}.{fieldname}";
+                        match.Justification = $"FK fallback (Exact) '{sourceFieldName}':={target.VocabularyName}.{fieldname}";
                         return match;
                     }
                 }

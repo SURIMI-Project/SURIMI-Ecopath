@@ -12,14 +12,22 @@ namespace ControlledVocabularies.Vocabularies
     /// Foundation class for building specific <see cref="IControlledVocabulary"/>
     /// instances.
     /// </summary>
-    /// <todo>
-    /// Refactor for stream loading, caching, and using local fallback files.
-    /// </todo>
-    /// <todo>
-    /// Enable multi-language support by duplicating textual columns (e.g., "name_ESP") and translating them.
-    /// Translation can be handled by agent AIs (translate → verify → log → cache).
-    /// Once added, translated columns become native vocabulary fields — no further adaptation required.
-    /// </todo>
+    /// <todo>Refactor for stream loading, caching, and using local fallback files.</todo>
+    /// <todo>Enable multi-language support by duplicating textual columns (e.g., "name_ESP") and translating them.
+    /// Translation can be handled by agent AIs (translate := verify := log := cache).
+    /// Once added, translated columns become native vocabulary fields — no further adaptation required.</todo>
+    /// <todo>Make Load() build an immutable snapshot (ImmutableArray) and Freeze() all contained MultiLevelKeys.</todo>
+    /// <todo>Add LoadAsync(CancellationToken) and LoadFromSourceAsync; push I/O to async where libs allow.</todo>
+    /// <todo>Seal KeyFieldDescriptors after Load() (no post-load mutation); expose read-only views.</todo>
+    /// <todo>Inject IKeyFieldIndexer via DI and surface tuning options (thresholds) as options.</todo>
+    /// <todo>Persist index stats (avg length, uniqueness, kind) for diagnostics; consider logging via TraceSource.</todo>
+    /// <todo>Validate schema on load (FieldPolicy.ForSchema for all FieldNames); throw on violations in DEBUG.</todo>
+    /// <todo>Optional: replace DataTable with typed/columnar storage; keep adapter for existing loaders.</todo>
+    /// <todo>Support external metadata (version, source URI, checksum, loaded-at) for reproducibility.</todo>
+    /// <todo>Add versioning/provenance (source date, checksum) and store in vocabulary metadata.</todo>
+    /// <todo>Support remote refresh with local fallback; validate schema changes defensively.</todo>
+    /// <todo>Internationalization: optional duplicate columns for localized labels (name_ESP, etc.).</todo>
+
     public abstract class ControlledVocabularyBase : IControlledVocabulary
     {
         #region Private classes 
@@ -203,8 +211,10 @@ namespace ControlledVocabularies.Vocabularies
             return bestCode;
         }
 
+        #region Foreign keys 
+
         /// <inheritdoc/>
-        public bool SetFK(string sourceFieldName, IControlledVocabulary target, string targetFieldName)
+        public bool SetForeignKey(string sourceFieldName, IControlledVocabulary target, string targetFieldName)
         {
             if (target == null) return false;
 
@@ -235,7 +245,7 @@ namespace ControlledVocabularies.Vocabularies
         }
 
         /// <inheritdoc/>
-        public bool RemoveFK(string sourceFieldName, string? targetVocabularyName = null)
+        public bool RemoveForeignKey(string sourceFieldName, string? targetVocabularyName = null)
         {
             var srcFieldSchema = FieldPolicy.ForSchema(sourceFieldName);
             if (!m_descriptors.TryGetValue(srcFieldSchema, out var descr)) return false;
@@ -253,6 +263,36 @@ namespace ControlledVocabularies.Vocabularies
             descr.ForeignKey = null; // *chop*
             return true;
         }
+
+        /// <inheritdoc/>
+        public IEnumerable<string> GetForeignKeyFieldNames() => m_descriptors
+            .Where(kv => kv.Value.ForeignKey is not null)
+            .Select(kv => kv.Key);
+
+        /// <inheritdoc/>
+        public ForeignKeySpec? GetForeignKey(string fieldName)
+        {
+            var schema = FieldPolicy.ForSchema(fieldName);
+            return m_descriptors.TryGetValue(schema, out var d) ? d.ForeignKey : null;
+        }
+
+        /// <inheritdoc/>
+        public bool TryGetForeignKey(string fieldName, out ForeignKeySpec? spec)
+        {
+            spec = GetForeignKey(fieldName);
+            return spec is not null;
+        }
+
+        /// <inheritdoc/>
+        public IEnumerable<(string FieldName, ForeignKeySpec Spec)> GetForeignKeys()
+        {
+            foreach (var (name, descr) in m_descriptors)
+            {
+                if (descr.ForeignKey is ForeignKeySpec fk)
+                    yield return (name, fk);
+            }
+        }
+        #endregion // Foreign Keys
 
         #endregion // Base functionality
 

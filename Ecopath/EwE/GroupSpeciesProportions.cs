@@ -24,7 +24,7 @@ public class GroupSpeciesProportions
     public readonly double m_r;
 
     /// <summary>
-    /// (row, col) → {species → proportion}
+    /// (row, col) := {species := proportion}
     /// </summary>
     private readonly Dictionary<(int row, int col), Dictionary<string, double>> m_proportions = new();
 

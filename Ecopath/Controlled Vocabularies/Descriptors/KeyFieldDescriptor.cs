@@ -6,6 +6,9 @@ namespace ControlledVocabularies.Descriptors
     /// <summary>
     /// Describes the parsing properties of multi-level key fields.
     /// </summary>
+    /// <todo>Finalize FieldKind + CaseSensitive; default CaseSensitive=true for Uri.</todo>
+    /// <todo>Add Seal() to prevent post-load edits (Strategy/AutoWeight) and enforce at runtime.</todo>
+    /// <todo>Consider unit/scale metadata for Numeric fields to enable NumericRange matching.</todo>
     public class KeyFieldDescriptor
     {
         /// <summary>

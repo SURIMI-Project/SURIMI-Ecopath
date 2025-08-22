@@ -10,6 +10,12 @@ namespace ControlledVocabularies.Core
     /// <summary>
     /// Represents a multi-level, self-describing key (e.g., for species or fleets)
     /// </summary>
+    /// <todo>Implement IFreezable (IsFrozen/Freeze) and guard all mutators (SetField/Parse/SetFieldDescriptor).</todo>
+    /// <todo>Add Clone(bool frozen=false) for safe copies when mutation is needed by callers.</todo>
+    /// <todo>Ensure SetField() normalizes field names with FieldPolicy.ForSchema; values via FieldPolicy.ForValue(kind).</todo>
+    /// <todo>Consider exposing an IReadOnlyDictionary<string, MultiLevelKeyField> view for fields.</todo>
+    /// <todo>Define value equality & stable hash if keys are used as dictionary keys (document semantics).</todo>
+
     public class MultiLevelKey
     {
         #region Private parts 

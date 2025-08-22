@@ -7,6 +7,13 @@ using ControlledVocabularies.Vocabularies;
 
 namespace ControlledVocabularies.Match
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <todo>Overloads already added; ensure registry is optional DI (falls back to GlobalServiceLocator).</todo>
+    /// <todo>Add MatchAll(.., topN) to return N best targets and include source/target vocab names in results.</todo>
+    /// <todo>Deterministic tie-breaks (current: score desc, then key asc) — document and test.</todo>
+    /// <todo>Emit trace in DEBUG for strategy selection and FK fast-path hits.</todo>
     public class GenericVocabularyMatcher : IVocabularyMatcher
     {
         private readonly IVocabularyRegistry m_registry;
@@ -103,7 +110,7 @@ namespace ControlledVocabularies.Match
                     {
                         match.SourceVocabulary = vocabA.VocabularyName;
                         match.TargetVocabulary = vocabB.VocabularyName;
-                        match.Justification = $"Matched '{sourceField}' → '{map.TargetField}' via {map.Strategy}";
+                        match.Justification = $"Matched '{sourceField}' := '{map.TargetField}' via {map.Strategy}";
                         best = match;
                     }
                 }

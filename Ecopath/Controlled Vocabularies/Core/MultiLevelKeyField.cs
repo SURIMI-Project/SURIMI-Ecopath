@@ -3,6 +3,9 @@
     /// <summary>
     /// Helper class, mediates between a multi-level field, its vocabulary and its value.
     /// </summary>
+    /// <todo>Make Value/Vocabulary init-only or enforce freeze via IFreezable to prevent mutation in published records.</todo>
+    /// <todo>Document ToString(includeVocabulary) semantics and ensure culture-invariant formatting.</todo>
+
     public class MultiLevelKeyField
     {
         public MultiLevelKeyField(string value, string vocabulary)

@@ -47,8 +47,8 @@ namespace ControlledVocabularies.Descriptors.Tests
             var v = new TestSourceWithFields("T", KeyDomain.Species, KeyPurpose.Species,
                 ("link", false, MatchStrategy.None));
 
-            v.AddRow(("link", "https://example.org/A"))
-             .AddRow(("link", "https://example.org/B"));
+            v.AddRow(("linkA", "https://example.org/A"))
+             .AddRow(("linkB", "https://example.org/B"));
 
             v.Load().Should().BeTrue();
 
