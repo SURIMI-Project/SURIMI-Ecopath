@@ -66,5 +66,12 @@ namespace ControlledVocabularies.Registries
         /// <param name="source"></param>
         /// <returns></returns>
         IEnumerable<IControlledVocabulary> GetCompatibleVocabularies(IControlledVocabulary source);
+
+        /// <summary>
+        /// Get all vocabularies.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        IEnumerable<IControlledVocabulary> GetAll();
     }
 }

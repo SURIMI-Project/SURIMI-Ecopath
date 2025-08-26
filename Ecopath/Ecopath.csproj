@@ -82,6 +82,9 @@
 	  <None Update="Includes\System.Drawing.Common.dll">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
+	  <None Update="Includes\WoRMS_taxlist_snippet.csv">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

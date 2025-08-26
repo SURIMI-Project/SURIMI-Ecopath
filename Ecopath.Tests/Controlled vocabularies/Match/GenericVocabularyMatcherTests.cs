@@ -1,5 +1,4 @@
 ﻿using ControlledVocabularies.Core;
-using ControlledVocabularies.Match;
 using ControlledVocabularies.Utils;
 using ControlledVocabularies.Vocabularies;
 using FluentAssertions;
@@ -41,7 +40,7 @@ namespace ControlledVocabularies.Match
             v2.Load().Should().BeTrue();
 
             GenericVocabularyMatcher m = new();
-            MultiLevelKey key = MultiLevelKey.FromPairs([(SpeciesFields.Lifestage, "juvenile")], KeyDomain.Species);
+            MultiLevelKey key = MultiLevelKey.FromPairs([(SpeciesFields.Lifestage, "juvenile")], KeyDomain.Species, strict:false);
 
             // This is a bloody big deal: a SURIMI lifestage code can be matched to a record from a totally independent vocabulary
             var result = m.Match(key, v1, v2);

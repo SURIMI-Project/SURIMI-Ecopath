@@ -96,6 +96,6 @@ namespace ControlledVocabularies.Vocabularies
 
         bool TryGetForeignKey(string name, out ForeignKeySpec? spec);
 
-        IEnumerable<(string FieldName, ForeignKeys.ForeignKeySpec Spec)> GetForeignKeys();
+        IEnumerable<(string fieldName, ForeignKeys.ForeignKeySpec spec)> GetForeignKeys();
     }
 }

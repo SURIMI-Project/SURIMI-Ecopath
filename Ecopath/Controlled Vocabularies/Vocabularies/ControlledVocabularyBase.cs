@@ -302,12 +302,12 @@ namespace ControlledVocabularies.Vocabularies
         /// <inheritdoc/>
         public bool TryGetForeignKey(string fieldName, out ForeignKeySpec? spec)
         {
-            spec = GetForeignKey(fieldName);
+            spec = GetForeignKey(FieldPolicy.ForSchema(fieldName));
             return spec is not null;
         }
 
         /// <inheritdoc/>
-        public IEnumerable<(string FieldName, ForeignKeySpec Spec)> GetForeignKeys()
+        public IEnumerable<(string fieldName, ForeignKeySpec spec)> GetForeignKeys()
         {
             foreach (var (name, descr) in m_descriptors)
             {

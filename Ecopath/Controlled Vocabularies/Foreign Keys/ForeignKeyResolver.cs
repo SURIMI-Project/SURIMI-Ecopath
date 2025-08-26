@@ -14,7 +14,7 @@ namespace ControlledVocabularies.ForeignKeys
     /// <todo>Honor Strict flag; only fall back to fuzzy/token overlap when Strict=false.</todo>
     /// <todo>Use registry alias resolution when available; still work without registry.</todo>
     /// <todo>Add cancellation tokens if doing any heavy scans in future.</todo>
-    internal sealed class ForeignKeyResolver : IForeignKeyResolver
+    public class ForeignKeyResolver : IForeignKeyResolver
     {
         private readonly IVocabularyRegistry m_registry;
         private readonly ExactFieldMatcher m_matcher = new();

@@ -35,7 +35,7 @@ namespace ControlledVocabularies.Descriptors.Tests
 
             var d = v.GetKeyFieldDescriptor("name")!;
             d.Kind.Should().Be(FieldKind.Label);
-            d.Strategy.HasFlag(MatchStrategy.Fuzzy).Should().BeTrue();
+            d.Strategy.HasFlag(MatchStrategy.Keyword).Should().BeTrue(); // Too long for Fuzzy
             d.Strategy.HasFlag(MatchStrategy.TokenOverlap).Should().BeTrue();
         }
 
@@ -44,8 +44,8 @@ namespace ControlledVocabularies.Descriptors.Tests
         {
             var v = new InMemoryVocabulary("T", KeyDomain.Species, KeyPurpose.Species);
             v.AddField("link", KeyPurpose.Species, strategy:MatchStrategy.None);
-            v.AddRow(("linkA", "https://example.org/A"));
-            v.AddRow(("linkB", "https://example.org/B"));
+            v.AddRow(("link", "https://example.org/A"));
+            v.AddRow(("link", "https://example.org/B"));
 
             v.Load().Should().BeTrue();
 
