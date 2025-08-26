@@ -262,7 +262,7 @@ namespace ControlledVocabularies.Vocabularies
 
             var spec = new ForeignKeySpec
             {
-                TargetVocabulary = target.VocabularyName,
+                TargetVocabulary = tgtVocabSchema, // Normalized
                 TargetField = tgtFieldSchema,
                 TargetDomain = target.Domain,
                 TargetPurpose = target.Purpose,

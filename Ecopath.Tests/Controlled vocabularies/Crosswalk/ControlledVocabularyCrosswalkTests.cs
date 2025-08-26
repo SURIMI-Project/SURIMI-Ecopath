@@ -55,8 +55,8 @@ namespace ControlledVocabularies.CrossWalk.Tests
             // Assert - Should find ASFIS record via FAO code
             fkResult.IsMatch.Should().BeTrue();
             fkResult.Score.Should().BeGreaterOrEqualTo(50); // Your resolver might score differently
-            fkResult.SourceVocabulary.Should().Be("WoRMS");
-            fkResult.TargetVocabulary.Should().Be("asfis"); // Lowercase from schema normalization
+            fkResult.SourceVocabulary.Should().Be("worms"); // Normalized
+            fkResult.TargetVocabulary.Should().Be("asfis"); // Normalized
             fkResult.TargetFieldValue.Should().Be("COD");
             fkResult.Justification.Should().Contain("FK");
         }
@@ -125,8 +125,8 @@ namespace ControlledVocabularies.CrossWalk.Tests
             var result = m_fkResolver.TryResolve(wormsKey, m_wormsVocab, m_asfisVocab);
 
             // Assert - Should use normalized names
-            result.SourceVocabulary.Should().Be("WoRMS");
-            result.TargetVocabulary.Should().Be("asfis"); // Normalized to lowercase
+            result.SourceVocabulary.Should().Be("worms"); // Normalized
+            result.TargetVocabulary.Should().Be("asfis"); // Normalized
         }
 
         [Fact]
