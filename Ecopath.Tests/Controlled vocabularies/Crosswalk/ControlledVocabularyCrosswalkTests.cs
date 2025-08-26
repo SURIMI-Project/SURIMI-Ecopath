@@ -93,8 +93,7 @@ namespace ControlledVocabularies.CrossWalk.Tests
 
             // Assert - Should find match via fallback mechanism
             result.IsMatch.Should().BeTrue();
-            result.Justification.Should().MatchRegex("FK.*fallback|FK.*exact",
-                "Should indicate fallback or exact matching");
+            result.StrategyUsed.Should().Be(MatchStrategy.Exact);
         }
 
         [Fact]
@@ -120,9 +119,7 @@ namespace ControlledVocabularies.CrossWalk.Tests
         public void Should_Use_Schema_Normalized_Vocabulary_Names()
         {
             // Arrange - Test that vocabulary name normalization works
-            var wormsKey = MultiLevelKey.FromPairs([
-                ("FAO_Code", "COD")
-            ], KeyDomain.Species);
+            var wormsKey = MultiLevelKey.FromPairs([("FAO_Code", "COD")], KeyDomain.Species);
 
             // Act
             var result = m_fkResolver.TryResolve(wormsKey, m_wormsVocab, m_asfisVocab);

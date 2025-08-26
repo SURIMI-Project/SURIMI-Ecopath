@@ -13,12 +13,12 @@ namespace ControlledVocabularies.Vocabularies
     {
         /// <todo>Implement online source: http://www.marinespecies.org/rest/AphiaRecordsByName/[name]</todo>
         /// <todo>Add version tracking by comparing AphiaID records between refreshes</todo>
-        private const string FileName = @"Includes\WoRMS_taxlist_snippet.csv";
+        private const string FileName = @"Includes\WoRMS_Data.csv";
 
         // Expected CSV columns from WoRMS export
         private const string COL_APHIA_ID = "AphiaID";           // Unique WoRMS identifier
         private const string COL_SCIENTIFIC_NAME = "ScientificName"; // Latin binomial
-        private const string COL_COMMON_NAME = "ScientificName_accepted";     // Vernacular name
+        private const string COL_COMMON_NAME = "commonname";    // Vernacular name
         private const string COL_KINGDOM = "Kingdom";           // Animalia, etc.
         private const string COL_PHYLUM = "Phylum";             // Chordata, etc.  
         private const string COL_CLASS = "Class";               // Actinopteri, etc.
@@ -57,29 +57,29 @@ namespace ControlledVocabularies.Vocabularies
                 CreateSampleFile();
             }
 
+            // Define field descriptors with cross-vocabulary mapping strategies
+            AddField(COL_APHIA_ID, Domain, Purpose, isRequired: true, weight: 10, strategy: MatchStrategy.Exact);
+            AddField(COL_SCIENTIFIC_NAME, Domain, Purpose, isRequired: true, weight: 9, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy);
+            AddField(COL_COMMON_NAME, Domain, Purpose, isRequired: false, weight: 7, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy);
+
+            // Taxonomic hierarchy - useful for resolution
+            AddField(COL_KINGDOM, Domain, Purpose, isRequired: false, weight: 2, strategy: MatchStrategy.Exact);
+            AddField(COL_PHYLUM, Domain, Purpose, isRequired: false, weight: 3, strategy: MatchStrategy.Exact);
+            AddField(COL_CLASS, Domain, Purpose, isRequired: false, weight: 4, strategy: MatchStrategy.Exact);
+            AddField(COL_ORDER, Domain, Purpose, isRequired: false, weight: 5, strategy: MatchStrategy.Exact);
+            AddField(COL_FAMILY, Domain, Purpose, isRequired: false, weight: 6, strategy: MatchStrategy.Exact);
+            AddField(COL_GENUS, Domain, Purpose, isRequired: false, weight: 7, strategy: MatchStrategy.Exact);
+
+            AddField(COL_STATUS, Domain, Purpose, isRequired: false, weight: 2, strategy: MatchStrategy.Exact);
+
+            // Cross-vocabulary bridge - critical for ASFIS mapping!
+            AddField(COL_FAO_CODE, Domain, Purpose, isRequired: false, weight: 8, strategy: MatchStrategy.Exact);
+
             try
             {
                 using var reader = new StreamReader(FileName);
                 using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
                 using var dr = new CsvDataReader(csv);
-
-                // Define field descriptors with cross-vocabulary mapping strategies
-                AddField(COL_APHIA_ID, Domain, Purpose, isRequired: true, weight: 10, strategy: MatchStrategy.Exact);
-                AddField(COL_SCIENTIFIC_NAME, Domain, Purpose, isRequired: true, weight: 9, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy);
-                AddField(COL_COMMON_NAME, Domain, Purpose, isRequired: false, weight: 7, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy);
-
-                // Taxonomic hierarchy - useful for resolution
-                AddField(COL_KINGDOM, Domain, Purpose, isRequired: false, weight: 2, strategy: MatchStrategy.Exact);
-                AddField(COL_PHYLUM, Domain, Purpose, isRequired: false, weight: 3, strategy: MatchStrategy.Exact);
-                AddField(COL_CLASS, Domain, Purpose, isRequired: false, weight: 4, strategy: MatchStrategy.Exact);
-                AddField(COL_ORDER, Domain, Purpose, isRequired: false, weight: 5, strategy: MatchStrategy.Exact);
-                AddField(COL_FAMILY, Domain, Purpose, isRequired: false, weight: 6, strategy: MatchStrategy.Exact);
-                AddField(COL_GENUS, Domain, Purpose, isRequired: false, weight: 7, strategy: MatchStrategy.Exact);
-
-                AddField(COL_STATUS, Domain, Purpose, isRequired: false, weight: 2, strategy: MatchStrategy.Exact);
-
-                // Cross-vocabulary bridge - critical for ASFIS mapping!
-                AddField(COL_FAO_CODE, Domain, Purpose, isRequired: false, weight: 8, strategy: MatchStrategy.Exact);
 
                 this.Table.Load(dr);
                 LastRefresh = DateTime.UtcNow;
@@ -90,6 +90,7 @@ namespace ControlledVocabularies.Vocabularies
                 // Todo: log ex.Message
                 return false;
             }
+            return true;
         }
 
         /// <summary>
@@ -124,8 +125,6 @@ namespace ControlledVocabularies.Vocabularies
                       Order = "Clupeiformes", Family = "Engraulidae", Genus = "Engraulis",
                       Status = "accepted", FAO_Code = "ANE" }
             };
-
-            Directory.CreateDirectory(Path.GetDirectoryName(FileName) ?? "Includes");
 
             using var writer = new StreamWriter(FileName);
             using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
@@ -168,7 +167,7 @@ namespace ControlledVocabularies.Vocabularies
             var asfisVocab = registry.Get("ASFIS");
             if (asfisVocab != null)
             {
-                this.SetForeignKey(COL_FAO_CODE, asfisVocab, "speciescode");
+                this.SetForeignKey(COL_FAO_CODE, asfisVocab, asfisVocab.CodeFieldName);
             }
         }
     }
