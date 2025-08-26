@@ -1,4 +1,5 @@
 ﻿using ControlledVocabularies.Core;
+using ControlledVocabularies.Utils;
 using FluentAssertions;
 using Xunit;
 
@@ -15,7 +16,7 @@ namespace ControlledVocabularies.Vocabularies.Tests
             v.VocabularyName.Should().Be("ISSCFG");
             v.Domain.Should().Be(KeyDomain.FleetSegment);
             (v.Purpose & (KeyPurpose.Fleet | KeyPurpose.Gear)).Should().NotBe(0);
-            v.CodeFieldName.Should().Be("GEAR_CODE".ToLowerInvariant()); // base normalizes names
+            v.CodeFieldName.Should().Be("GEAR_CODE"); // base normalizes names
 
             // Must have at least some rows
             v.Records.Should().NotBeEmpty();

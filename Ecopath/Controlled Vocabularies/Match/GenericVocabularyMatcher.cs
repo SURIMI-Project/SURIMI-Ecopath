@@ -16,16 +16,16 @@ namespace ControlledVocabularies.Match
     /// <todo>Emit trace in DEBUG for strategy selection and FK fast-path hits.</todo>
     public class GenericVocabularyMatcher : IVocabularyMatcher
     {
-        private readonly IVocabularyRegistry m_registry;
-        private readonly IForeignKeyResolver m_fk;
+        private readonly IVocabularyRegistry? m_registry;
+        private readonly IForeignKeyResolver? m_fk;
 
         public GenericVocabularyMatcher(IVocabularyRegistry? registry = null, IForeignKeyResolver? fkResolver = null)
         {
-            m_registry = registry
-                ?? Ecopath.Services.GlobalServiceLocator.Get<VocabularyRegistry>()
-                ?? throw new InvalidOperationException("No VocabularyRegistry available.");
+            // Try registry from parameter, then GlobalServiceLocator, then null (optional)
+            m_registry = registry ?? Ecopath.Services.GlobalServiceLocator.Get<VocabularyRegistry>();
 
-            m_fk = fkResolver ?? new ForeignKeyResolver(m_registry);
+            // FK resolver needs registry, so only create if registry available
+            m_fk = fkResolver ?? (m_registry != null ? new ForeignKeyResolver(m_registry) : null);
         }
 
         /// <summary>
@@ -42,7 +42,21 @@ namespace ControlledVocabularies.Match
             var threshold = minscore ?? LocalSettings.DefaultMinScore;
             MatchResult best = MatchResult.NoMatch;
 
-            var targets = (vocabB != null) ? [ vocabB ] : m_registry.GetCompatibleVocabularies(vocabA);
+            IEnumerable<IControlledVocabulary> targets;
+
+            if (vocabB != null)
+            {
+                targets = [vocabB];
+            }
+            else if (m_registry != null)
+            {
+                targets = m_registry.GetCompatibleVocabularies(vocabA);
+            }
+            else
+            {
+                // No registry and no specific target - can't do anything
+                return NoMatchNamed(vocabA, null, "No target vocabulary specified and no registry available.");
+            }
 
             foreach (var t in targets)
             {
@@ -54,7 +68,7 @@ namespace ControlledVocabularies.Match
         }
 
         /// <summary>
-        /// Match a record from a source vocabulary to a targer or any available vocabulary.
+        /// Match a record from a source vocabulary to a target or any available vocabulary.
         /// </summary>
         /// <param name="record"></param>
         /// <param name="vocabA"></param>
@@ -63,6 +77,10 @@ namespace ControlledVocabularies.Match
         /// <returns></returns>
         public MatchResult Match(MultiLevelKey record, string vocabAName, string? vocabBName = null, int? minscore = null)
         {
+            // This overload requires registry
+            if (m_registry == null)
+                return MatchResult.NoMatch;
+
             if (!m_registry.TryGetByNameOrAlias(vocabAName, out var a) || a is null)
                 return MatchResult.NoMatch;
 
@@ -83,7 +101,7 @@ namespace ControlledVocabularies.Match
             if (!MatchHelpers.CanMatch(vocabA, vocabB))
                 return NoMatchNamed(vocabA, vocabB, "Incompatible vocabularies (domain/purpose).");
 
-            // 1) FK fast-path (delegated)
+            // 1) FK fast-path (delegated) - only if FK resolver available
             if (m_fk != null)
             {
                 var fk = m_fk.TryResolve(record, vocabA, vocabB);
@@ -148,14 +166,14 @@ namespace ControlledVocabularies.Match
             }
         }
 
-        private static MatchResult NoMatchNamed(IControlledVocabulary a, IControlledVocabulary b, string reason)
-            => new MatchResult() 
-                    {
-                        SourceVocabulary = a.VocabularyName,
-                        TargetVocabulary = b.VocabularyName,
-                        Score = 0,
-                        Justification = reason
-                    };
+        private static MatchResult NoMatchNamed(IControlledVocabulary a, IControlledVocabulary? b, string reason)
+            => new MatchResult()
+            {
+                SourceVocabulary = a.VocabularyName,
+                TargetVocabulary = b?.VocabularyName ?? "unknown",
+                Score = 0,
+                Justification = reason
+            };
 
         #endregion // Internals
     }

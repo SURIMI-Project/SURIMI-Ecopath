@@ -49,5 +49,7 @@ namespace ControlledVocabularies.Registries
 
         public IEnumerable<IControlledVocabulary> GetCompatibleVocabularies(IControlledVocabulary source)
             => m_vocabularies.Values.Where(v => MatchHelpers.CanMatch(source, v) && !ReferenceEquals(source, v));
+
+        public IEnumerable<IControlledVocabulary> GetAll() => m_vocabularies.Values;
     }
 }
