@@ -2,6 +2,7 @@
 using ControlledVocabularies.Descriptors;
 using ControlledVocabularies.Match;
 using ControlledVocabularies.Registries;
+using ControlledVocabularies.Utils;
 using ControlledVocabularies.Vocabularies;
 using ControlledVocabularies.Vocabularies.Tests;
 using Ecopath.Services;
@@ -88,8 +89,8 @@ namespace ControlledVocabularies.ForeignKeys.Tests
 
             result.Should().NotBeNull();
             result.Score.Should().Be(100);
-            result.SourceVocabulary.Should().Be("TestSource");
-            result.TargetVocabulary.Should().Be("TestSpecies");
+            result.SourceVocabulary.Should().Be(FieldPolicy.ForSchema("TestSource"));
+            result.TargetVocabulary.Should().Be(FieldPolicy.ForSchema("TestSpecies"));
             result.SourceField.Should().Be("speciescode");
             result.TargetField.Should().Be("code");
             result.TargetFieldValue.Should().Be("COD");
@@ -117,8 +118,8 @@ namespace ControlledVocabularies.ForeignKeys.Tests
             var result = matcher.Match(record, source, vocabB: null, minscore: 80);
 
             result.Score.Should().BeGreaterOrEqualTo(80);
-            result.TargetVocabulary.Should().Be("TestSpecies"); // the only target that can resolve COD
-            result.SourceVocabulary.Should().Be("TestSource");
+            result.TargetVocabulary.Should().Be("testspecies"); // the only target that can resolve COD
+            result.SourceVocabulary.Should().Be("testsource");
         }
 
         [Fact]
