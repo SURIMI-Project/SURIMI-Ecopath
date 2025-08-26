@@ -31,7 +31,7 @@ namespace ControlledVocabularies.ForeignKeys.Tests
 
             var d = ((ControlledVocabularyBase)src).GetKeyFieldDescriptor("speciescode")!;
             d.ForeignKey!.TargetVocabulary.Should().Be("asfis");
-            d.ForeignKey!.TargetField.Should().Be("alpha3 code");
+            d.ForeignKey!.TargetField.Should().Be("alpha3-code");
         }
 
         [Fact]
@@ -47,7 +47,7 @@ namespace ControlledVocabularies.ForeignKeys.Tests
             src.GetForeignKeyFieldNames().Count().Should().Be(1);
 
             var fk = ((ControlledVocabularyBase)src).GetKeyFieldDescriptor("fieldx")!.ForeignKey!;
-            fk.TargetVocabulary.Should().Be("surimi lifestage"); // schema form of "surimi.lifestage"
+            fk.TargetVocabulary.Should().Be("surimi.lifestage"); // Namespace dot preserved
             fk.TargetField.Should().Be("id");
         }
 
@@ -137,7 +137,7 @@ namespace ControlledVocabularies.ForeignKeys.Tests
             var result = matcher.Match(record, source, lifestage, minscore: 80);
 
             result.Score.Should().Be(0);
-            // names should still be populated per your requirement
+            // names should still be populated per requirement
             result.SourceVocabulary.Should().Be("TestSource");
             result.TargetVocabulary.Should().Be("TestLifestage");
         }
