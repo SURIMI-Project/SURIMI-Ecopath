@@ -236,14 +236,21 @@ namespace ControlledVocabularies.Vocabularies
 
         #region Foreign keys 
 
-        /// <inheritdoc/>
-        public bool SetForeignKey(string sourceFieldName, IControlledVocabulary target, string targetFieldName)
+        /// <summary>
+        /// Set a foreign key
+        /// </summary>
+        /// <param name="sourceFieldName"></param>
+        /// <param name="target"></param>
+        /// <param name="targetFieldName">The target field name to refer to. If not provided, the target
+        /// vocabulary's <see cref="CodeFieldName"/> is used.</param>
+        /// <returns></returns>
+        public bool SetForeignKey(string sourceFieldName, IControlledVocabulary target, string? targetFieldName = null)
         {
             if (target == null) return false;
 
             // normalize to SCHEMA space
             var srcFieldSchema = FieldPolicy.ForSchema(sourceFieldName);
-            var tgtFieldSchema = FieldPolicy.ForSchema(targetFieldName);
+            var tgtFieldSchema = FieldPolicy.ForSchema(targetFieldName ?? target.CodeFieldName);
             var tgtVocabSchema = FieldPolicy.ForSchema(target.VocabularyName);
 
             // validate existence

@@ -65,10 +65,12 @@ namespace ControlledVocabularies.ForeignKeys
                 // 1) Try to match foreign key by exploring the target field, if provided
                 if (!string.IsNullOrEmpty(specTargetField) && target.FieldNames.Contains(specTargetField))
                 {
+                    // Resolve once
+                    var a = FieldPolicy.ForValue(inputValue, FieldKind.Code);
+
                     foreach (var r in target.Records)
                     {
-                        var a = FieldPolicy.ForValue(r.GetField(specTargetField)!.ToString(false), FieldKind.Code);
-                        var b = FieldPolicy.ForValue(inputValue, FieldKind.Code);
+                        var b = FieldPolicy.ForValue(r.GetField(specTargetField)!.ToString(false), FieldKind.Code);
 
                         if (m_matcher.Score(a, b) == 1)
                         {
@@ -83,7 +85,7 @@ namespace ControlledVocabularies.ForeignKeys
                                 Score = 100,
                                 MatchedKey = r,
                                 StrategyUsed = MatchStrategy.Exact,
-                                Justification = $"FK '{sourceFieldName}':={target.VocabularyName}.{spec.TargetField}"
+                                Justification = $"FK Exact '{sourceFieldName}':={target.VocabularyName}.{spec.TargetField}"
                             };
                         }
                     }
