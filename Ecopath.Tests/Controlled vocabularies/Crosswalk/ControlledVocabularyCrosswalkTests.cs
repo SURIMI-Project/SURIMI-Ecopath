@@ -65,9 +65,7 @@ namespace ControlledVocabularies.CrossWalk.Tests
         public void Should_Use_Exact_Matching_For_Foreign_Keys()
         {
             // Arrange - Test the exact matching behavior
-            var wormsKey = MultiLevelKey.FromPairs([
-                ("FAO_Code", "HAD")  // Haddock
-            ], KeyDomain.Species);
+            var wormsKey = MultiLevelKey.FromPairs([("FAO_Code", "HAD")], KeyDomain.Species);
 
             // Act
             var result = m_fkResolver.TryResolve(wormsKey, m_wormsVocab, m_asfisVocab);
@@ -75,8 +73,8 @@ namespace ControlledVocabularies.CrossWalk.Tests
             // Assert - Should use exact matching strategy
             result.IsMatch.Should().BeTrue();
             result.StrategyUsed.Should().Be(MatchStrategy.Exact);
-            result.SourceField.Should().Be("FAO_Code");
-            result.SourceFieldValue.Should().Be("HAD");
+            result.SourceField.Should().Be("fao-code"); // Normalized
+            result.SourceFieldValue.Should().Be("HAD"); // Original
         }
 
         [Fact]
@@ -140,6 +138,7 @@ namespace ControlledVocabularies.CrossWalk.Tests
                 .FirstOrDefault(r => r.GetField("AphiaID")?.Value == userWormsId);
 
             wormsRecord.Should().NotBeNull();
+            var wormscode = wormsRecord!.GetField("fao-code")?.Value;
 
             // Step 2: Use FK resolver to cross-walk to ASFIS
             var crossWalkResult = m_fkResolver.TryResolve(wormsRecord!, m_wormsVocab, m_asfisVocab);
@@ -149,10 +148,10 @@ namespace ControlledVocabularies.CrossWalk.Tests
 
             // Step 4: Extract ASFIS information
             var asfisRecord = crossWalkResult.MatchedKey;
-            var asfisCode = asfisRecord.GetField("speciescode")?.Value;
+            var asfisCode = asfisRecord.GetField(m_asfisVocab.CodeFieldName)?.Value;
 
             // Assert - Complete semantic preservation
-            asfisCode.Should().Be("COD");
+            asfisCode.Should().Be(wormscode);
 
             Console.WriteLine($"Cross-vocabulary resolution:");
             Console.WriteLine($"  WoRMS AphiaID: {userWormsId}");
