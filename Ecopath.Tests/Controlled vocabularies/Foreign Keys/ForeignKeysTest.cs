@@ -27,7 +27,7 @@ namespace ControlledVocabularies.ForeignKeys.Tests
             src.SetForeignKey("speciescode", tgt, "Alpha3_Code").Should().BeTrue();
             src.SetForeignKey("speciescode", tgt, "Alpha3_Code").Should().BeTrue(); // idempotent
 
-            src.GetForeignKeyFieldNames().Count().Should().Be(1);   
+            src.GetForeignKeyFieldNames.Count().Should().Be(1);   
 
             var d = ((ControlledVocabularyBase)src).GetKeyFieldDescriptor("speciescode")!;
             d.ForeignKey!.TargetVocabulary.Should().Be("asfis");
@@ -44,7 +44,7 @@ namespace ControlledVocabularies.ForeignKeys.Tests
             src.SetForeignKey("fieldx", t1, "GEAR_CODE").Should().BeTrue();
             src.SetForeignKey("fieldx", t2, "id").Should().BeTrue(); // replaces t1
 
-            src.GetForeignKeyFieldNames().Count().Should().Be(1);
+            src.GetForeignKeyFieldNames.Count().Should().Be(1);
 
             var fk = ((ControlledVocabularyBase)src).GetKeyFieldDescriptor("fieldx")!.ForeignKey!;
             fk.TargetVocabulary.Should().Be("surimi.lifestage"); // Namespace dot preserved
@@ -68,7 +68,7 @@ namespace ControlledVocabularies.ForeignKeys.Tests
             // already gone := false
             src.RemoveForeignKey("flag").Should().BeFalse();
 
-            src.GetForeignKeyFieldNames().Count().Should().Be(0);
+            src.GetForeignKeyFieldNames.Count().Should().Be(0);
         }
 
         [Fact]

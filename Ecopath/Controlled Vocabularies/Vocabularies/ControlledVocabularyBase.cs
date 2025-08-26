@@ -295,7 +295,7 @@ namespace ControlledVocabularies.Vocabularies
         }
 
         /// <inheritdoc/>
-        public IEnumerable<string> GetForeignKeyFieldNames() => m_descriptors
+        public IEnumerable<string> GetForeignKeyFieldNames => m_descriptors
             .Where(kv => kv.Value.ForeignKey is not null)
             .Select(kv => kv.Key);
 
@@ -314,12 +314,15 @@ namespace ControlledVocabularies.Vocabularies
         }
 
         /// <inheritdoc/>
-        public IEnumerable<(string fieldName, ForeignKeySpec spec)> GetForeignKeys()
+        public IEnumerable<(string fieldName, ForeignKeySpec spec)> GetForeignKeys
         {
-            foreach (var (name, descr) in m_descriptors)
+            get
             {
-                if (descr.ForeignKey is ForeignKeySpec fk)
-                    yield return (name, fk);
+                foreach (var (name, descr) in m_descriptors)
+                {
+                    if (descr.ForeignKey is ForeignKeySpec fk)
+                        yield return (name, fk);
+                }
             }
         }
         #endregion // Foreign Keys

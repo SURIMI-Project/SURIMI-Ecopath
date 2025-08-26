@@ -34,7 +34,7 @@ namespace ControlledVocabularies.ForeignKeys
             var targetName = FieldPolicy.ForSchema(target.VocabularyName);
 
             // Explore foreign key defintions in the source vocabulary
-            foreach (var sourceFieldName in source.FieldNames)
+            foreach (var sourceFieldName in source.GetForeignKeyFieldNames)
             {
                 var spec = source.GetKeyFieldDescriptor(sourceFieldName)?.ForeignKey ?? null;
                 if (spec == null) continue;
@@ -76,10 +76,10 @@ namespace ControlledVocabularies.ForeignKeys
                         {
                             return new MatchResult
                             {
-                                SourceVocabulary = source.VocabularyName,
+                                SourceVocabulary = FieldPolicy.ForSchema(source.VocabularyName),
                                 SourceField = sourceFieldName,
                                 SourceFieldValue = inputValue,
-                                TargetVocabulary = target.VocabularyName,
+                                TargetVocabulary = specTargetName,
                                 TargetField = specTargetField,
                                 TargetFieldValue = inputValue,
                                 Score = 100,

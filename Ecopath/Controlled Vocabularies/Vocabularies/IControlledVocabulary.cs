@@ -92,10 +92,10 @@ namespace ControlledVocabularies.Vocabularies
         /// </summary>
         bool RemoveForeignKey(string sourceFieldName, string? targetVocabularyName = null);
 
-        IEnumerable<string> GetForeignKeyFieldNames();
+        IEnumerable<string> GetForeignKeyFieldNames { get; }
 
         bool TryGetForeignKey(string name, out ForeignKeySpec? spec);
 
-        IEnumerable<(string fieldName, ForeignKeys.ForeignKeySpec spec)> GetForeignKeys();
+        IEnumerable<(string fieldName, ForeignKeys.ForeignKeySpec spec)> GetForeignKeys { get; }
     }
 }
