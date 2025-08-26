@@ -1,5 +1,6 @@
 ﻿using ControlledVocabularies.Core;
 using ControlledVocabularies.Registries;
+using ControlledVocabularies.Utils;
 using FluentAssertions;
 using Xunit;
 
@@ -18,10 +19,10 @@ namespace ControlledVocabularies.Vocabularies.Tests
 
             // Assert
             loaded.Should().BeTrue();
-            wormsVocab.VocabularyName.Should().Be("WoRMS");
+            wormsVocab.VocabularyName.Should().Be("WoRMS");  // Non-normalized
             wormsVocab.Domain.Should().Be(KeyDomain.Species);
             wormsVocab.Purpose.Should().Be(KeyPurpose.Species);
-            wormsVocab.CodeFieldName.Should().Be("AphiaID");
+            wormsVocab.CodeFieldName.Should().Be("AphiaID"); // Non-normalized
         }
 
         [Fact]
@@ -33,10 +34,10 @@ namespace ControlledVocabularies.Vocabularies.Tests
 
             // Assert
             var fieldNames = wormsVocab.FieldNames.ToList();
-            fieldNames.Should().Contain("AphiaID");
-            fieldNames.Should().Contain("ScientificName");
-            fieldNames.Should().Contain("CommonName");
-            fieldNames.Should().Contain("FAO_Code"); // Critical for ASFIS cross-reference
+            fieldNames.Should().Contain("aphiaid");        // Normalized
+            fieldNames.Should().Contain("scientificname"); // Normalized
+            fieldNames.Should().Contain("commonname");     // Normalized
+            fieldNames.Should().Contain("fao-code");       // Normalized
         }
 
         [Fact]
@@ -85,7 +86,7 @@ namespace ControlledVocabularies.Vocabularies.Tests
             // Assert
             wormsVocab.TryGetForeignKey("FAO_Code", out var fkSpec).Should().BeTrue();
             fkSpec!.TargetVocabulary.Should().Be("asfis");
-            fkSpec.TargetField.Should().Be("speciescode");
+            fkSpec.TargetField.Should().Be(FieldPolicy.ForSchema(asfisVocab.CodeFieldName));
         }
 
         [Fact]
