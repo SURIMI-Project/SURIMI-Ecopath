@@ -60,7 +60,7 @@ namespace ControlledVocabularies.Resolve.Tests
             var resolver = new StrategyKeyResolver(m_mappings, m_keyFieldDescriptors.GetAll(KeyDomain.Species));
 
             // Act
-            MultiLevelKey key = MultiLevelKey.FromPairs([(SpeciesFields.SpeciesCode, "ASFIS:MUR"), (SpeciesFields.Lifestage, "surimi:juvenile")], KeyDomain.Species, strict:false);
+            MultiLevelKey key = MultiLevelKey.FromPairs([(SpeciesFields.SpeciesCode, "ASFIS:MUR"), (SpeciesFields.Lifestage, "surimi:juvenile")], KeyDomain.Species);
             var matches = resolver.FindAllMatches(key);
 
             // Assert

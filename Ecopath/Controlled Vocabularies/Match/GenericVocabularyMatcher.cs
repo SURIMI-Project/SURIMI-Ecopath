@@ -40,7 +40,7 @@ namespace ControlledVocabularies.Match
         public MatchResult Match(MultiLevelKey record, IControlledVocabulary vocabA, IControlledVocabulary? vocabB = null, int? minscore = null)
         {
             var threshold = minscore ?? LocalSettings.DefaultMinScore;
-            MatchResult best = MatchResult.NoMatch;
+            MatchResult best = NoMatchNamed(vocabA, vocabB, "Incompatible vocabularies (domain/purpose).");
 
             IEnumerable<IControlledVocabulary> targets;
 

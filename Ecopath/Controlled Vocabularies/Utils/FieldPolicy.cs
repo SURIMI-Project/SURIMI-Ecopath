@@ -15,8 +15,10 @@ namespace ControlledVocabularies.Utils
         {
             if (string.IsNullOrWhiteSpace(s)) return string.Empty;
             var nfc = s.Normalize(NormalizationForm.FormC).ToLowerInvariant();
-            // replace non-letters/digits with space; collapse
-            nfc = Regex.Replace(nfc, @"[^\p{L}\p{N}]+", "-");
+
+            // Preserve dots (namespace separators) and replace other non-alphanumeric with dashes
+            nfc = Regex.Replace(nfc, @"[^\p{L}\p{N}\.]+", "-");  // Note: \. added
+
             return string.Join("-", nfc.Split("-", StringSplitOptions.RemoveEmptyEntries));
         }
 
