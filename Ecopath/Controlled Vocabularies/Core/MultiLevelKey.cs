@@ -49,7 +49,7 @@ namespace ControlledVocabularies.Core
         /// <param name="registry"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public static MultiLevelKey FromObject(object source, KeyDomain domainHint, IKeyFieldDescriptorRegistry? registry = null)
+        public static MultiLevelKey FromObject(object source, KeyDomain domainHint, IKeyFieldDescriptorRegistry? registry = null, bool strict = false)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -59,7 +59,7 @@ namespace ControlledVocabularies.Core
                               .Select(p => (FieldPolicy.ForSchema(p.Name), (string?)p.GetValue(source)));
 
 
-            return FromPairs(pairs, domainHint, registry);
+            return FromPairs(pairs, domainHint, registry, strict: strict);
         }
 
         /// <summary>
@@ -69,7 +69,7 @@ namespace ControlledVocabularies.Core
         /// <param name="domainHint"></param>
         /// <param name="registry"></param>
         /// <returns></returns>
-        public static MultiLevelKey FromDataRow(DataRow row, KeyDomain domainHint, IKeyFieldDescriptorRegistry? registry = null)
+        public static MultiLevelKey FromDataRow(DataRow row, KeyDomain domainHint, IKeyFieldDescriptorRegistry? registry = null, bool strict = false)
         {
             var dt = row.Table;
             var pairs = new List<(string, string?)>(dt.Columns.Count);
@@ -82,7 +82,7 @@ namespace ControlledVocabularies.Core
 
                 pairs.Add((FieldPolicy.ForSchema(col.ColumnName), value));
             }
-            return FromPairs(pairs, domainHint, registry);
+            return FromPairs(pairs, domainHint, registry, strict: strict);
         }
 
         /// <summary>
@@ -92,14 +92,14 @@ namespace ControlledVocabularies.Core
         /// <param name="domainHint"></param>
         /// <param name="registry"></param>
         /// <returns></returns>
-        public static MultiLevelKey FromString(string keyStr, KeyDomain domainHint, IKeyFieldDescriptorRegistry? registry = null)
+        public static MultiLevelKey FromString(string keyStr, KeyDomain domainHint, IKeyFieldDescriptorRegistry? registry = null, bool strict = false)
         {
             var pairs = keyStr.Split(';', StringSplitOptions.RemoveEmptyEntries)
                               .Select(kvp => kvp.Split('='))
                               .Where(parts => parts.Length == 2)
                               .Select(parts => (FieldPolicy.ForSchema(parts[0]), parts[1]));
 
-            return FromPairs(pairs!, domainHint, registry);
+            return FromPairs(pairs!, domainHint, registry, strict: strict);
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace ControlledVocabularies.Core
         /// <param name="strict">Flag to enforce the use of registered variables only.</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public static MultiLevelKey FromPairs(IEnumerable<(string field, string? value)> pairs,  KeyDomain domainHint, IKeyFieldDescriptorRegistry? registry = null, bool strict = true)
+        public static MultiLevelKey FromPairs(IEnumerable<(string field, string? value)> pairs,  KeyDomain domainHint, IKeyFieldDescriptorRegistry? registry = null, bool strict = false)
         {
             var mlk = new MultiLevelKey(domainHint) { _strict = strict };
 

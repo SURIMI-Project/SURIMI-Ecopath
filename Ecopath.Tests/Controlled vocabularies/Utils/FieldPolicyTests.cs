@@ -11,9 +11,9 @@ namespace ControlledVocabularies.Utils.Tests
         [Fact]
         public void Schema_Normalization_Bridges_Hyphen_To_Space()
         {
-            FieldPolicy.ForSchema("Alpha3_Code").Should().Be("alpha3 code");
-            FieldPolicy.ForSchema("alpha-3").Should().Be("alpha 3");
-            FieldPolicy.ForSchema("  GEAR_CODE ").Should().Be("gear code");
+            FieldPolicy.ForSchema("Alpha3_Code").Should().Be("alpha3-code");
+            FieldPolicy.ForSchema("alpha 3").Should().Be("alpha-3");
+            FieldPolicy.ForSchema("  GEAR_CODE ").Should().Be("gear-code");
         }
 
         [Fact]
@@ -32,12 +32,12 @@ namespace ControlledVocabularies.Utils.Tests
             var iso = new ISO3166CountryCodeVocabulary();
             iso.Load().Should().BeTrue();
 
-            iso.FieldNames.Should().Contain("alpha 3"); // schema key form
+            iso.FieldNames.Should().Contain("alpha-3"); // schema key form
 
-            // emulate authored FK with "alpha-3"
-            var authored = "alpha-3";
+            // emulate authored FK with "ALPHA_3"
+            var authored = "ALPHA 3";
             var tf = FieldPolicy.ForSchema(authored);
-            tf.Should().Be("alpha 3");
+            tf.Should().Be("alpha-3");
             var any = iso.Records.First();
             any.GetField(tf).Should().NotBeNull();
         }

@@ -165,7 +165,7 @@ namespace ControlledVocabularies.Vocabularies
                             // log and skip
                             continue;
                         }
-                        m_data[id] = MultiLevelKey.FromDataRow(drow, Domain, regTemp);
+                        m_data[id] = MultiLevelKey.FromDataRow(drow, Domain, regTemp, true);
                     }
                 }
                 return m_data.Values; 
