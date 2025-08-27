@@ -1,186 +1,134 @@
-﻿using System.Globalization;
-using ControlledVocabularies.Core;
+﻿using ControlledVocabularies.Core;
+using ControlledVocabularies.Registries;
+using ControlledVocabularies.Analysis;
+using ControlledVocabularies.Analysis.Strategies;
+using ControlledVocabularies.Utils;
 
 namespace ControlledVocabularies.Descriptors
 {
-    /// <todo>Expose options (SparseCutoff, CodeLenMax, etc.) via IOptions<KeyFieldIndexerOptions> for tuning.</todo>
-    /// <todo>Emit lightweight telemetry (counts/kinds) in DEBUG for test diagnostics.</todo>
-    /// <todo>Add property-based tests for kind inference & strategy selection across randomized inputs.</todo>
-    internal sealed class KeyFieldIndexer : IKeyFieldIndexer
+    /// <summary>
+    /// Strategy-based field indexer with pluggable analysis strategies
+    /// </summary>
+    /// <todo>Add configuration for strategy enablement/priority</todo>
+    /// <todo>Add async strategy execution for heavy analysis</todo>
+    /// <todo>Add strategy result caching for performance</todo>
+    public class KeyFieldIndexer : IKeyFieldIndexer
     {
-        /// <summary>
-        /// Cut-off below which no strategy will be assigned
-        /// </summary>
-        private const double SparseCutoff = 0.10;
-        /// <summary>
-        /// fraction of distinct/nonzero for code-ish
-        /// </summary>
-        private const double CodeUniqMin = 0.70;
-        /// <summary>
-        /// fraction of “upperish” values for code-ish
-        /// </summary>
-        private const double UpperMin = 0.90; 
-        /// <summary>
-        /// Max lengths for code fields
-        /// </summary>
-        private const int CodeLenMax = 6;
+        private readonly FieldAnalysisOrchestrator _orchestrator;
+        private readonly IVocabularyRegistry? _registry;
 
-        /// <summary>
-        /// Index a field from a collection of <see cref="MultiLevelKey">keys</see> into a 
-        /// provided descriptor.
-        /// </summary>
-        /// <param name="fieldName"></param>
-        /// <param name="records"></param>
-        /// <param name="descriptor"></param>
-        /// <returns></returns>
+        public KeyFieldIndexer(IVocabularyRegistry? registry = null)
+        {
+            _registry = registry;
+            _orchestrator = new FieldAnalysisOrchestrator();
+            RegisterDefaultStrategies();
+        }
+
+        private void RegisterDefaultStrategies()
+        {
+            // Register strategies in priority order - high priority = more reliable
+            _orchestrator.RegisterStrategy(new CodeNamePairStrategy());
+            _orchestrator.RegisterStrategy(new HierarchicalStructureStrategy());
+            _orchestrator.RegisterStrategy(new RepetitiveMeaningfulStrategy());
+            _orchestrator.RegisterStrategy(new DomainSpecificTermStrategy(_registry));
+            _orchestrator.RegisterStrategy(new BasicStatisticsStrategy()); // Always run as fallback
+        }
+
         public bool BuildIndex(string fieldName, IEnumerable<MultiLevelKey> records, KeyFieldDescriptor descriptor)
         {
-            var values = new List<string>();
-            int total = 0;
-            foreach (var r in records)
+            fieldName = FieldPolicy.ForSchema(fieldName); // Ensure normalization
+
+            var allRecords = records.ToList();
+            if (!allRecords.Any()) return false;
+
+            // Extract sample values
+            var sampleValues = ExtractFieldValues(allRecords, fieldName);
+            if (!sampleValues.Any()) return false;
+
+            // Build analysis context
+            var context = new AnalysisContext
             {
-                total++;
-                var s = r.GetField(fieldName)?.Value?.Trim();
-                if (!string.IsNullOrWhiteSpace(s)) values.Add(s!);
-            }
+                VocabularyDomain = KeyDomain.NotSet, // Will be inferred
+                VocabularyPurpose = KeyPurpose.NotSet, // Will be inferred
+                Registry = _registry,
+                ExistingDescriptor = descriptor
+            };
 
-            int nonZero = values.Count;
-            int distinct = values.Distinct(StringComparer.Ordinal).Count();
-            double nonZeroRatio = total > 0 ? (double)nonZero / total : 0.0;
-            double uniquenessRatio = nonZero > 0 ? (double)distinct / nonZero : 0.0;
-            int avgLen = nonZero > 0 ? (int)values.Average(v => v.Length) : 0;
+            // Run strategy-based analysis
+            var analysisResult = _orchestrator.AnalyzeField(fieldName, sampleValues, allRecords, context);
 
-            double upperRatio = UppercaseRatio(values);
-            double avgWordCount = AverageWordCount(values);
-            bool anyUri = values.Any(LooksLikeUriOrDoi);
-            bool allNumeric = values.Count > 0 && values.All(IsNumeric);
+            // Apply recommendations to descriptor
+            ApplyAnalysisToDescriptor(analysisResult, descriptor);
 
-            // publish stats
-            descriptor.AvgLength = avgLen;
-            descriptor.DistinctValueCount = distinct;
-            descriptor.NonZeroRatio = nonZeroRatio;
-            descriptor.UniquenessRatio = uniquenessRatio;
-
-            // infer kind (only if unknown)
-            if (descriptor.Kind == FieldKind.Unknown)
-                descriptor.Kind = InferKind(avgLen, uniquenessRatio, upperRatio, anyUri, allNumeric);
-
-            // infer strategy (only if none set)
-            if (descriptor.Strategy == MatchStrategy.None)
-                descriptor.Strategy = InferStrategies(descriptor.Kind, avgLen, distinct, nonZeroRatio, uniquenessRatio);
-
-            // auto-weight
-            if (descriptor.UseAutoWeight)
-            {
-                var baseW = BaseWeightFor(descriptor.Strategy); // 1..10
-                var sal = ComputeSalience(avgLen, uniquenessRatio, nonZeroRatio);
-                descriptor.AutoWeight = Math.Clamp((int)Math.Round(baseW * sal), 1, 10);
-            }
+            // Populate basic statistics for compatibility
+            PopulateBasicStatistics(sampleValues, allRecords, descriptor);
 
             return true;
         }
 
-        // --- inference helpers ---
-
-        private static FieldKind InferKind(int avgLen, double uniq, double upper, bool anyUri, bool allNumeric)
+        /// <summary>
+        /// Extract field values with consistent normalization
+        /// </summary>
+        private List<string> ExtractFieldValues(List<MultiLevelKey> records, string fieldName, int maxSamples = 200)
         {
-            if (anyUri) return FieldKind.Uri;
-            if (allNumeric) return FieldKind.Numeric;
-            bool codeish = avgLen <= CodeLenMax && upper >= UpperMin && uniq >= CodeUniqMin;
-            return codeish ? FieldKind.Code : FieldKind.Label;
-        }
+            var values = new List<string>();
+            var seen = new HashSet<string>();
 
-        private static MatchStrategy InferStrategies(FieldKind kind, int avgLen, int distinct, double nonZeroRatio, double uniq)
-        {
-            if (nonZeroRatio < SparseCutoff || kind == FieldKind.Uri)
-                return MatchStrategy.None;
-
-            MatchStrategy s = MatchStrategy.None;
-
-            if (kind == FieldKind.Code && avgLen <= CodeLenMax && uniq >= CodeUniqMin)
-                s |= MatchStrategy.Exact;
-
-            if (avgLen > 5 && avgLen <= 25)
+            foreach (var record in records.Take(maxSamples * 2)) // Sample more for diversity
             {
-                s |= MatchStrategy.Exact;
-                if (kind != FieldKind.Numeric) s |= MatchStrategy.Fuzzy;
+                var field = record.GetField(fieldName);
+                var value = field?.Value?.Trim();
+
+                if (!string.IsNullOrWhiteSpace(value) && seen.Add(value))
+                {
+                    values.Add(value);
+                    if (values.Count >= maxSamples) break;
+                }
             }
 
-            if (avgLen > 25 && distinct > 100)
-                s |= MatchStrategy.Keyword | MatchStrategy.TokenOverlap;
-
-            if (kind == FieldKind.Numeric)
-                s |= MatchStrategy.NumericRange;
-
-            if (s == MatchStrategy.None && avgLen > 0 && avgLen <= 25)
-                s |= MatchStrategy.Exact;
-
-            return s;
+            return values;
         }
 
-        // --- scoring helpers (kept private here) ---
-
-        private static int BaseWeightFor(MatchStrategy strategy)
+        /// <summary>
+        /// Apply strategy analysis results to field descriptor
+        /// </summary>
+        private void ApplyAnalysisToDescriptor(CompositeAnalysisResult analysisResult, KeyFieldDescriptor descriptor)
         {
-            if (strategy.HasFlag(MatchStrategy.Exact)) return 10;
-            if (strategy.HasFlag(MatchStrategy.Synonym)) return 9;
-            if (strategy.HasFlag(MatchStrategy.Fuzzy)) return 7;
-            if (strategy.HasFlag(MatchStrategy.TokenOverlap)) return 5;
-            if (strategy.HasFlag(MatchStrategy.Keyword)) return 4;
-            if (strategy.HasFlag(MatchStrategy.NumericRange)) return 6;
-            return 3;
-        }
-
-        private static double ComputeSalience(int avgLen, double uniqueness, double coverage)
-        {
-            double lengthFactor = 12.0 / Math.Max(12.0, avgLen <= 0 ? 12.0 : avgLen);
-            const double wLen = 0.6, wUniq = 0.3, wCov = 0.1;
-            double raw = (wLen * lengthFactor) + (wUniq * uniqueness) + (wCov * coverage);
-            return Math.Clamp(raw, 0.15, 1.0);
-        }
-
-        // --- low-level utilities (unchanged behavior) ---
-
-        private static double UppercaseRatio(List<string> values)
-        {
-            if (values.Count == 0) return 0.0;
-            int upperish = 0;
-            foreach (var v in values)
+            // Apply kind recommendation
+            if (analysisResult.RecommendedKind != FieldKind.Unknown)
             {
-                bool ok = v.All(ch => char.IsUpper(ch) || char.IsDigit(ch) || ch is '_' or '-');
-                if (ok) upperish++;
+                descriptor.Kind = analysisResult.RecommendedKind;
             }
-            return (double)upperish / values.Count;
-        }
 
-        private static double AverageWordCount(List<string> values)
-        {
-            if (values.Count == 0) return 0.0;
-            double sum = 0;
-            foreach (var v in values)
+            // Apply strategy recommendation
+            if (analysisResult.RecommendedStrategy != MatchStrategy.None)
             {
-                var wc = string.IsNullOrWhiteSpace(v) ? 0
-                    : v.Split((char[])null, StringSplitOptions.RemoveEmptyEntries).Length;
-                sum += wc;
+                descriptor.Strategy = analysisResult.RecommendedStrategy;
             }
-            return sum / values.Count;
+
+            // Apply weight recommendation
+            if (descriptor.UseAutoWeight && analysisResult.RecommendedWeight > 0)
+            {
+                descriptor.AutoWeight = Math.Clamp(analysisResult.RecommendedWeight, 1, 10);
+            }
+
+            // Store analysis metadata for debugging
+            /// <todo>Add analysis metadata storage for debugging/diagnostics</todo>
         }
 
-        private static bool LooksLikeUriOrDoi(string s)
+        /// <summary>
+        /// Populate basic statistics for backward compatibility
+        /// </summary>
+        private void PopulateBasicStatistics(List<string> values, List<MultiLevelKey> records, KeyFieldDescriptor descriptor)
         {
-            if (string.IsNullOrWhiteSpace(s)) return false;
-            s = s.Trim();
-            return s.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
-                || s.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
-                || s.StartsWith("doi:", StringComparison.OrdinalIgnoreCase)
-                || s.Contains("//");
-        }
+            var totalRecords = records.Count;
+            var nonZeroCount = values.Count;
+            var distinctCount = values.Distinct().Count();
 
-        private static bool IsNumeric(string s)
-        {
-            if (string.IsNullOrWhiteSpace(s)) return false;
-            var t = s.Trim().Replace(',', '.');
-            return double.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out _);
+            descriptor.AvgLength = nonZeroCount > 0 ? (int)values.Average(v => v.Length) : 0;
+            descriptor.DistinctValueCount = distinctCount;
+            descriptor.NonZeroRatio = totalRecords > 0 ? (double)nonZeroCount / totalRecords : 0.0;
+            descriptor.UniquenessRatio = nonZeroCount > 0 ? (double)distinctCount / nonZeroCount : 0.0;
         }
     }
 }

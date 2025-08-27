@@ -79,6 +79,9 @@
 	  <None Update="Includes\NercS11_lifestages.jsonld">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <None Update="Includes\speciesoccursum_ver0816c.csv">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	  <None Update="Includes\System.Drawing.Common.dll">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>

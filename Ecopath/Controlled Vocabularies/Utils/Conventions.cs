@@ -70,10 +70,11 @@
     public enum FieldKind
     {
         Unknown = 0,
-        Code,      // short, opaque identifiers (ESP, DL, 09.32)
-        Label,     // human-readable strings (Drifting longlines)
-        Uri,       // URLs/DOIs
-        Numeric    // numeric (int/float) treated specially if you add range logic later
+        Code,       // short, opaque identifiers (ESP, DL, 09.32)
+        Label,      // human-readable strings (Drifting longlines)
+        Uri,        // URLs/DOIs
+        Numeric,    // numeric (int/float) treated specially for range logic
+        DateTime    // dates, timestamps, years - important for versioning & temporal context
     }
 
     /// <summary>
