@@ -1,241 +1,589 @@
 ﻿using ControlledVocabularies.Core;
 using ControlledVocabularies.Descriptors;
+using ControlledVocabularies.Match;
 using ControlledVocabularies.Registries;
+using ControlledVocabularies.Utils;
 using ControlledVocabularies.Vocabularies;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ControlledVocabularies.Inference
 {
     /// <summary>
-    /// Infers semantic metadata for blank vocabularies by analyzing content patterns
-    /// and testing foreign key relationships against known vocabularies.
+    /// Enhanced vocabulary semantic inferrer with field importance weighting and hierarchical analysis
     /// </summary>
+    /// <todo>Cache unresolved FK candidates for future vocabulary arrivals</todo>
+    /// <todo>Re-evaluate pending fields when new vocabularies registered</todo>
+    /// <todo>Add spatial/temporal context field detection</todo>
+    /// <todo>Implement brute-force FK discovery across all vocabularies</todo>
     public class VocabularySemanticInferrer
     {
-        private readonly IVocabularyRegistry _registry;
+        private readonly IVocabularyRegistry? _registry;
         private readonly KeyFieldIndexer _fieldIndexer;
 
-        public VocabularySemanticInferrer(IVocabularyRegistry registry)
+        public VocabularySemanticInferrer(IVocabularyRegistry? registry = null)
         {
             _registry = registry;
             _fieldIndexer = new KeyFieldIndexer();
         }
 
-        public SemanticInferenceResult AnalyzeVocabulary(IControlledVocabulary blankVocab)
+        public SemanticInferenceResult AnalyzeVocabulary(IControlledVocabulary vocabulary)
         {
-            var result = new SemanticInferenceResult(blankVocab.VocabularyName);
+            var result = new SemanticInferenceResult(vocabulary.VocabularyName);
 
             // 1. Analyze vocabulary name for domain hints
-            InferVocabularyDomainFromName(blankVocab.VocabularyName, result);
+            InferVocabularyDomainFromName(vocabulary.VocabularyName, result);
 
-            // 2. Analyze each field for semantic clues
-            foreach (var fieldName in blankVocab.FieldNames)
+            // 2. Enhanced field analysis with importance weighting and descriptor integration
+            foreach (var fieldName in vocabulary.FieldNames)
             {
-                AnalyzeField(blankVocab, fieldName, result);
+                var fieldInfo = AnalyzeFieldEnhanced(vocabulary, fieldName);
+                result.AddFieldInference(fieldInfo);
             }
 
-            // 3. Infer primary domain/purpose from field analysis
+            // 3. Infer primary domain/purpose from weighted field analysis
             InferPrimarySemantics(result);
 
             // 4. Test foreign key hypotheses against known vocabularies
-            TestForeignKeyHypotheses(blankVocab, result);
+            if (_registry != null)
+            {
+                TestForeignKeyHypotheses(vocabulary, result);
+            }
+            else
+            {
+                /// <todo>Store unresolved FK candidates for when registry becomes available</todo>
+                result.AddDiagnostic("Registry unavailable - FK discovery deferred");
+            }
 
             return result;
         }
 
-        private void InferVocabularyDomainFromName(string vocabName, SemanticInferenceResult result)
-        {
-            var name = vocabName.ToLowerInvariant();
-
-            if (name.Contains("species") || name.Contains("fish") || name.Contains("marine"))
-                result.AddDomainHint(KeyDomain.Species, 0.7, "Vocabulary name suggests species");
-
-            if (name.Contains("gear") || name.Contains("fishing") || name.Contains("fleet"))
-                result.AddDomainHint(KeyDomain.FleetSegment, 0.8, "Vocabulary name suggests fishing");
-
-            if (name.Contains("country") || name.Contains("nation") || name.Contains("iso"))
-                result.AddDomainHint(KeyDomain.Country, 0.9, "Vocabulary name suggests geography");
-        }
-
-        private void AnalyzeField(IControlledVocabulary vocab, string fieldName, SemanticInferenceResult result)
+        /// <summary>
+        /// Enhanced field analysis with importance weighting, descriptor integration, and hierarchical detection
+        /// </summary>
+        private FieldInferenceInfo AnalyzeFieldEnhanced(IControlledVocabulary vocab, string fieldName)
         {
             var fieldInfo = new FieldInferenceInfo(fieldName);
 
-            // Get sample values for pattern analysis
-            var sampleValues = vocab.Records.Take(100)
-                .Select(r => r.GetField(fieldName)?.Value)
-                .Where(v => !string.IsNullOrWhiteSpace(v))
-                .Take(20)
-                .ToList();
-
-            if (!sampleValues.Any()) return;
-
-            // Create temporary descriptor for field indexing
-            var tempDescriptor = new KeyFieldDescriptor(fieldName, KeyDomain.NotSet, KeyPurpose.NotSet);
-            _fieldIndexer.BuildIndex(fieldName, vocab.Records, tempDescriptor);
-
-            // Analyze field name patterns
-            InferFromFieldName(fieldName, fieldInfo);
-
-            // Analyze content patterns  
-            InferFromContent(sampleValues, tempDescriptor, fieldInfo);
-
-            result.AddFieldInference(fieldInfo);
-        }
-
-        private void InferFromFieldName(string fieldName, FieldInferenceInfo fieldInfo)
-        {
-            var name = fieldName.ToLowerInvariant();
-
-            // Species-related patterns
-            if (name.Contains("species") || name.Contains("scientific") || name.Contains("binomial"))
+            // Get sample values for analysis
+            var sampleValues = GetSampleValues(vocab, fieldName, maxSamples: 100);
+            if (!sampleValues.Any())
             {
-                fieldInfo.AddSemanticHint(KeyDomain.Species, KeyPurpose.Species, 0.9, "Field name suggests species");
-            }
-            else if (name.Contains("common") && name.Contains("name"))
-            {
-                fieldInfo.AddSemanticHint(KeyDomain.Species, KeyPurpose.Species, 0.7, "Common name field");
-            }
-            else if (name.Contains("stage") || name.Contains("life"))
-            {
-                fieldInfo.AddSemanticHint(KeyDomain.Species, KeyPurpose.Lifestage, 0.8, "Life stage field");
+                fieldInfo.AddDiagnostic($"No sample values found for field '{fieldName}'");
+                return fieldInfo;
             }
 
-            // Fishing-related patterns
-            else if (name.Contains("gear"))
-            {
-                fieldInfo.AddSemanticHint(KeyDomain.FleetSegment, KeyPurpose.Gear, 0.9, "Gear field");
-            }
-            else if (name.Contains("fleet") || name.Contains("vessel"))
-            {
-                fieldInfo.AddSemanticHint(KeyDomain.FleetSegment, KeyPurpose.Fleet, 0.8, "Fleet field");
-            }
+            // Get or create field descriptor for enhanced analysis
+            var descriptor = GetOrCreateFieldDescriptor(vocab, fieldName, sampleValues);
+            fieldInfo.SetDescriptor(descriptor);
 
-            // Geographic patterns
-            else if (name.Contains("country") || name.Contains("flag") || name.Contains("nation"))
-            {
-                fieldInfo.AddSemanticHint(KeyDomain.Country, KeyPurpose.Country, 0.9, "Country field");
-            }
+            // Phase 1: Importance weighting analysis
+            AnalyzeFieldImportance(fieldName, sampleValues, descriptor, fieldInfo);
 
-            // Code patterns (potential FKs)
-            if (name.Contains("code") || name.Contains("id") || name == "fao" || name == "asfis")
-            {
-                fieldInfo.IsPotentialForeignKey = true;
-                fieldInfo.ForeignKeyConfidence = name.Length <= 10 ? 0.8 : 0.5; // Shorter = more likely FK
-            }
-        }
+            // Phase 2: Integrate KeyFieldDescriptor insights
+            IntegrateDescriptorInsights(descriptor, fieldInfo);
 
-        private void InferFromContent(List<string> samples, KeyFieldDescriptor descriptor, FieldInferenceInfo fieldInfo)
-        {
-            // Use existing field indexer insights
+            // Hierarchical nesting analysis for code fields
             if (descriptor.Kind == FieldKind.Code)
             {
-                fieldInfo.IsPotentialForeignKey = true;
-                fieldInfo.ForeignKeyConfidence = Math.Max(fieldInfo.ForeignKeyConfidence, 0.6);
+                AnalyzeHierarchicalNesting(sampleValues, fieldInfo);
             }
 
-            // Analyze content patterns for semantic clues
-            var avgLength = samples.Average(s => s.Length);
-            var hasBinomials = samples.Any(s => s.Contains(' ') && s.Split(' ').Length == 2 && char.IsLower(s.Split(' ')[1][0]));
-            var hasNumbers = samples.Any(s => s.Any(char.IsDigit));
+            // Semantic inference from field patterns using registry
+            InferFieldSemantics(vocab, fieldName, sampleValues, descriptor, fieldInfo);
 
-            if (hasBinomials)
+            return fieldInfo;
+        }
+
+        /// <summary>
+        /// Phase 1: Analyze field importance with weighting hierarchy
+        /// </summary>
+        private void AnalyzeFieldImportance(string fieldName, List<string> sampleValues, KeyFieldDescriptor descriptor, FieldInferenceInfo fieldInfo)
+        {
+            var fieldNameLower = fieldName.ToLowerInvariant();
+
+            // Name fields (highest importance) - the semantic goldmine!
+            if (IsNameField(fieldNameLower))
             {
-                fieldInfo.AddSemanticHint(KeyDomain.Species, KeyPurpose.Species, 0.95, "Contains binomial patterns");
+                fieldInfo.ImportanceWeight = FieldImportanceWeight.Name;
+                fieldInfo.AddReason($"Name field detected - highest semantic importance");
+
+                // Name fields are excellent domain/purpose indicators
+                if (fieldNameLower.Contains("scientific") || fieldNameLower.Contains("binomial"))
+                {
+                    fieldInfo.AddSemanticHint(KeyDomain.Species, KeyPurpose.Species, 0.95, "Scientific name indicates species domain");
+                }
+                else if (fieldNameLower.Contains("common") || fieldNameLower.Contains("vernacular"))
+                {
+                    fieldInfo.AddSemanticHint(KeyDomain.Species, KeyPurpose.Species, 0.85, "Common name indicates species domain");
+                }
+                else if (fieldNameLower.Contains("gear") && fieldNameLower.Contains("name"))
+                {
+                    fieldInfo.AddSemanticHint(KeyDomain.FleetSegment, KeyPurpose.Gear, 0.9, "Gear name indicates fleet domain");
+                }
             }
 
-            if (avgLength <= 5 && hasNumbers && descriptor.UniquenessRatio > 0.8)
+            // Code fields (medium importance) - identifiers and potential FKs
+            else if (IsCodeField(fieldNameLower) || descriptor.Kind == FieldKind.Code)
             {
+                fieldInfo.ImportanceWeight = FieldImportanceWeight.Code;
                 fieldInfo.IsPotentialForeignKey = true;
-                fieldInfo.ForeignKeyConfidence = 0.9;
-                fieldInfo.AddReason("Short, unique, alphanumeric codes suggest FK");
+                fieldInfo.ForeignKeyConfidence = CalculateCodeFieldFKConfidence(sampleValues, descriptor);
+                fieldInfo.AddReason($"Code field detected - potential foreign key (confidence: {fieldInfo.ForeignKeyConfidence:F2})");
+            }
+
+            // Description fields (lower importance) - additional context
+            else if (IsDescriptionField(fieldNameLower))
+            {
+                fieldInfo.ImportanceWeight = FieldImportanceWeight.Description;
+                fieldInfo.AddReason("Description field - provides context but less semantic weight");
+            }
+
+            // Context fields (medium importance) - spatial/temporal/metadata
+            else if (IsContextField(fieldNameLower))
+            {
+                fieldInfo.ImportanceWeight = FieldImportanceWeight.Context;
+                AnalyzeContextField(fieldNameLower, sampleValues, fieldInfo);
+            }
+
+            // Unknown fields (lowest importance)
+            else
+            {
+                fieldInfo.ImportanceWeight = FieldImportanceWeight.Unknown;
+                fieldInfo.AddReason("Field purpose unclear - requires content analysis");
             }
         }
 
+        /// <summary>
+        /// Phase 2: Integrate insights from KeyFieldDescriptor
+        /// </summary>
+        private void IntegrateDescriptorInsights(KeyFieldDescriptor descriptor, FieldInferenceInfo fieldInfo)
+        {
+            // Use descriptor statistics for semantic clues
+            if (descriptor.UniquenessRatio > 0.95)
+            {
+                fieldInfo.AddSemanticHint(KeyDomain.NotSet, KeyPurpose.NotSet, 0.8,
+                    $"Highly unique field (ratio: {descriptor.UniquenessRatio:F2}) - likely identifier");
+                fieldInfo.IsPotentialForeignKey = true;
+            }
+
+            if (descriptor.NonZeroRatio < 0.5)
+            {
+                fieldInfo.AddDiagnostic($"Sparse field (coverage: {descriptor.NonZeroRatio:F2}) - may be optional metadata");
+                fieldInfo.ImportanceWeight = fieldInfo.ImportanceWeight.LowerBySparsity();
+            }
+
+            // Strategy patterns reveal semantic intent
+            if (descriptor.Strategy.HasFlag(MatchStrategy.Exact) && descriptor.Strategy.HasFlag(MatchStrategy.Fuzzy))
+            {
+                fieldInfo.AddReason("Exact+Fuzzy strategy suggests name field for matching");
+            }
+            else if (descriptor.Strategy == MatchStrategy.Exact && descriptor.Kind == FieldKind.Code)
+            {
+                fieldInfo.AddReason("Exact-only code field suggests foreign key or identifier");
+                fieldInfo.ForeignKeyConfidence = Math.Max(fieldInfo.ForeignKeyConfidence, 0.7);
+            }
+        }
+
+        /// <summary>
+        /// Analyze hierarchical nesting in code field values
+        /// </summary>
+        private void AnalyzeHierarchicalNesting(List<string> sampleValues, FieldInferenceInfo fieldInfo)
+        {
+            var nestingAnalysis = CalculateHierarchicalNesting(sampleValues);
+            fieldInfo.SetHierarchicalNesting(nestingAnalysis);
+
+            if (nestingAnalysis.IsHierarchical)
+            {
+                fieldInfo.AddReason($"Hierarchical structure detected - depth: {nestingAnalysis.MaxDepth}, " +
+                                  $"separators: [{string.Join(", ", nestingAnalysis.Separators)}]");
+
+                // Hierarchical fields are usually NOT primary keys
+                if (nestingAnalysis.MaxDepth > 2)
+                {
+                    fieldInfo.AddDiagnostic("Deep hierarchy suggests composite/derived key rather than primary key");
+                }
+
+                // But they're excellent for taxonomic/geographic context
+                if (nestingAnalysis.Separators.Contains('.'))
+                {
+                    fieldInfo.AddSemanticHint(KeyDomain.Species, KeyPurpose.Species, 0.6,
+                        "Dot-separated hierarchy suggests taxonomic classification");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Enhanced vocabulary domain inference from name patterns using registry
+        /// </summary>
+        private void InferVocabularyDomainFromName(string vocabName, SemanticInferenceResult result)
+        {
+            var normalizedName = FieldPolicy.ForSchema(vocabName);
+
+            // Dynamic vocabulary detection using registry
+            if (_registry != null)
+            {
+                foreach (var existingVocab in _registry.GetAll())
+                {
+                    var normalizedExistingName = FieldPolicy.ForSchema(existingVocab.VocabularyName);
+
+                    if (normalizedName.Contains(normalizedExistingName) || normalizedExistingName.Contains(normalizedName))
+                    {
+                        result.AddDomainHint(existingVocab.Domain, 0.8,
+                            $"Vocabulary name similar to existing '{existingVocab.VocabularyName}' vocabulary");
+                        result.AddPurposeHint(existingVocab.Purpose, 0.8,
+                            $"Purpose inferred from similar vocabulary '{existingVocab.VocabularyName}'");
+                    }
+                }
+            }
+
+            // Fallback patterns for common domain indicators
+            var name = normalizedName;
+
+            // Species domain patterns
+            if (name.Contains("species") || name.Contains("fish") || name.Contains("marine") ||
+                name.Contains("taxon") || name.Contains("biological"))
+            {
+                result.AddDomainHint(KeyDomain.Species, 0.7, "Vocabulary name suggests species domain");
+            }
+
+            // Fleet/fishing domain patterns  
+            if (name.Contains("gear") || name.Contains("fishing") || name.Contains("fleet") ||
+                name.Contains("vessel"))
+            {
+                result.AddDomainHint(KeyDomain.FleetSegment, 0.8, "Vocabulary name suggests fishing domain");
+            }
+
+            // Geographic domain patterns
+            if (name.Contains("country") || name.Contains("nation") || name.Contains("region") ||
+                name.Contains("geographic") || name.Contains("spatial"))
+            {
+                result.AddDomainHint(KeyDomain.Country, 0.8, "Vocabulary name suggests geographic domain");
+            }
+
+            // Life stage domain patterns
+            if (name.Contains("lifestage") || name.Contains("stage") || name.Contains("life"))
+            {
+                result.AddDomainHint(KeyDomain.Species, 0.7, "Vocabulary name suggests species domain");
+                result.AddPurposeHint(KeyPurpose.Lifestage, 0.9, "Vocabulary name suggests lifestage purpose");
+            }
+
+            /// <todo>Add patterns for new context domains (Geographic, Temporal, Environmental, Metadata)</todo>
+        }
+
+        /// <summary>
+        /// Enhanced field semantic inference using registry-based pattern matching
+        /// </summary>
+        private void InferFieldSemantics(IControlledVocabulary sourceVocab, string fieldName, List<string> sampleValues,
+            KeyFieldDescriptor descriptor, FieldInferenceInfo fieldInfo)
+        {
+            if (_registry == null || !sampleValues.Any()) return;
+
+            // Test against all known purposes using existing vocabulary matching
+            var purposesToTest = new[]
+            {
+                KeyPurpose.Species, KeyPurpose.Lifestage, KeyPurpose.Gear,
+                KeyPurpose.Country, KeyPurpose.Age, KeyPurpose.Length
+                /// <todo>Add new context purposes when implemented</todo>
+            };
+
+            foreach (var purpose in purposesToTest)
+            {
+                if (IsSemanticPattern(sourceVocab, fieldName, sampleValues, purpose))
+                {
+                    var confidence = CalculateSemanticConfidence(fieldName, sampleValues, purpose);
+                    var domain = InferDomainFromPurpose(purpose);
+
+                    fieldInfo.AddSemanticHint(domain, purpose, confidence,
+                        $"Field content matches existing {purpose} vocabulary patterns");
+                }
+            }
+
+            // Additional field name-based hints
+            InferFromFieldName(fieldName, fieldInfo);
+        }
+
+        /// <summary>
+        /// Test if field content matches existing vocabularies with specific purpose
+        /// </summary>
+        private bool IsSemanticPattern(IControlledVocabulary sourceVocab, string fieldName, List<string> sampleValues,
+            KeyPurpose targetPurpose, int? minScore = null)
+        {
+            var threshold = minScore ?? LocalSettings.DefaultMinScore;
+            var targetVocabs = _registry!.GetByPurpose(targetPurpose);
+            var matcher = new GenericVocabularyMatcher(_registry);
+
+            foreach (var targetVocab in targetVocabs)
+            {
+                // Test with first few sample values
+                foreach (var sampleValue in sampleValues.Take(3))
+                {
+                    var testKey = MultiLevelKey.FromPairs([(fieldName, sampleValue)], targetVocab.Domain);
+                    var result = matcher.Match(testKey, sourceVocab, targetVocab);
+
+                    if (result.Score >= threshold)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Calculate semantic confidence based on field name and content patterns
+        /// </summary>
+        private double CalculateSemanticConfidence(string fieldName, List<string> sampleValues, KeyPurpose purpose)
+        {
+            double confidence = 0.6; // Base confidence for matching content
+
+            // Boost confidence if field name also suggests the purpose
+            var fieldNameLower = fieldName.ToLowerInvariant();
+            if (purpose == KeyPurpose.Species && (fieldNameLower.Contains("species") || fieldNameLower.Contains("scientific")))
+                confidence += 0.2;
+            else if (purpose == KeyPurpose.Lifestage && fieldNameLower.Contains("stage"))
+                confidence += 0.3;
+            else if (purpose == KeyPurpose.Gear && fieldNameLower.Contains("gear"))
+                confidence += 0.3;
+            else if (purpose == KeyPurpose.Country && (fieldNameLower.Contains("country") || fieldNameLower.Contains("flag")))
+                confidence += 0.3;
+
+            return Math.Min(1.0, confidence);
+        }
+
+        /// <summary>
+        /// Infer likely domain from purpose
+        /// </summary>
+        private KeyDomain InferDomainFromPurpose(KeyPurpose purpose)
+        {
+            return purpose switch
+            {
+                KeyPurpose.Species or KeyPurpose.Lifestage or KeyPurpose.Age or KeyPurpose.Length => KeyDomain.Species,
+                KeyPurpose.Gear or KeyPurpose.Fleet => KeyDomain.FleetSegment,
+                KeyPurpose.Country => KeyDomain.Country,
+                KeyPurpose.Market => KeyDomain.Market,
+                /// <todo>Add mappings for new context purposes</todo>
+                _ => KeyDomain.NotSet
+            };
+        }
+
+        /// <summary>
+        /// Enhanced primary semantics inference using weighted field analysis
+        /// </summary>
         private void InferPrimarySemantics(SemanticInferenceResult result)
         {
-            // Find most confident domain/purpose from field analysis
             var domainVotes = new Dictionary<KeyDomain, double>();
             var purposeVotes = new Dictionary<KeyPurpose, double>();
 
             foreach (var field in result.FieldInferences)
             {
+                // Weight votes by field importance
+                var importanceMultiplier = (int)field.ImportanceWeight / 5.0;
+
                 foreach (var hint in field.SemanticHints)
                 {
-                    domainVotes[hint.Domain] = domainVotes.GetValueOrDefault(hint.Domain) + hint.Confidence;
-                    purposeVotes[hint.Purpose] = purposeVotes.GetValueOrDefault(hint.Purpose) + hint.Confidence;
+                    var weightedConfidence = hint.Confidence * importanceMultiplier;
+
+                    domainVotes[hint.Domain] = domainVotes.GetValueOrDefault(hint.Domain) + weightedConfidence;
+                    purposeVotes[hint.Purpose] = purposeVotes.GetValueOrDefault(hint.Purpose) + weightedConfidence;
                 }
             }
 
+            // Combine with vocabulary-level hints
+            foreach (var domainHint in result.DomainHints)
+            {
+                domainVotes[domainHint.Domain] = domainVotes.GetValueOrDefault(domainHint.Domain) + domainHint.Confidence;
+            }
+
+            foreach (var purposeHint in result.PurposeHints)
+            {
+                purposeVotes[purposeHint.Purpose] = purposeVotes.GetValueOrDefault(purposeHint.Purpose) + purposeHint.Confidence;
+            }
+
+            // Select primary domain
             if (domainVotes.Any())
             {
                 var topDomain = domainVotes.OrderByDescending(kv => kv.Value).First();
                 result.InferredDomain = topDomain.Key;
-                result.DomainConfidence = Math.Min(1.0, topDomain.Value / domainVotes.Count);
+                result.DomainConfidence = Math.Min(1.0, topDomain.Value / Math.Max(1.0, domainVotes.Count));
             }
 
+            // Select primary purposes (can be multiple with flags)
             if (purposeVotes.Any())
             {
-                // Combine multiple purposes with flags
-                var sortedPurposes = purposeVotes.OrderByDescending(kv => kv.Value).ToList();
                 result.InferredPurpose = KeyPurpose.NotSet;
+                var threshold = purposeVotes.Values.Max() * 0.3; // Include purposes with 30%+ of top score
 
-                foreach (var purpose in sortedPurposes.Where(kv => kv.Value > 1.0)) // Threshold for inclusion
+                foreach (var purposeVote in purposeVotes.Where(kv => kv.Value >= threshold).OrderByDescending(kv => kv.Value))
                 {
-                    result.InferredPurpose |= purpose.Key;
+                    result.InferredPurpose |= purposeVote.Key;
                 }
 
-                if (result.InferredPurpose == KeyPurpose.NotSet && sortedPurposes.Any())
-                    result.InferredPurpose = sortedPurposes.First().Key;
+                if (result.InferredPurpose == KeyPurpose.NotSet && purposeVotes.Any())
+                {
+                    result.InferredPurpose = purposeVotes.OrderByDescending(kv => kv.Value).First().Key;
+                }
             }
         }
 
-        private void TestForeignKeyHypotheses(IControlledVocabulary blankVocab, SemanticInferenceResult result)
+        /// <summary>
+        /// Enhanced foreign key hypothesis testing with registry integration
+        /// </summary>
+        private void TestForeignKeyHypotheses(IControlledVocabulary sourceVocab, SemanticInferenceResult result)
         {
-            var potentialFKFields = result.FieldInferences.Where(f => f.IsPotentialForeignKey).ToList();
+            var potentialFKFields = result.FieldInferences
+                .Where(f => f.IsPotentialForeignKey && f.ForeignKeyConfidence > 0.3)
+                .OrderByDescending(f => f.ForeignKeyConfidence)
+                .ToList();
 
             foreach (var fkField in potentialFKFields)
             {
-                TestFieldAsForeignKey(blankVocab, fkField, result);
+                // Test against compatible vocabularies first (smarter targeting)
+                var compatibleVocabs = _registry!.GetByDomain(result.InferredDomain).ToList();
+                if (!compatibleVocabs.Any())
+                {
+                    // Fallback to all vocabularies if no domain-compatible ones found
+                    /// <todo>Implement brute-force FK discovery across all vocabularies when needed</todo>
+                    compatibleVocabs = _registry.GetAll().ToList();
+                }
+
+                TestFieldAsForeignKey(sourceVocab, fkField, compatibleVocabs, result);
             }
         }
 
-        private void TestFieldAsForeignKey(IControlledVocabulary sourceVocab, FieldInferenceInfo fkField, SemanticInferenceResult result)
+        /// <summary>
+        /// Test a field as foreign key against target vocabularies
+        /// </summary>
+        private void TestFieldAsForeignKey(IControlledVocabulary sourceVocab, FieldInferenceInfo fkField,
+            IEnumerable<IControlledVocabulary> targetVocabs, SemanticInferenceResult result)
         {
-            // Test against all known vocabularies
-            foreach (var targetVocab in _registry.GetAll())
+            var sourceFieldName = fkField.FieldName;
+
+            foreach (var targetVocab in targetVocabs)
             {
                 if (ReferenceEquals(sourceVocab, targetVocab)) continue;
 
-                var fkTest = TestForeignKeyMatch(sourceVocab, fkField.FieldName, targetVocab);
+                var fkTest = TestForeignKeyMatch(sourceVocab, sourceFieldName, targetVocab);
                 if (fkTest.IsViable)
                 {
-                    result.AddForeignKeyCandidate(new ForeignKeyCandidate
+                    var fkResult = new ForeignKeyMatchResult
                     {
-                        SourceField = fkField.FieldName,
+                        SourceField = sourceFieldName,
+                        SourceVocabulary = sourceVocab.VocabularyName,
                         TargetVocabulary = targetVocab.VocabularyName,
                         TargetField = fkTest.BestTargetField,
+                        Score = (int)(fkTest.MatchRatio * 100), // Convert ratio to 0-100 integer
+                        StrategyUsed = MatchStrategy.Exact,
+                        Justification = GenerateFKReasoning(fkField, fkTest, targetVocab),
                         MatchCount = fkTest.MatchCount,
-                        MatchRatio = fkTest.MatchRatio,
                         Confidence = fkTest.MatchRatio * fkField.ForeignKeyConfidence
-                    });
+                    };
+
+                    result.AddForeignKeyCandidate(fkResult);
                 }
             }
         }
+        /// <summary>
+        /// Calculate hierarchical nesting metrics for code values
+        /// </summary>
+        private HierarchicalNestingAnalysis CalculateHierarchicalNesting(List<string> values)
+        {
+            var analysis = new HierarchicalNestingAnalysis();
+            var commonSeparators = new[] { '.', '-', '_', ':', '/', '\\' };
+            var separatorCounts = new Dictionary<char, int>();
+            var depthCounts = new Dictionary<int, int>();
 
+            foreach (var value in values.Take(50)) // Sample for performance
+            {
+                if (string.IsNullOrWhiteSpace(value)) continue;
+
+                foreach (var sep in commonSeparators)
+                {
+                    if (value.Contains(sep))
+                    {
+                        separatorCounts[sep] = separatorCounts.GetValueOrDefault(sep) + 1;
+                        var depth = value.Count(c => c == sep) + 1;
+                        depthCounts[depth] = depthCounts.GetValueOrDefault(depth) + 1;
+                        analysis.MaxDepth = Math.Max(analysis.MaxDepth, depth);
+                    }
+                }
+            }
+
+            // Consider hierarchical if >30% of values have consistent separator usage
+            var totalValues = values.Count;
+            var threshold = totalValues * 0.3;
+
+            analysis.Separators = separatorCounts.Where(kv => kv.Value > threshold).Select(kv => kv.Key).ToList();
+            analysis.IsHierarchical = analysis.Separators.Any() && analysis.MaxDepth > 1;
+            analysis.ConsistencyRatio = analysis.Separators.Any()
+                ? separatorCounts.Where(kv => analysis.Separators.Contains(kv.Key)).Sum(kv => kv.Value) / (double)totalValues
+                : 0.0;
+
+            return analysis;
+        }
+
+        /// <summary>
+        /// Get sample values from vocabulary field with intelligent sampling
+        /// </summary>
+        private List<string> GetSampleValues(IControlledVocabulary vocab, string fieldName, int maxSamples = 100)
+        {
+            var values = new List<string>();
+            var seen = new HashSet<string>();
+
+            foreach (var record in vocab.Records.Take(maxSamples * 2)) // Sample more to get diversity
+            {
+                var field = record.GetField(fieldName);
+                var value = field?.Value?.Trim();
+
+                if (!string.IsNullOrWhiteSpace(value) && seen.Add(value))
+                {
+                    values.Add(value);
+                    if (values.Count >= maxSamples) break;
+                }
+            }
+
+            return values;
+        }
+
+        /// <summary>
+        /// Get existing field descriptor or create one with indexing for enhanced analysis
+        /// </summary>
+        private KeyFieldDescriptor GetOrCreateFieldDescriptor(IControlledVocabulary vocab, string fieldName, List<string> sampleValues)
+        {
+            // Try to get existing descriptor first
+            var existing = vocab.GetKeyFieldDescriptor(fieldName);
+            if (existing != null) return existing;
+
+            // Create temporary descriptor and index it for statistics
+            var tempDescriptor = new KeyFieldDescriptor(fieldName, KeyDomain.NotSet, KeyPurpose.NotSet);
+
+            // Use field indexer to build statistics
+            _fieldIndexer.BuildIndex(fieldName, vocab.Records, tempDescriptor);
+
+            return tempDescriptor;
+        }
+
+        /// <summary>
+        /// Test foreign key match between source field and target vocabulary
+        /// </summary>
         private ForeignKeyTestResult TestForeignKeyMatch(IControlledVocabulary source, string sourceField, IControlledVocabulary target)
         {
             var result = new ForeignKeyTestResult();
-            var sourceValues = source.Records.Select(r => r.GetField(sourceField)?.Value)
+            var sourceValues = GetSampleValues(source, sourceField, 50)
                 .Where(v => !string.IsNullOrWhiteSpace(v))
+                .Select(v => FieldPolicy.ForValue(v, FieldKind.Code)) // Normalize for comparison
                 .ToHashSet();
 
             if (!sourceValues.Any()) return result;
 
-            // Test against each target field
-            foreach (var targetField in target.FieldNames)
+            // Test against each target field, prioritizing code fields
+            var targetFields = target.FieldNames.OrderBy(f =>
+                target.GetKeyFieldDescriptor(f)?.Kind == FieldKind.Code ? 0 : 1).ToList();
+
+            foreach (var targetField in targetFields)
             {
-                var targetValues = target.Records.Select(r => r.GetField(targetField)?.Value)
+                var targetValues = GetSampleValues(target, targetField, 100)
                     .Where(v => !string.IsNullOrWhiteSpace(v))
+                    .Select(v => FieldPolicy.ForValue(v, FieldKind.Code))
                     .ToHashSet();
 
                 if (!targetValues.Any()) continue;
@@ -253,59 +601,90 @@ namespace ControlledVocabularies.Inference
 
             return result;
         }
-    }
 
-    // Supporting classes for clean results
-    public class SemanticInferenceResult
-    {
-        public string VocabularyName { get; }
-        public KeyDomain InferredDomain { get; set; } = KeyDomain.NotSet;
-        public KeyPurpose InferredPurpose { get; set; } = KeyPurpose.NotSet;
-        public double DomainConfidence { get; set; }
-        public List<FieldInferenceInfo> FieldInferences { get; } = new();
-        public List<ForeignKeyCandidate> ForeignKeyCandidates { get; } = new();
+        // Helper methods for field classification
+        private bool IsNameField(string fieldNameLower) =>
+            fieldNameLower.Contains("name") || fieldNameLower.Contains("label") ||
+            fieldNameLower.Contains("title") || fieldNameLower.Contains("scientific") ||
+            fieldNameLower.Contains("common") || fieldNameLower.Contains("vernacular");
 
-        public SemanticInferenceResult(string vocabName) => VocabularyName = vocabName;
+        private bool IsCodeField(string fieldNameLower) =>
+            fieldNameLower.Contains("code") || fieldNameLower.Contains("id") ||
+            fieldNameLower.EndsWith("_id") || fieldNameLower == "alpha3" ||
+            fieldNameLower.Contains("identifier");
 
-        public void AddDomainHint(KeyDomain domain, double confidence, string reason) { /* implementation */ }
-        public void AddFieldInference(FieldInferenceInfo field) => FieldInferences.Add(field);
-        public void AddForeignKeyCandidate(ForeignKeyCandidate fk) => ForeignKeyCandidates.Add(fk);
-    }
+        private bool IsDescriptionField(string fieldNameLower) =>
+            fieldNameLower.Contains("description") || fieldNameLower.Contains("comment") ||
+            fieldNameLower.Contains("note") || fieldNameLower.Contains("remark") ||
+            fieldNameLower.Contains("detail");
 
-    public class FieldInferenceInfo
-    {
-        public string FieldName { get; }
-        public List<SemanticHint> SemanticHints { get; } = new();
-        public bool IsPotentialForeignKey { get; set; }
-        public double ForeignKeyConfidence { get; set; }
-        public List<string> Reasons { get; } = new();
+        private bool IsContextField(string fieldNameLower) =>
+            // Spatial context
+            fieldNameLower.Contains("region") || fieldNameLower.Contains("area") ||
+            fieldNameLower.Contains("location") || fieldNameLower.Contains("geographic") ||
+            fieldNameLower.Contains("latitude") || fieldNameLower.Contains("longitude") ||
+            // Temporal context  
+            fieldNameLower.Contains("year") || fieldNameLower.Contains("date") ||
+            fieldNameLower.Contains("time") || fieldNameLower.Contains("period") ||
+            // Metadata context
+            fieldNameLower.Contains("version") || fieldNameLower.Contains("created") ||
+            fieldNameLower.Contains("modified") || fieldNameLower.Contains("updated");
 
-        public FieldInferenceInfo(string fieldName) => FieldName = fieldName;
-
-        public void AddSemanticHint(KeyDomain domain, KeyPurpose purpose, double confidence, string reason)
+        private void InferFromFieldName(string fieldName, FieldInferenceInfo fieldInfo)
         {
-            SemanticHints.Add(new SemanticHint(domain, purpose, confidence, reason));
+            var fieldNameLower = fieldName.ToLowerInvariant();
+
+            // Additional field name-based semantic hints
+            if (fieldNameLower.Contains("taxonomy") || fieldNameLower.Contains("taxon"))
+                fieldInfo.AddSemanticHint(KeyDomain.Species, KeyPurpose.Species, 0.8, "Taxonomic field name");
+
+            if (fieldNameLower.Contains("depth") || fieldNameLower.Contains("habitat"))
+                fieldInfo.AddSemanticHint(KeyDomain.Species, KeyPurpose.Species, 0.6, "Species habitat field");
         }
 
-        public void AddReason(string reason) => Reasons.Add(reason);
-    }
+        private void AnalyzeContextField(string fieldNameLower, List<string> sampleValues, FieldInferenceInfo fieldInfo)
+        {
+            // Spatial context detection
+            if (fieldNameLower.Contains("region") || fieldNameLower.Contains("area"))
+            {
+                fieldInfo.AddSemanticHint(KeyDomain.Geographic, KeyPurpose.SpatialExtent, 0.8, "Geographic context field");
+            }
+            else if (fieldNameLower.Contains("year") || fieldNameLower.Contains("date"))
+            {
+                fieldInfo.AddSemanticHint(KeyDomain.Temporal, KeyPurpose.TimeStamp, 0.8, "Temporal context field");
+            }
+            /// <todo>Add more context field patterns as needed</todo>
+        }
 
-    public record SemanticHint(KeyDomain Domain, KeyPurpose Purpose, double Confidence, string Reason);
-    public record ForeignKeyCandidate
-    {
-        public string SourceField { get; init; } = "";
-        public string TargetVocabulary { get; init; } = "";
-        public string TargetField { get; init; } = "";
-        public int MatchCount { get; init; }
-        public double MatchRatio { get; init; }
-        public double Confidence { get; init; }
-    }
+        private double CalculateCodeFieldFKConfidence(List<string> sampleValues, KeyFieldDescriptor descriptor)
+        {
+            double confidence = 0.5; // Base confidence for code fields
 
-    public class ForeignKeyTestResult
-    {
-        public int MatchCount { get; set; }
-        public double MatchRatio { get; set; }
-        public string BestTargetField { get; set; } = "";
-        public bool IsViable => MatchRatio > 0.1; // Threshold for considering it a potential FK
+            // Short, unique codes are more likely FKs
+            if (descriptor.AvgLength <= 5 && descriptor.UniquenessRatio > 0.8)
+                confidence += 0.3;
+
+            // High distinctness suggests referential usage
+            if (descriptor.UniquenessRatio > 0.95)
+                confidence += 0.2;
+
+            return Math.Min(1.0, confidence);
+        }
+
+        private string GenerateFKReasoning(FieldInferenceInfo fkField, ForeignKeyTestResult fkTest, IControlledVocabulary targetVocab) =>
+            $"Field '{fkField.FieldName}' matches {fkTest.MatchCount} values ({fkTest.MatchRatio:P1}) " +
+            $"with '{targetVocab.VocabularyName}.{fkTest.BestTargetField}' " +
+            $"(confidence: {fkField.ForeignKeyConfidence:F2})";
+
+        /// <summary>
+        /// Helper class for FK testing results  
+        /// </summary>
+        private class ForeignKeyTestResult
+        {
+            public int MatchCount { get; set; }
+            public double MatchRatio { get; set; }
+            public string BestTargetField { get; set; } = "";
+            public bool IsViable => MatchRatio > 0.1; // 10% minimum match threshold
+        }
     }
 }
