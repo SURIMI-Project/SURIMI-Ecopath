@@ -51,12 +51,9 @@ namespace ControlledVocabularies.Inference.Tests
             var result = _inferrer.AnalyzeVocabulary(vocab);
 
             // Assert
-            result.InferredDomain.Should().Be(expectedDomain,
-                $"Should infer {expectedDomain} for {vocabType.Name}");
-            result.InferredPurpose.Should().Be(expectedPurpose,
-                $"Should infer {expectedPurpose} for {vocabType.Name}");
-            result.DomainConfidence.Should().BeGreaterThan(0.5,
-                "Should have reasonable confidence in domain inference");
+            result.InferredDomain.Should().Be(expectedDomain, $"Should infer {expectedDomain} for {vocabType.Name}");
+            result.InferredPurpose.Should().Be(expectedPurpose, $"Should infer {expectedPurpose} for {vocabType.Name}");
+            result.DomainConfidence.Should().BeGreaterThan(0.5, "Should have reasonable confidence in domain inference");
         }
 
         [Fact]
@@ -93,7 +90,7 @@ namespace ControlledVocabularies.Inference.Tests
                 fk.SourceField == "FAO_Code" && fk.TargetVocabulary.Contains("asfis"));
 
             faoCodeFK.Should().NotBeNull("Should identify FAO_Code as FK to ASFIS");
-            faoCodeFK!.MatchRatio.Should().BeGreaterThan(0.1, "Should have reasonable match ratio");
+            faoCodeFK.Score.Should().BeGreaterThan(10, "Should have reasonable match ratio");
             faoCodeFK.Confidence.Should().BeGreaterThan(0.3, "Should have decent confidence");
         }
 
@@ -131,7 +128,7 @@ namespace ControlledVocabularies.Inference.Tests
 
             // Note: This might not find exact FK matches, but should identify semantic compatibility
             // The test validates that the inferrer is looking for cross-vocabulary relationships
-            Console.WriteLine($"Found {result.ForeignKeyCandidates.Count} FK candidates");
+            Console.WriteLine($"Found {result.ForeignKeyCandidates.Count()} FK candidates");
             foreach (var candidate in result.ForeignKeyCandidates)
             {
                 Console.WriteLine($"  {candidate.SourceField} -> {candidate.TargetVocabulary}.{candidate.TargetField} (confidence: {candidate.Confidence:F2})");

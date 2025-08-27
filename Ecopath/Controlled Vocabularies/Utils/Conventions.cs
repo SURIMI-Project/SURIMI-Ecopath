@@ -6,7 +6,12 @@
         Species,
         FleetSegment,
         Market,
-        Country
+        Country,
+        // Context domains
+        Geographic,    // Spatial extents, regions
+        Temporal,      // Time periods, years  
+        Environmental, // SST, productivity contexts
+        Metadata       // Versioning, timestamps
     }
 
     [Flags]
@@ -21,7 +26,11 @@
         Fleet = 1UL << 5,
         Country = 1UL << 6,
         Market = 1UL << 7,
-        // reserve some spare bits for internal growth
+        // Context purposes
+        SpatialExtent = 1UL << 8,
+        TimeStamp = 1UL << 9,
+        Version = 1UL << 10,
+        // ... reserve more bits
     }
 
     public class SpeciesFields
@@ -65,5 +74,17 @@
         Label,     // human-readable strings (Drifting longlines)
         Uri,       // URLs/DOIs
         Numeric    // numeric (int/float) treated specially if you add range logic later
+    }
+
+    /// <summary>
+    /// Field importance weighting hierarchy
+    /// </summary>
+    public enum FieldImportanceWeight
+    {
+        Unknown = 1,      // Lowest priority
+        Description = 2,   // Context only
+        Code = 3,         // Identifiers, potential FKs
+        Context = 4,      // Spatial/temporal/metadata  
+        Name = 5          // Highest priority - semantic goldmine
     }
 }
