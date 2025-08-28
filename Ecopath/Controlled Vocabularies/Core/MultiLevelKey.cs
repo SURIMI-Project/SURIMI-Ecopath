@@ -1,27 +1,27 @@
 ﻿using ControlledVocabularies.Descriptors;
 using ControlledVocabularies.Utils;
 using Ecopath.Services;
+using System.Collections.Immutable;
 using System.Data;
+using System.Numerics;
 using System.Reflection;
 using System.Text;
 
 namespace ControlledVocabularies.Core
 {
-    /// <summary>
-    /// Represents a multi-level, self-describing key (e.g., for species or fleets)
-    /// </summary>
+    /// <inheritdoc/>
     /// <todo>Implement IFreezable (IsFrozen/Freeze) and guard all mutators (SetField/Parse/SetFieldDescriptor).</todo>
     /// <todo>Add Clone(bool frozen=false) for safe copies when mutation is needed by callers.</todo>
     /// <todo>Ensure SetField() normalizes field names with FieldPolicy.ForSchema; values via FieldPolicy.ForValue(kind).</todo>
     /// <todo>Consider exposing an IReadOnlyDictionary<string, MultiLevelKeyField> view for fields.</todo>
     /// <todo>Define value equality & stable hash if keys are used as dictionary keys (document semantics).</todo>
 
-    public class MultiLevelKey
+    public class MultiLevelKey : IMultiLevelKey
     {
         #region Private parts 
 
-        private Dictionary<string, MultiLevelKeyField> m_fields { get; set; } = new();
-        private Dictionary<string, KeyFieldDescriptor> m_descriptors { get; set; } = new();
+        private Dictionary<string, IKeyFieldDescriptor> Descriptors { get; set; } = new();
+        private Dictionary<string, IMultiLevelKeyField> Fields { get; set; } = new();
 
         private bool _strict = false;
 
@@ -111,7 +111,7 @@ namespace ControlledVocabularies.Core
         /// <param name="strict">Flag to enforce the use of registered variables only.</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public static MultiLevelKey FromPairs(IEnumerable<(string field, string? value)> pairs,  KeyDomain domainHint, IKeyFieldDescriptorRegistry? registry = null, bool strict = false)
+        public static MultiLevelKey FromPairs(IEnumerable<(string field, string? value)> pairs, KeyDomain domainHint, IKeyFieldDescriptorRegistry? registry = null, bool strict = false)
         {
             var mlk = new MultiLevelKey(domainHint) { _strict = strict };
 
@@ -152,8 +152,8 @@ namespace ControlledVocabularies.Core
                     {
                         if (prop.CanWrite && prop.PropertyType == typeof(string))
                         {
-                            MultiLevelKeyField? val = null;
-                            if (m_fields.TryGetValue(FieldPolicy.ForSchema(prop.Name), out val))
+                            IMultiLevelKeyField? val = null;
+                            if (Fields.TryGetValue(FieldPolicy.ForSchema(prop.Name), out val))
                                 prop.SetValue(obj, val.ToString(includeVocabulary));
                             else
                                 prop.SetValue(obj, string.Empty);
@@ -198,7 +198,7 @@ namespace ControlledVocabularies.Core
 
             if (string.IsNullOrWhiteSpace(value))
             {
-                this.m_fields.Remove(key);
+                this.Fields.Remove(key);
                 return;
             }
 
@@ -206,10 +206,10 @@ namespace ControlledVocabularies.Core
             string vocab = (iSep == -1 || bPurgeVocabularyName) ? string.Empty : value.Substring(0, iSep);
             value = (iSep == -1) ? value : value.Substring(iSep + 1);
 
-            this.m_fields[key] = new MultiLevelKeyField(value, vocab);
+            this.Fields[key] = new MultiLevelKeyField(value, vocab);
 
             // Try to complement a missing KeyFieldDescriptor if allowed
-            if (!this.m_descriptors.ContainsKey(key) && !_strict)
+            if (!this.Descriptors.ContainsKey(key) && !_strict)
             {
                 KeyFieldDescriptorRegistry? registry = GlobalServiceLocator.Get<KeyFieldDescriptorRegistry>();
                 if (registry != null)
@@ -217,43 +217,43 @@ namespace ControlledVocabularies.Core
                     KeyFieldDescriptor? descr = registry!.Get(Domain, key) ?? null;
                     if (descr != null)
                     {
-                        this.m_descriptors[key] = descr;
+                        this.Descriptors[key] = descr;
                     }
                 }
             }
         }
 
-         public MultiLevelKeyField? GetField(string key)
+        public IMultiLevelKeyField? GetField(string key)
         {
             key = FieldPolicy.ForSchema(key);
-            if (this.m_fields.TryGetValue(key, out var value)) return value;
+            if (this.Fields.TryGetValue(key, out var value)) return value;
             return null;
         }
 
-        public void SetFieldDescriptor(string key, KeyFieldDescriptor? descriptor)
+        public void SetFieldDescriptor(string key, IKeyFieldDescriptor? descriptor)
         {
             if (string.IsNullOrWhiteSpace(key)) return;
 
             key = FieldPolicy.ForSchema(key);
             if (descriptor == null)
             {
-                this.m_descriptors.Remove(key);
+                this.Descriptors.Remove(key);
                 return;
             }
-            m_descriptors[key] = descriptor;
+            Descriptors[key] = descriptor;
         }
 
-        public IEnumerable<string> FieldNames => this.m_fields.Keys;
+        public IEnumerable<string> FieldNames => this.Fields.Keys;
 
         public KeyDomain FieldDomain(string field)
         {
-            KeyFieldDescriptor? d = this.GetFieldDescriptor(field);
+            IKeyFieldDescriptor? d = this.GetFieldDescriptor(field);
             return d?.Domain ?? this.Domain;
         }
 
         public KeyPurpose FieldPurpose(string field)
         {
-            KeyFieldDescriptor? d = this.GetFieldDescriptor(field);
+            IKeyFieldDescriptor? d = this.GetFieldDescriptor(field);
             return d?.Purpose ?? KeyPurpose.NotSet;
         }
 
@@ -263,9 +263,16 @@ namespace ControlledVocabularies.Core
         /// <returns></returns>
         public override string ToString()
         {
-            StringBuilder sb = new();
 
-            sb.Append(string.Join(";", this.m_fields.OrderBy(kv => kv.Key).Select(kv => $"{kv.Key}={kv.Value}")));
+            var keys = Fields.Keys.ToArray();
+            Array.Sort(keys);
+
+            StringBuilder sb = new();
+            for (int i=0; i< keys.Length; i++)
+            {
+                if (i > 0) sb.Append(";");
+                sb.Append(keys[i]); sb.Append('='); sb.Append(Fields[keys[i]]);
+            }
             sb.Append($";domain={this.Domain.ToString()}");
 
             if (this.TimeStamp > DateTime.MinValue)
@@ -278,10 +285,10 @@ namespace ControlledVocabularies.Core
 
         #region Internals
 
-        private KeyFieldDescriptor? GetFieldDescriptor(string key)
+        private IKeyFieldDescriptor? GetFieldDescriptor(string key)
         {
             key = FieldPolicy.ForSchema(key);
-            if (this.m_descriptors.TryGetValue(key, out var value)) return value;
+            if (this.Descriptors.TryGetValue(key, out var value)) return value;
             return null;
         }
 

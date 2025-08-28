@@ -1,12 +1,9 @@
 ﻿namespace ControlledVocabularies.Core
 {
-    /// <summary>
-    /// Helper class, mediates between a multi-level field, its vocabulary and its value.
-    /// </summary>
+    /// <inheritdoc/>
     /// <todo>Make Value/Vocabulary init-only or enforce freeze via IFreezable to prevent mutation in published records.</todo>
     /// <todo>Document ToString(includeVocabulary) semantics and ensure culture-invariant formatting.</todo>
-
-    public class MultiLevelKeyField
+    public class MultiLevelKeyField : IMultiLevelKeyField
     {
         public MultiLevelKeyField(string value, string vocabulary)
         {
@@ -17,7 +14,7 @@
         public string Value { get; set; }
         public string Vocabulary { get; set; }
 
-        public static MultiLevelKeyField? FromString(string value)
+        public static IMultiLevelKeyField? FromString(string value)
         {
             if (string.IsNullOrEmpty(value)) return null;
             int iSep = value.IndexOf(':');

@@ -3,17 +3,12 @@ using ControlledVocabularies.ForeignKeys;
 
 namespace ControlledVocabularies.Descriptors
 {
-    /// <summary>
-    /// Describes the parsing properties of multi-level key fields.
-    /// </summary>
-    /// <todo>Finalize FieldKind + CaseSensitive; default CaseSensitive=true for Uri.</todo>
+     /// <todo>Finalize FieldKind + CaseSensitive; default CaseSensitive=true for Uri.</todo>
     /// <todo>Add Seal() to prevent post-load edits (Strategy/AutoWeight) and enforce at runtime.</todo>
     /// <todo>Consider unit/scale metadata for Numeric fields to enable NumericRange matching.</todo>
-    public class KeyFieldDescriptor
+    public class KeyFieldDescriptor : IKeyFieldDescriptor
     {
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <inheritdocs/>
         /// <param name="fieldName"></param>
         /// <param name="isRequired"></param>
         /// <param name="weight">[1, 100]. Set to 0 to have an indexer cacluclate weights automatically.</param>
@@ -30,34 +25,17 @@ namespace ControlledVocabularies.Descriptors
             Strategy = strategy;
         }
 
-        /// <summary>
-        /// The internal field name.
-        /// </summary>
+        /// <inheritdoc/>
         public string FieldName { get; }
 
-        /// <summary>
-        /// Flag, stating whether this field is mandatory
-        /// </summary>
+        /// <inheritdoc/>
         public bool IsRequired { get; }
 
-        /// <summary>
-        /// The weight to allocate to field matches [1, 100]
-        /// </summary>
         public int UserWeight { get; }
 
-        /// <summary>
-        /// The purpose of this field
-        /// </summary>
-        public KeyPurpose Purpose { get; }
+         public KeyPurpose Purpose { get; }
 
-        /// <summary>
-        /// The knowledge domain this field is obtained from
-        /// </summary>
-        public KeyDomain Domain { get; }
-
-        /// <summary>
-        /// Bit flags that identify the most likely matching stratey for matching across vocabularies
-        /// </summary>
+          public KeyDomain Domain { get; }
         public MatchStrategy Strategy { get; set; }
 
         public ForeignKeySpec? ForeignKey { get; set; }  // null if not an FK
