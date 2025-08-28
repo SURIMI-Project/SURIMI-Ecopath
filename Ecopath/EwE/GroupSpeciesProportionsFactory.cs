@@ -26,7 +26,7 @@ public static class GroupSpeciesProportionsFactory
         {
             if (key.Index == iGroup)
             {
-                MultiLevelKeyField? code = key.GetField(SpeciesFields.SpeciesCode);
+                IMultiLevelKeyField? code = key.GetField(SpeciesFields.SpeciesCode);
                 if (code != null)
                     props.RegisterSpecies(key);
             }
