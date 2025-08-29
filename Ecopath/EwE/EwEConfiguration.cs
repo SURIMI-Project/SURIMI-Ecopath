@@ -1,13 +1,15 @@
-﻿using ControlledVocabularies.Core;
+﻿using ControlledVocabularies.Common;
+using ControlledVocabularies.Context;
+using ControlledVocabularies.Core;
 using ControlledVocabularies.Descriptors;
 using ControlledVocabularies.Match;
 using ControlledVocabularies.Registries;
 using ControlledVocabularies.Resolve;
 using ControlledVocabularies.Vocabularies;
 using Ecopath.EwE.Wrapper;
-using Ecopath.Services;
 using EwECore;
 using EwECore.Auxiliary;
+using Google.Api;
 
 namespace Ecopath.EwE
 {
@@ -71,6 +73,16 @@ namespace Ecopath.EwE
             SpinupYears = 1;
             StartYear = 2001;
 #endif
+            var reg = ModelContextDescriptorRegistry.Create();
+            var context = new ModelContext(reg);
+
+            // ToDo: make this real once the model has loaded
+            context.SetModelName("EwE Demo");
+            context.SetAreaName("NE Atlantic");
+            context.SetBoundingBox(35.0, -25.0, 70.0, 20.0);
+            context.SetYears(1990, 2020);
+            context.SetTimestamp(DateTime.UtcNow);
+            GlobalServiceLocator.Replace(context);
 
             m_keyFieldDescriptors = GlobalServiceLocator.Get<KeyFieldDescriptorRegistry>()!;
 

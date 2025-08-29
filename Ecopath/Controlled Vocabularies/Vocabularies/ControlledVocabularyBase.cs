@@ -1,9 +1,10 @@
-﻿using ControlledVocabularies.Core;
+﻿using ControlledVocabularies.Common;
+using ControlledVocabularies.Core;
 using ControlledVocabularies.Descriptors;
 using ControlledVocabularies.ForeignKeys;
+using ControlledVocabularies.Inference.Field;
 using ControlledVocabularies.Match;
 using ControlledVocabularies.Utils;
-using Ecopath.Services;
 using System.Data;
 
 namespace ControlledVocabularies.Vocabularies
@@ -104,7 +105,7 @@ namespace ControlledVocabularies.Vocabularies
         /// <param name="isRequired"></param>
         /// <param name="weight"></param>
         /// <param name="strategy">Strategy to match a field. 
-        /// Defaults to <see cref="MatchStrategy.None"/> for <see cref="KeyFieldIndexer"/> appraisal.</param>
+        /// Defaults to <see cref="MatchStrategy.None"/> for <see cref="KeyFieldDescriptorIndexer"/> appraisal.</param>
         /// <returns></returns>
         /// <todo>
         /// The MultiLevelKey system is designed to work with strings only for identifying fields. There is no
@@ -195,7 +196,7 @@ namespace ControlledVocabularies.Vocabularies
 
             if (!LoadFromSource()) return false;
 
-            var indexer = GlobalServiceLocator.Get<IKeyFieldIndexer>() ?? new KeyFieldIndexer();
+            var indexer = GlobalServiceLocator.Get<IKeyFieldDescriptorIndexer>() ?? new KeyFieldDescriptorIndexer();
             foreach (string fieldName in FieldNames)
             {
                 indexer.BuildIndex(fieldName, Records, m_descriptors[fieldName]);

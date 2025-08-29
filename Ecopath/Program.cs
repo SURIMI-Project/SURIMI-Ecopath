@@ -1,8 +1,9 @@
+using ControlledVocabularies.Common;
+using ControlledVocabularies.Descriptors;
+using ControlledVocabularies.Registries;
 using Ecopath.EwE;
 using Ecopath.EwE.Wrapper;
 using Ecopath.Services;
-using ControlledVocabularies.Descriptors;
-using ControlledVocabularies.Registries;
 
 namespace Ecopath;
 
