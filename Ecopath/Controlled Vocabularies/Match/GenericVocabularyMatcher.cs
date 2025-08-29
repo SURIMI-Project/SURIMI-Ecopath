@@ -1,4 +1,5 @@
-﻿using ControlledVocabularies.Core;
+﻿using ControlledVocabularies.Common;
+using ControlledVocabularies.Core;
 using ControlledVocabularies.ForeignKeys;
 using ControlledVocabularies.Registries;
 using ControlledVocabularies.Resolve;
@@ -22,7 +23,7 @@ namespace ControlledVocabularies.Match
         public GenericVocabularyMatcher(IVocabularyRegistry? registry = null, IForeignKeyResolver? fkResolver = null)
         {
             // Try registry from parameter, then GlobalServiceLocator, then null (optional)
-            m_registry = registry ?? Ecopath.Services.GlobalServiceLocator.Get<VocabularyRegistry>();
+            m_registry = registry ?? GlobalServiceLocator.Get<VocabularyRegistry>();
 
             // FK resolver needs registry, so only create if registry available
             m_fk = fkResolver ?? (m_registry != null ? new ForeignKeyResolver(m_registry) : null);

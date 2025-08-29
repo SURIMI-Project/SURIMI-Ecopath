@@ -1,4 +1,4 @@
-﻿namespace Ecopath.Services
+﻿namespace ControlledVocabularies.Common
 {
     public static class GlobalServiceLocator 
     { 

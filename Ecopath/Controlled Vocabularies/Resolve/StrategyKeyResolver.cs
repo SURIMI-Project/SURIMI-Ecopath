@@ -1,4 +1,5 @@
-﻿using ControlledVocabularies.Core;
+﻿using ControlledVocabularies.Common;
+using ControlledVocabularies.Core;
 using ControlledVocabularies.Descriptors;
 using ControlledVocabularies.Match;
 using ControlledVocabularies.Utils;

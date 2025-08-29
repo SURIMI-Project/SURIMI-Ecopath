@@ -11,11 +11,11 @@ namespace ControlledVocabularies.Descriptors
         /// <inheritdocs/>
         /// <param name="fieldName"></param>
         /// <param name="isRequired"></param>
-        /// <param name="weight">[1, 100]. Set to 0 to have an indexer cacluclate weights automatically.</param>
+        /// <param name="weight">[1, 10]. Set to 0 (default) to have an indexer cacluclate weights automatically.</param>
         /// <param name="domain"></param>
         /// <param name="purpose"></param>
         /// <param name="strategy">Matching strategy, "exact" by default.</param>
-        public KeyFieldDescriptor(string fieldName, KeyDomain domain, KeyPurpose purpose, bool isRequired = false, int weight = 1, MatchStrategy strategy = MatchStrategy.Exact)
+        public KeyFieldDescriptor(string fieldName, KeyDomain domain, KeyPurpose purpose, bool isRequired = false, int weight = 0, MatchStrategy strategy = MatchStrategy.Exact)
         {
             Domain = domain;
             FieldName = fieldName;

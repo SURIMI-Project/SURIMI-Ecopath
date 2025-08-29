@@ -1,10 +1,13 @@
-﻿using ControlledVocabularies.Core;
+﻿using ControlledVocabularies.Common;
+using ControlledVocabularies.Context;
+using ControlledVocabularies.Core;
 using ControlledVocabularies.Descriptors;
+using ControlledVocabularies.Inference.Field;
+using ControlledVocabularies.Inference.Strategies;
 using ControlledVocabularies.Match;
 using ControlledVocabularies.Registries;
 using ControlledVocabularies.Utils;
 using ControlledVocabularies.Vocabularies;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace ControlledVocabularies.Inference
@@ -16,46 +19,58 @@ namespace ControlledVocabularies.Inference
     /// <todo>Re-evaluate pending fields when new vocabularies registered</todo>
     /// <todo>Add spatial/temporal context field detection</todo>
     /// <todo>Implement brute-force FK discovery across all vocabularies</todo>
-    public class VocabularySemanticInferrer
+    public sealed class VocabularyInferenceEngine
     {
-        private readonly IVocabularyRegistry? _registry;
-        private readonly KeyFieldIndexer _fieldIndexer;
+        private readonly VocabularyRegistry _registry;
+        private readonly KeyFieldDescriptorIndexer _indexer;
+        private readonly VocabularyAnalysisOrchestrator _orchestrator;
 
-        public VocabularySemanticInferrer(IVocabularyRegistry? registry = null)
+        public VocabularyInferenceEngine(IVocabularyRegistry? registry = null)
         {
-            _registry = registry;
-            _fieldIndexer = new KeyFieldIndexer();
+            _indexer = new KeyFieldDescriptorIndexer(registry);
+            _orchestrator = new VocabularyAnalysisOrchestrator();
+            _registry = GlobalServiceLocator.Get<VocabularyRegistry>()!;
+
+            // Register vocabulary-level strategies
+            _orchestrator.Register(new DomainFromNameStrategy(registry));
+            _orchestrator.Register(new FieldHintsCollectorStrategy());  // pulls from FieldInferenceInfo
+            _orchestrator.Register(new FleetSegmentSignalStrategy());
+            _orchestrator.Register(new ForeignKeyByOverlapStrategy(registry));
+            // _orchestrator.Register(new ForeignKeyByMatcherStrategy(registry)); // optional
         }
 
-        public SemanticInferenceResult AnalyzeVocabulary(IControlledVocabulary vocabulary)
+        public SemanticInferenceResult AnalyzeVocabulary(IControlledVocabulary vocab)
         {
-            var result = new SemanticInferenceResult(vocabulary.VocabularyName);
-
-            // 1. Analyze vocabulary name for domain hints
-            InferVocabularyDomainFromName(vocabulary.VocabularyName, result);
-
-            // 2. Enhanced field analysis with importance weighting and descriptor integration
-            foreach (var fieldName in vocabulary.FieldNames)
+            // 0) Ensure descriptors exist (index if missing) – reuse KeyFieldIndexer
+            foreach (var fn in vocab.FieldNames)
             {
-                var fieldInfo = AnalyzeFieldEnhanced(vocabulary, fieldName);
-                result.AddFieldInference(fieldInfo);
+                var d = vocab.GetKeyFieldDescriptor(fn);
+                if (d == null)
+                {
+                    var temp = new Descriptors.KeyFieldDescriptor(fn, KeyDomain.NotSet, KeyPurpose.NotSet);
+                    _indexer.BuildIndex(fn, vocab.Records, temp);
+                }
             }
 
-            // 3. Infer primary domain/purpose from weighted field analysis
-            InferPrimarySemantics(result);
-
-            // 4. Test foreign key hypotheses against known vocabularies
-            if (_registry != null)
+            // 1) Build per-field info with your existing AnalyzeFieldEnhanced
+            var cache = new System.Collections.Generic.Dictionary<string, FieldInferenceInfo>(System.StringComparer.Ordinal);
+            foreach (var fn in vocab.FieldNames)
             {
-                TestForeignKeyHypotheses(vocabulary, result);
-            }
-            else
-            {
-                /// <todo>Store unresolved FK candidates for when registry becomes available</todo>
-                result.AddDiagnostic("Registry unavailable - FK discovery deferred");
+                var info = AnalyzeFieldEnhanced(vocab, fn); // your existing method
+                cache[Utils.FieldPolicy.ForSchema(fn)] = info;
             }
 
-            return result;
+            FieldInferenceInfo Provider(string name)
+            {
+                var key = Utils.FieldPolicy.ForSchema(name);
+                FieldInferenceInfo v;
+                if (cache.TryGetValue(key, out v)) return v;
+                return new FieldInferenceInfo(name);
+            }
+
+            // 2) Run strategies then finalize with your rewritten InferPrimarySemantics
+            var ctx = GlobalServiceLocator.Get<ModelContext>();
+            return _orchestrator.Analyze(vocab, ctx, Provider, InferPrimarySemantics);
         }
 
         /// <summary>
@@ -66,7 +81,7 @@ namespace ControlledVocabularies.Inference
             var fieldInfo = new FieldInferenceInfo(fieldName);
 
             // Get sample values for analysis
-            var sampleValues = GetSampleValues(vocab, fieldName, maxSamples: 100);
+            var sampleValues = FieldFilter.ExtractFieldValues(vocab.Records, fieldName);
             if (!sampleValues.Any())
             {
                 fieldInfo.AddDiagnostic($"No sample values found for field '{fieldName}'");
@@ -120,6 +135,8 @@ namespace ControlledVocabularies.Inference
                 else if (fieldNameLower.Contains("gear") && fieldNameLower.Contains("name"))
                 {
                     fieldInfo.AddSemanticHint(KeyDomain.FleetSegment, KeyPurpose.Gear, 0.9, "Gear name indicates fleet domain");
+                    // add parallel Fleet hint
+                    fieldInfo.AddSemanticHint(KeyDomain.FleetSegment, KeyPurpose.Fleet, 0.8, "Gear is part of fleet segmentation");
                 }
             }
 
@@ -371,56 +388,162 @@ namespace ControlledVocabularies.Inference
         /// </summary>
         private void InferPrimarySemantics(SemanticInferenceResult result)
         {
+            // Accumulators
             var domainVotes = new Dictionary<KeyDomain, double>();
             var purposeVotes = new Dictionary<KeyPurpose, double>();
 
+            // --- 1) Collect votes from field-level hints (weighted) ---
             foreach (var field in result.FieldInferences)
             {
-                // Weight votes by field importance
-                var importanceMultiplier = (int)field.ImportanceWeight / 5.0;
+                // Importance -> [0.2 .. 1.0]  (Unknown=0.2, Name=1.0)
+                double importanceMultiplier = (double)((int)field.ImportanceWeight) / 5.0;
+                if (importanceMultiplier < 0.0) importanceMultiplier = 0.0;
+                if (importanceMultiplier > 1.0) importanceMultiplier = 1.0;
 
-                foreach (var hint in field.SemanticHints)
+                // Field-level reliability (0..1) — already combines stats/hierarchy
+                double fieldReliability = field.OverallConfidence;
+                if (fieldReliability < 0.0) fieldReliability = 0.0;
+                if (fieldReliability > 1.0) fieldReliability = 1.0;
+
+                // Base weight for this field’s hints
+                double baseWeight = importanceMultiplier * (0.5 + 0.5 * fieldReliability);
+
+                // Fleet/Metier tagging: boost FleetSegment detection signals
+                // Normalize name & reasons via FieldPolicy
+                string fname = FieldPolicy.ForSchema(field.FieldName);
+                bool hasFleetTags = ContainsFleetTags(fname);
+
+                // Also scan reasons for tags (plain loop; no LINQ)
+                if (!hasFleetTags)
                 {
-                    var weightedConfidence = hint.Confidence * importanceMultiplier;
+                    for (int i = 0; i < field.Reasons.Count; i++)
+                    {
+                        string rn = FieldPolicy.ForSchema(field.Reasons[i] ?? "");
+                        if (ContainsFleetTags(rn)) { hasFleetTags = true; break; }
+                    }
+                }
 
-                    domainVotes[hint.Domain] = domainVotes.GetValueOrDefault(hint.Domain) + weightedConfidence;
-                    purposeVotes[hint.Purpose] = purposeVotes.GetValueOrDefault(hint.Purpose) + weightedConfidence;
+                // Apply hints
+                for (int i = 0; i < field.SemanticHints.Count; i++)
+                {
+                    var hint = field.SemanticHints[i];
+
+                    // Vote contributed by this hint
+                    double vote = hint.Confidence * baseWeight;
+
+                    // Extra nudge if fleet/metier tags are present and hint relates to fleet/gear
+                    if (hasFleetTags)
+                    {
+                        if (hint.Domain == KeyDomain.FleetSegment) vote += 0.10; // small domain nudge
+                        if ((hint.Purpose & KeyPurpose.Gear) != 0UL ||
+                            (hint.Purpose & KeyPurpose.Fleet) != 0UL)
+                        {
+                            vote += 0.10; // small purpose nudge
+                        }
+                    }
+
+                    // Accumulate domain vote
+                    double dv;
+                    if (!domainVotes.TryGetValue(hint.Domain, out dv)) dv = 0.0;
+                    dv += vote;
+                    domainVotes[hint.Domain] = dv;
+
+                    // Accumulate purpose vote
+                    double pv;
+                    if (!purposeVotes.TryGetValue(hint.Purpose, out pv)) pv = 0.0;
+                    pv += vote;
+                    purposeVotes[hint.Purpose] = pv;
                 }
             }
 
-            // Combine with vocabulary-level hints
-            foreach (var domainHint in result.DomainHints)
+            // --- 2) Blend in vocabulary-level hints (name/registry heuristics) ---
+            // Domain
+            foreach (var dh in result.DomainHints)
             {
-                domainVotes[domainHint.Domain] = domainVotes.GetValueOrDefault(domainHint.Domain) + domainHint.Confidence;
+                double v;
+                if (!domainVotes.TryGetValue(dh.Domain, out v)) v = 0.0;
+                v += dh.Confidence;
+                domainVotes[dh.Domain] = v;
+            }
+            // Purpose
+            foreach (var ph in result.PurposeHints)
+            {
+                double v;
+                if (!purposeVotes.TryGetValue(ph.Purpose, out v)) v = 0.0;
+                v += ph.Confidence;
+                purposeVotes[ph.Purpose] = v;
             }
 
-            foreach (var purposeHint in result.PurposeHints)
-            {
-                purposeVotes[purposeHint.Purpose] = purposeVotes.GetValueOrDefault(purposeHint.Purpose) + purposeHint.Confidence;
-            }
+            // --- 3) Decide primary Domain (normalize by SUM, not by bucket count) ---
+            KeyDomain topDomain = KeyDomain.NotSet;
+            double topDomainValue = 0.0;
+            double domainSum = 0.0;
 
-            // Select primary domain
-            if (domainVotes.Any())
+            // Classic loop; no LINQ
+            foreach (var kv in domainVotes)
             {
-                var topDomain = domainVotes.OrderByDescending(kv => kv.Value).First();
-                result.InferredDomain = topDomain.Key;
-                result.DomainConfidence = Math.Min(1.0, topDomain.Value / Math.Max(1.0, domainVotes.Count));
-            }
-
-            // Select primary purposes (can be multiple with flags)
-            if (purposeVotes.Any())
-            {
-                result.InferredPurpose = KeyPurpose.NotSet;
-                var threshold = purposeVotes.Values.Max() * 0.3; // Include purposes with 30%+ of top score
-
-                foreach (var purposeVote in purposeVotes.Where(kv => kv.Value >= threshold).OrderByDescending(kv => kv.Value))
+                domainSum += kv.Value;
+                if (kv.Value > topDomainValue)
                 {
-                    result.InferredPurpose |= purposeVote.Key;
+                    topDomainValue = kv.Value;
+                    topDomain = kv.Key;
+                }
+            }
+
+            if (domainSum > 0.0)
+            {
+                result.InferredDomain = topDomain;
+                result.DomainConfidence = topDomainValue / domainSum;
+                if (result.DomainConfidence > 1.0) result.DomainConfidence = 1.0;
+            }
+            else
+            {
+                result.InferredDomain = KeyDomain.NotSet;
+                result.DomainConfidence = 0.0;
+            }
+
+            // --- 4) Decide Purpose(s) (flags). Pick all within a fraction of the top ---
+            KeyPurpose topPurposeKey = KeyPurpose.NotSet;
+            double topPurposeValue = 0.0;
+
+            foreach (var kv in purposeVotes)
+            {
+                if (kv.Value > topPurposeValue)
+                {
+                    topPurposeValue = kv.Value;
+                    topPurposeKey = kv.Key;
+                }
+            }
+
+            // If we have any purpose votes, include all >= threshold * top
+            result.InferredPurpose = KeyPurpose.NotSet;
+            if (topPurposeValue > 0.0)
+            {
+                const double FRACTION = 0.30; // include any purpose with ≥30% of top
+                double cutoff = topPurposeValue * FRACTION;
+
+                foreach (var kv in purposeVotes)
+                {
+                    if (kv.Value >= cutoff)
+                    {
+                        result.InferredPurpose |= kv.Key;
+                    }
                 }
 
-                if (result.InferredPurpose == KeyPurpose.NotSet && purposeVotes.Any())
+                // Safety: if nothing passed the cutoff (shouldn't happen), choose the top
+                if (result.InferredPurpose == KeyPurpose.NotSet)
                 {
-                    result.InferredPurpose = purposeVotes.OrderByDescending(kv => kv.Value).First().Key;
+                    result.InferredPurpose = topPurposeKey;
+                }
+            }
+
+            // --- 5) Complementary purpose logic for Fleet/Metier signals ---
+            // If domain is FleetSegment and Gear is selected, also include Fleet.
+            if (result.InferredDomain == KeyDomain.FleetSegment)
+            {
+                if ((result.InferredPurpose & KeyPurpose.Gear) != 0UL)
+                {
+                    result.InferredPurpose |= KeyPurpose.Fleet;
                 }
             }
         }
@@ -522,29 +645,6 @@ namespace ControlledVocabularies.Inference
         }
 
         /// <summary>
-        /// Get sample values from vocabulary field with intelligent sampling
-        /// </summary>
-        private List<string> GetSampleValues(IControlledVocabulary vocab, string fieldName, int maxSamples = 100)
-        {
-            var values = new List<string>();
-            var seen = new HashSet<string>();
-
-            foreach (var record in vocab.Records.Take(maxSamples * 2)) // Sample more to get diversity
-            {
-                var field = record.GetField(fieldName);
-                var value = field?.Value?.Trim();
-
-                if (!string.IsNullOrWhiteSpace(value) && seen.Add(value))
-                {
-                    values.Add(value);
-                    if (values.Count >= maxSamples) break;
-                }
-            }
-
-            return values;
-        }
-
-        /// <summary>
         /// Get existing field descriptor or create one with indexing for enhanced analysis
         /// </summary>
         private KeyFieldDescriptor GetOrCreateFieldDescriptor(IControlledVocabulary vocab, string fieldName, List<string> sampleValues)
@@ -557,7 +657,7 @@ namespace ControlledVocabularies.Inference
             var tempDescriptor = new KeyFieldDescriptor(fieldName, KeyDomain.NotSet, KeyPurpose.NotSet);
 
             // Use field indexer to build statistics
-            _fieldIndexer.BuildIndex(fieldName, vocab.Records, tempDescriptor);
+            _indexer.BuildIndex(fieldName, vocab.Records, tempDescriptor);
 
             return tempDescriptor;
         }
@@ -568,7 +668,7 @@ namespace ControlledVocabularies.Inference
         private ForeignKeyTestResult TestForeignKeyMatch(IControlledVocabulary source, string sourceField, IControlledVocabulary target)
         {
             var result = new ForeignKeyTestResult();
-            var sourceValues = GetSampleValues(source, sourceField, 50)
+            var sourceValues = FieldFilter.ExtractFieldValues(source.Records, sourceField)
                 .Where(v => !string.IsNullOrWhiteSpace(v))
                 .Select(v => FieldPolicy.ForValue(v, FieldKind.Code)) // Normalize for comparison
                 .ToHashSet();
@@ -581,7 +681,7 @@ namespace ControlledVocabularies.Inference
 
             foreach (var targetField in targetFields)
             {
-                var targetValues = GetSampleValues(target, targetField, 100)
+                var targetValues = FieldFilter.ExtractFieldValues(target.Records, targetField)
                     .Where(v => !string.IsNullOrWhiteSpace(v))
                     .Select(v => FieldPolicy.ForValue(v, FieldKind.Code))
                     .ToHashSet();
@@ -610,8 +710,7 @@ namespace ControlledVocabularies.Inference
 
         private bool IsCodeField(string fieldNameLower) =>
             fieldNameLower.Contains("code") || fieldNameLower.Contains("id") ||
-            fieldNameLower.EndsWith("_id") || fieldNameLower == "alpha3" ||
-            fieldNameLower.Contains("identifier");
+            fieldNameLower.Contains("identifier") || fieldNameLower.Contains("key");
 
         private bool IsDescriptionField(string fieldNameLower) =>
             fieldNameLower.Contains("description") || fieldNameLower.Contains("comment") ||
@@ -684,7 +783,32 @@ namespace ControlledVocabularies.Inference
             public int MatchCount { get; set; }
             public double MatchRatio { get; set; }
             public string BestTargetField { get; set; } = "";
-            public bool IsViable => MatchRatio > 0.1; // 10% minimum match threshold
+            public bool IsViable
+            {
+                get
+                {
+                    // viable if ≥ 3 direct matches OR ≥10% ratio
+                    return MatchCount >= 3 || MatchRatio > 0.10;
+                }
+            }
+        }
+
+        // Helper: detects fleet-related tags in a normalized string
+        private static bool ContainsFleetTags(string normalized)
+        {
+            // normalized is already FieldPolicy.ForSchema(text), so dashes separate tokens
+            // We look for substrings that commonly indicate fleet/metier data.
+            if (string.IsNullOrEmpty(normalized)) return false;
+
+            // Tags: fleet, gear, vessel, metier, métier (normalized), métier-code, segment
+            // Use ordinal checks; no culture deps
+            if (normalized.IndexOf("fleet", StringComparison.Ordinal) >= 0) return true;
+            if (normalized.IndexOf("gear", StringComparison.Ordinal) >= 0) return true;
+            if (normalized.IndexOf("vessel", StringComparison.Ordinal) >= 0) return true;
+            if (normalized.IndexOf("metier", StringComparison.Ordinal) >= 0) return true;   // covers “métier” once normalized
+            if (normalized.IndexOf("segment", StringComparison.Ordinal) >= 0) return true;
+
+            return false;
         }
     }
 }

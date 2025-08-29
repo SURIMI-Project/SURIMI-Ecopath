@@ -1,11 +1,11 @@
 ﻿using ControlledVocabularies.Core;
 
-namespace ControlledVocabularies.Analysis
+namespace ControlledVocabularies.Inference.Field
 {
-    public class CompositeAnalysisResult
+    public class CompositeFieldInferenceResult
     {
         public string FieldName { get; }
-        public List<FieldAnalysisResult> StrategyResults { get; }
+        public List<FieldInferenceResult> StrategyResults { get; }
 
         public FieldKind RecommendedKind { get; }
         public MatchStrategy RecommendedStrategy { get; }
@@ -13,10 +13,10 @@ namespace ControlledVocabularies.Analysis
         public int OverallConfidence { get; }
         public string ConsensusMethod { get; }
 
-        public CompositeAnalysisResult(string fieldName, List<FieldAnalysisResult> results)
+        public CompositeFieldInferenceResult(string fieldName, List<FieldInferenceResult> results)
         {
             FieldName = fieldName;
-            StrategyResults = new List<FieldAnalysisResult>(results);
+            StrategyResults = new List<FieldInferenceResult>(results);
 
             var consensus = CalculateHybridConsensus(results);
             RecommendedKind = consensus.Kind;
@@ -26,12 +26,12 @@ namespace ControlledVocabularies.Analysis
             ConsensusMethod = consensus.Method;
         }
 
-        private ConsensusResult CalculateHybridConsensus(List<FieldAnalysisResult> results)
+        private ConsensusResult CalculateHybridConsensus(List<FieldInferenceResult> results)
         {
             if (results.Count == 0)
                 return ConsensusResult.NoResults();
 
-            var validResults = new List<FieldAnalysisResult>();
+            var validResults = new List<FieldInferenceResult>();
             foreach (var result in results)
             {
                 if (result.HasSuggestion)
@@ -118,7 +118,7 @@ namespace ControlledVocabularies.Analysis
             {
                 int totalScore = 0;
                 int totalConfidence = 0;
-                var contributingResults = new List<FieldAnalysisResult>();
+                var contributingResults = new List<FieldInferenceResult>();
 
                 foreach (var result in group.Value)
                 {
@@ -188,7 +188,7 @@ namespace ControlledVocabularies.Analysis
             return CalculateAverageWeightFromWeightedWeights(resultsWithWeights);
         }
 
-        private int CalculateAverageWeight(List<FieldAnalysisResult> results)
+        private int CalculateAverageWeight(List<FieldInferenceResult> results)
         {
             var resultsWithWeights = new List<WeightedWeight>();
             foreach (var result in results)
@@ -264,7 +264,7 @@ namespace ControlledVocabularies.Analysis
 
     public class NormalizedResult
     {
-        public FieldAnalysisResult Original { get; set; }
+        public FieldInferenceResult Original { get; set; }
         public int ConfidenceScore { get; set; }
 
         public override string ToString() => $"{Original.StrategyName}: {ConfidenceScore}/100";
@@ -275,7 +275,7 @@ namespace ControlledVocabularies.Analysis
         public FieldKind Kind { get; set; }
         public int TotalScore { get; set; }
         public int AverageConfidence { get; set; }
-        public List<FieldAnalysisResult> ContributingResults { get; set; } = new();
+        public List<FieldInferenceResult> ContributingResults { get; set; } = new();
 
         public override string ToString() => $"{Kind}: {TotalScore} points ({ContributingResults.Count} votes)";
     }

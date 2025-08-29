@@ -1,8 +1,7 @@
 ﻿using ControlledVocabularies.Core;
 using ControlledVocabularies.Descriptors;
-using ControlledVocabularies.Utils;
+using ControlledVocabularies.Inference.Field;
 using FluentAssertions;
-using Microsoft.AspNetCore.Routing;
 using Xunit;
 
 namespace ControlledVocabularies.Vocabularies.Tests
@@ -42,8 +41,12 @@ namespace ControlledVocabularies.Vocabularies.Tests
             var isscfgVocab = new ISSCFGGearCodeVocabulary();
             isscfgVocab.Load();
 
-            var indexer = new KeyFieldIndexer();
-            var descriptor = new KeyFieldDescriptor("GEAR_CODE", KeyDomain.FleetSegment, KeyPurpose.Gear);
+            var indexer = new KeyFieldDescriptorIndexer();
+            var descriptor = new KeyFieldDescriptor(isscfgVocab.CodeFieldName, KeyDomain.FleetSegment, KeyPurpose.Gear);
+
+            // Just to make sure, see comment below
+            descriptor.UseAutoWeight.Should().BeTrue();
+            descriptor.UserWeight.Should().Be(0);
 
             // Act
             var success = indexer.BuildIndex("GEAR_CODE", isscfgVocab.Records, descriptor);
@@ -52,6 +55,8 @@ namespace ControlledVocabularies.Vocabularies.Tests
             success.Should().BeTrue();
             descriptor.Kind.Should().Be(FieldKind.Code); // Should detect as code due to CODE/NAME pair
             descriptor.Strategy.Should().HaveFlag(MatchStrategy.Exact); // Should use exact matching
+            
+            // This test failed when the test descriptor was initialized with a default weight of 1
             descriptor.Weight.Should().BeGreaterThan(5); // Should get good weight from analysis
         }
     }
