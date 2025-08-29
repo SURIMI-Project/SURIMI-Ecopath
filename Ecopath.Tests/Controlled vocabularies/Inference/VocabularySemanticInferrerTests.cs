@@ -4,6 +4,7 @@ using ControlledVocabularies.Vocabularies;
 using ControlledVocabularies.Utils;
 using FluentAssertions;
 using Xunit;
+using ControlledVocabularies.Inference.Vocabulary;
 
 namespace ControlledVocabularies.Inference.Tests
 {
