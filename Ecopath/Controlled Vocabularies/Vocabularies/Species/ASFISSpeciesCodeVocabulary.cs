@@ -27,8 +27,8 @@ namespace ControlledVocabularies.Vocabularies
             using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
             using var dr = new CsvDataReader(csv);
 
-            AddField(COL_CODE, Domain, Purpose, true, 1, MatchStrategy.Exact);
-            AddField(COL_NAME, Domain, Purpose, true, 1, MatchStrategy.Exact | MatchStrategy.Fuzzy | MatchStrategy.TokenOverlap);
+            AddField(COL_CODE, Domain, Purpose, FieldKind.Code, true, 10, MatchStrategy.Exact);
+            AddField(COL_NAME, Domain, Purpose, FieldKind.Label, true, 8, MatchStrategy.Exact | MatchStrategy.Fuzzy | MatchStrategy.TokenOverlap);
 
             try
             {

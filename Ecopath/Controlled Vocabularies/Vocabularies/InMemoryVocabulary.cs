@@ -11,14 +11,14 @@ namespace ControlledVocabularies.Vocabularies
         private readonly List<FieldDef> m_fields = new();
         private readonly List<(string field, string? value)[]> m_rows = new();
 
-        private sealed record FieldDef( string Name, KeyPurpose Purpose, bool IsRequired, int Weight, MatchStrategy Strategy, FieldKind? Kind, bool IsCode);
+        private sealed record FieldDef(string Name, KeyPurpose Purpose, FieldKind Kind, bool IsRequired, int Weight, MatchStrategy Strategy, bool IsCode);
 
         public InMemoryVocabulary(string vocabularyName, KeyDomain domain, KeyPurpose purpose)
             : base(vocabularyName, domain, purpose) { }
 
-        public InMemoryVocabulary AddField( string name, KeyPurpose purpose, bool required = false, int weight = 0, MatchStrategy strategy = MatchStrategy.None, FieldKind? kind = null, bool isCode = false)
+        public InMemoryVocabulary AddField( string name, KeyPurpose purpose, FieldKind kind, bool required = false, int weight = 0, MatchStrategy strategy = MatchStrategy.None, bool isCode = false)
         {
-            m_fields.Add(new FieldDef(FieldPolicy.ForSchema(name), purpose, required, weight, strategy, kind, isCode));
+            m_fields.Add(new FieldDef(FieldPolicy.ForSchema(name), purpose, kind, required, weight, strategy, isCode));
             return this;
         }
 
@@ -36,8 +36,8 @@ namespace ControlledVocabularies.Vocabularies
             // define columns/descriptors
             foreach (var f in m_fields)
             {
-                var d = AddField(f.Name, Domain, f.Purpose, f.IsRequired, f.Weight, f.Strategy);
-                if (f.Kind.HasValue) d.Kind = f.Kind.Value;                   // pin Kind if provided
+                var d = AddField(f.Name, Domain, f.Purpose, f.Kind, f.IsRequired, f.Weight, f.Strategy);
+                if (f.Kind != FieldKind.Unknown) d.Kind = f.Kind;              // pin Kind if provided
                 if (f.Strategy != MatchStrategy.None) d.Strategy = f.Strategy; // pin Strategy if provided
                 if (f.IsCode) CodeFieldName = f.Name;
             }

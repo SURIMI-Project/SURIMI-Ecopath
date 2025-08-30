@@ -17,8 +17,8 @@ namespace ControlledVocabularies.Vocabularies
 
         protected override bool LoadFromSource()
         {
-            AddField(COL_CODE, Domain, Purpose, true, 1, MatchStrategy.Exact);
-            AddField(COL_VALUES, Domain, Purpose, true, 1, MatchStrategy.Exact | MatchStrategy.Fuzzy);
+            AddField(COL_CODE, Domain, Purpose, FieldKind.Code, true, 1, MatchStrategy.Exact);
+            AddField(COL_VALUES, Domain, Purpose, FieldKind.Label, true, 1, MatchStrategy.Exact | MatchStrategy.Fuzzy);
 
             AddRow("juvenile", "young juvenile small");
             AddRow("adult", "adult large old");

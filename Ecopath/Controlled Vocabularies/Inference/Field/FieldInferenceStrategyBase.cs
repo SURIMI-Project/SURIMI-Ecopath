@@ -9,6 +9,6 @@ namespace ControlledVocabularies.Inference.Field
 
         public double Priority { get; set;}
 
-        public abstract FieldInferenceResult Analyze(string fieldName, List<string> sampleValues, IEnumerable<MultiLevelKey> allRecords, ModelContext context);
+        public abstract FieldInferenceResult Analyze(string fieldName, IEnumerable<string> sampleValues, IEnumerable<MultiLevelKey> allRecords, ModelContext context);
     }
 }

@@ -54,7 +54,7 @@ namespace ControlledVocabularies.Vocabularies.Tests
 
             // build FK descriptor on field "speciescode"
             var col = Table.Columns["speciescode"]!;
-            var descr = new ControlledVocabularyBase.DataTableKeyFieldDescriptor(col, Domain, Purpose,
+            var descr = new ControlledVocabularyBase.DataTableKeyFieldDescriptor(col, Domain, Purpose, FieldKind.Code,
                            isRequired: true, weight: 1, strategy: MatchStrategy.Exact)
             {
                 ForeignKey = new ForeignKeySpec
@@ -71,7 +71,7 @@ namespace ControlledVocabularies.Vocabularies.Tests
             m_descriptors["speciescode"] = descr;
 
             var idCol = Table.Columns["id"]!;
-            m_descriptors["id"] = new ControlledVocabularyBase.DataTableKeyFieldDescriptor(idCol, Domain, Purpose,
+            m_descriptors["id"] = new ControlledVocabularyBase.DataTableKeyFieldDescriptor(idCol, Domain, Purpose, FieldKind.Code,
                 isRequired: false, weight: 1, strategy: MatchStrategy.Exact);
 
             return true;
@@ -89,8 +89,8 @@ namespace ControlledVocabularies.Vocabularies.Tests
 
         protected override bool LoadFromSource()
         {
-            AddField("id", Domain, Purpose, true, 1, MatchStrategy.Exact);
-            AddField("label", Domain, Purpose, true, 1, MatchStrategy.Exact | MatchStrategy.Fuzzy);
+            AddField("id", Domain, Purpose, FieldKind.Code, true, 1, MatchStrategy.Exact);
+            AddField("label", Domain, Purpose, FieldKind.Label, true, 1, MatchStrategy.Exact | MatchStrategy.Fuzzy);
 
             var r1 = Table.NewRow(); r1["id"] = "juvenile"; r1["label"] = "young juvenile"; Table.Rows.Add(r1);
             var r2 = Table.NewRow(); r2["id"] = "adult"; r2["label"] = "adult"; Table.Rows.Add(r2);

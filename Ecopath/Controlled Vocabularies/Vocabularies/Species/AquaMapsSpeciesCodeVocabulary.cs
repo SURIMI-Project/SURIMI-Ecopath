@@ -33,17 +33,17 @@ namespace ControlledVocabularies.Vocabularies
             using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
             using var dr = new CsvDataReader(csv);
 
-            AddField(COL_CODE, Domain, Purpose, true, 1, MatchStrategy.Exact);
-            AddField(COL_FK, Domain, Purpose, true, 1, MatchStrategy.Exact);
-            AddField(COL_NAME, Domain, Purpose, true, 1, MatchStrategy.Exact | MatchStrategy.Fuzzy | MatchStrategy.TokenOverlap);
-            AddField(COL_FB_NAME, Domain, Purpose, true, 1, MatchStrategy.Exact | MatchStrategy.Fuzzy | MatchStrategy.TokenOverlap);
-            AddField(COL_KINGDOM, Domain, Purpose, true, 1, MatchStrategy.Exact);
-            AddField(COL_PHYLUM, Domain, Purpose, true, 1, MatchStrategy.Exact);
-            AddField(COL_CLASS, Domain, Purpose, true, 1, MatchStrategy.Exact);
-            AddField(COL_ORDER, Domain, Purpose, true, 1, MatchStrategy.Exact);
-            AddField(COL_FAMILY, Domain, Purpose, true, 1, MatchStrategy.Exact);
-            AddField(COL_GENUS, Domain, Purpose, true, 1, MatchStrategy.Exact);
-            AddField(COL_SPECIES, Domain, Purpose, true, 1, MatchStrategy.Exact);
+            AddField(COL_CODE, Domain, Purpose, FieldKind.Code, true, 1, MatchStrategy.Exact);
+            AddField(COL_FK, Domain, Purpose, FieldKind.Code, true, 1, MatchStrategy.Exact);
+            AddField(COL_NAME, Domain, Purpose, FieldKind.Label, true, 1, MatchStrategy.Exact | MatchStrategy.Fuzzy | MatchStrategy.TokenOverlap);
+            AddField(COL_FB_NAME, Domain, Purpose, FieldKind.Label, true, 1, MatchStrategy.Exact | MatchStrategy.Fuzzy | MatchStrategy.TokenOverlap);
+            AddField(COL_KINGDOM, Domain, Purpose, FieldKind.Label, true, 1, MatchStrategy.Exact);
+            AddField(COL_PHYLUM, Domain, Purpose, FieldKind.Label, true, 1, MatchStrategy.Exact);
+            AddField(COL_CLASS, Domain, Purpose, FieldKind.Label, true, 1, MatchStrategy.Exact);
+            AddField(COL_ORDER, Domain, Purpose, FieldKind.Label, true, 1, MatchStrategy.Exact);
+            AddField(COL_FAMILY, Domain, Purpose, FieldKind.Label, true, 1, MatchStrategy.Exact);
+            AddField(COL_GENUS, Domain, Purpose, FieldKind.Label, true, 1, MatchStrategy.Exact);
+            AddField(COL_SPECIES, Domain, Purpose, FieldKind.Label, true, 1, MatchStrategy.Exact);
 
             this.Table.Columns[COL_NAME]!.Expression = $"TRIM(ISNULL({COL_GENUS}, '') + ' ' + ISNULL({COL_SPECIES}, ''))"; // Let's see if this works...
 

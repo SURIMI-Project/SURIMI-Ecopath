@@ -58,22 +58,22 @@ namespace ControlledVocabularies.Vocabularies
             }
 
             // Define field descriptors with cross-vocabulary mapping strategies
-            AddField(COL_APHIA_ID, Domain, Purpose, isRequired: true, weight: 10, strategy: MatchStrategy.Exact);
-            AddField(COL_SCIENTIFIC_NAME, Domain, Purpose, isRequired: true, weight: 9, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy);
-            AddField(COL_COMMON_NAME, Domain, Purpose, isRequired: false, weight: 7, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy);
+            AddField(COL_APHIA_ID, Domain, Purpose, FieldKind.Code, isRequired: true, weight: 10, strategy: MatchStrategy.Exact);
+            AddField(COL_SCIENTIFIC_NAME, Domain, Purpose, FieldKind.Label, isRequired: true, weight: 9, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy);
+            AddField(COL_COMMON_NAME, Domain, Purpose, FieldKind.Label, isRequired: false, weight: 7, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy);
 
             // Taxonomic hierarchy - useful for resolution
-            AddField(COL_KINGDOM, Domain, Purpose, isRequired: false, weight: 2, strategy: MatchStrategy.Exact);
-            AddField(COL_PHYLUM, Domain, Purpose, isRequired: false, weight: 3, strategy: MatchStrategy.Exact);
-            AddField(COL_CLASS, Domain, Purpose, isRequired: false, weight: 4, strategy: MatchStrategy.Exact);
-            AddField(COL_ORDER, Domain, Purpose, isRequired: false, weight: 5, strategy: MatchStrategy.Exact);
-            AddField(COL_FAMILY, Domain, Purpose, isRequired: false, weight: 6, strategy: MatchStrategy.Exact);
-            AddField(COL_GENUS, Domain, Purpose, isRequired: false, weight: 7, strategy: MatchStrategy.Exact);
+            AddField(COL_KINGDOM, Domain, Purpose, FieldKind.Label, isRequired: false, weight: 2, strategy: MatchStrategy.Exact);
+            AddField(COL_PHYLUM, Domain, Purpose, FieldKind.Label, isRequired: false, weight: 3, strategy: MatchStrategy.Exact);
+            AddField(COL_CLASS, Domain, Purpose, FieldKind.Label, isRequired: false, weight: 4, strategy: MatchStrategy.Exact);
+            AddField(COL_ORDER, Domain, Purpose, FieldKind.Label, isRequired: false, weight: 5, strategy: MatchStrategy.Exact);
+            AddField(COL_FAMILY, Domain, Purpose, FieldKind.Label, isRequired: false, weight: 6, strategy: MatchStrategy.Exact);
+            AddField(COL_GENUS, Domain, Purpose, FieldKind.Label, isRequired: false, weight: 7, strategy: MatchStrategy.Exact);
 
-            AddField(COL_STATUS, Domain, Purpose, isRequired: false, weight: 2, strategy: MatchStrategy.Exact);
+            AddField(COL_STATUS, Domain, Purpose, FieldKind.Label, isRequired: false, weight: 2, strategy: MatchStrategy.Exact);
 
             // Cross-vocabulary bridge - critical for ASFIS mapping!
-            AddField(COL_FAO_CODE, Domain, Purpose, isRequired: false, weight: 8, strategy: MatchStrategy.Exact);
+            AddField(COL_FAO_CODE, Domain, Purpose, FieldKind.Code, isRequired: false, weight: 8, strategy: MatchStrategy.Exact);
 
             try
             {

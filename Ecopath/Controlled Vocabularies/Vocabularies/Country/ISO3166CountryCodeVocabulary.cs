@@ -23,8 +23,8 @@ namespace ControlledVocabularies.Vocabularies
             using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
             using var dr = new CsvDataReader(csv);
 
-            AddField(COL_CODE, Domain, Purpose, true, 1, MatchStrategy.Exact);
-            AddField(COL_NAME, Domain, Purpose, true, 1, MatchStrategy.Exact | MatchStrategy.Fuzzy);
+            AddField(COL_CODE, Domain, Purpose, FieldKind.Code, true, 1, MatchStrategy.Exact);
+            AddField(COL_NAME, Domain, Purpose, FieldKind.Label, true, 1, MatchStrategy.Exact | MatchStrategy.Fuzzy);
 
             try
             {

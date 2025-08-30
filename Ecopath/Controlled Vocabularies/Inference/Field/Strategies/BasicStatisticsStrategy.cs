@@ -12,8 +12,7 @@ namespace ControlledVocabularies.Inference.Field.Strategies
         public string Name => "BasicStatistics";
         public double Priority => 1.0; // Lowest priority - fallback only
 
-        public FieldInferenceResult Analyze(string fieldName, List<string> sampleValues,
-            IEnumerable<MultiLevelKey> allRecords, ModelContext context)
+        public FieldInferenceResult Analyze(string fieldName, IEnumerable<string> sampleValues, IEnumerable<MultiLevelKey> allRecords, ModelContext context)
         {
             var result = new FieldInferenceResult { StrategyName = Name };
 
@@ -21,7 +20,7 @@ namespace ControlledVocabularies.Inference.Field.Strategies
 
             var normalizedFieldName = FieldPolicy.ForSchema(fieldName);
             var avgLength = sampleValues.Average(v => v.Length);
-            var uniqueness = sampleValues.Distinct().Count() / (double)sampleValues.Count;
+            var uniqueness = sampleValues.Distinct().Count() / (double)sampleValues.Count();
             var uppercaseRatio = CalculateUppercaseRatio(sampleValues);
             var allNumeric = sampleValues.All(v => double.TryParse(v, out _));
             var hasUriPattern = sampleValues.Any(v => v.StartsWith("http") || v.Contains("://"));
@@ -56,14 +55,14 @@ namespace ControlledVocabularies.Inference.Field.Strategies
             return result;
         }
 
-        private double CalculateUppercaseRatio(List<string> values)
+        private double CalculateUppercaseRatio(IEnumerable<string> values)
         {
             if (!values.Any()) return 0;
 
             var uppercaseCount = values.Count(v =>
                 v.All(c => char.IsUpper(c) || char.IsDigit(c) || char.IsPunctuation(c) || char.IsWhiteSpace(c)));
 
-            return (double)uppercaseCount / values.Count;
+            return (double)uppercaseCount / values.Count();
         }
     }
 }

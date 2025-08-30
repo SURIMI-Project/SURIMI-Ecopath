@@ -16,8 +16,7 @@ namespace ControlledVocabularies.Inference.Field.Strategies
         public string Name => "CodeNamePair";
         public double Priority => 9.0; // Highest priority - most reliable
 
-        public FieldInferenceResult Analyze(string fieldName, List<string> sampleValues,
-            IEnumerable<MultiLevelKey> allRecords, ModelContext context)
+        public FieldInferenceResult Analyze(string fieldName, IEnumerable<string> sampleValues, IEnumerable<MultiLevelKey> allRecords, ModelContext context)
         {
             var result = new FieldInferenceResult { StrategyName = Name };
             var normalizedFieldName = FieldPolicy.ForSchema(fieldName);
