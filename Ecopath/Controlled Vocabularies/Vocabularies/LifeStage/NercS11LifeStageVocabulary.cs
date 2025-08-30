@@ -22,8 +22,8 @@ namespace ControlledVocabularies.Vocabularies
 
             string path = @"Includes\NercS11_lifestages.jsonld";
 
-            AddField(COL_CODE, Domain, Purpose, isRequired: true, weight: 1, strategy: MatchStrategy.Exact);
-            AddField(COL_LABEL, Domain, Purpose, isRequired: true, weight: 1, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy);
+            AddField(COL_CODE, Domain, Purpose, FieldKind.Code, isRequired: true, weight: 1, strategy: MatchStrategy.Exact);
+            AddField(COL_LABEL, Domain, Purpose, FieldKind.Label, isRequired: true, weight: 1, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy);
 
             var root = JObject.Parse(File.ReadAllText(path));
             var graph = (JArray?)root["@graph"] ?? new JArray();

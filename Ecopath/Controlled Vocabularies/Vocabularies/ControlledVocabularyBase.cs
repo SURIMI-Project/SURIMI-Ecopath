@@ -35,8 +35,8 @@ namespace ControlledVocabularies.Vocabularies
 
         protected class DataTableKeyFieldDescriptor : KeyFieldDescriptor
         {
-            public DataTableKeyFieldDescriptor(DataColumn column, KeyDomain domain, KeyPurpose purpose, bool isRequired = false, int weight = 1, MatchStrategy strategy = MatchStrategy.Exact)
-                : base(column.ColumnName, domain, purpose, isRequired, weight, strategy)
+            public DataTableKeyFieldDescriptor(DataColumn column, KeyDomain domain, KeyPurpose purpose, FieldKind kind, bool isRequired = false, int weight = 1, MatchStrategy strategy = MatchStrategy.Exact)
+                : base(column.ColumnName, domain, purpose, kind, isRequired, weight, strategy)
             {
                 Column = column ?? throw new ArgumentNullException(nameof(column));
             }
@@ -111,7 +111,7 @@ namespace ControlledVocabularies.Vocabularies
         /// The MultiLevelKey system is designed to work with strings only for identifying fields. There is no
         /// need (yet) to work with datatable columns other than strings. This may change at some point.
         /// </todo>
-        protected DataTableKeyFieldDescriptor AddField(string columnName, KeyDomain domain, KeyPurpose purpose, bool isRequired = false, int weight = 1, MatchStrategy strategy = MatchStrategy.None)
+        protected DataTableKeyFieldDescriptor AddField(string columnName, KeyDomain domain, KeyPurpose purpose, FieldKind kind = FieldKind.Unknown, bool isRequired = false, int weight = 1, MatchStrategy strategy = MatchStrategy.None)
         {
             columnName = FieldPolicy.ForSchema(columnName);
 
@@ -121,7 +121,7 @@ namespace ControlledVocabularies.Vocabularies
             }
 
             DataColumn col = Table.Columns[columnName]!;
-            var descriptor = new DataTableKeyFieldDescriptor(col, domain, purpose, isRequired, weight, strategy);
+            var descriptor = new DataTableKeyFieldDescriptor(col, domain, purpose, kind, isRequired, weight, strategy);
             m_descriptors[columnName] = descriptor;
             return descriptor;
         }

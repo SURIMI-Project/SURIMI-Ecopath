@@ -23,7 +23,7 @@ namespace ControlledVocabularies.Inference.Field.Strategies
         public string Name => "DomainSpecific";
         public double Priority => 1.0; // Lowest priority - fallback only
 
-        public FieldInferenceResult Analyze(string fieldName, List<string> sampleValues, IEnumerable<MultiLevelKey> allRecords, ModelContext context)
+        public FieldInferenceResult Analyze(string fieldName, IEnumerable<string> sampleValues, IEnumerable<MultiLevelKey> allRecords, ModelContext context)
         {
             var result = new FieldInferenceResult { StrategyName = Name };
 
@@ -66,7 +66,7 @@ namespace ControlledVocabularies.Inference.Field.Strategies
             return bestScore;
         }
 
-        private double TestSampleValuesAgainstVocabularies(string fieldName, List<string> sampleValues)
+        private double TestSampleValuesAgainstVocabularies(string fieldName, IEnumerable<string> sampleValues)
         {
             if (!sampleValues.Any()) return 0;
 

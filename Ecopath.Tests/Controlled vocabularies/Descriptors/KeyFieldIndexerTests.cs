@@ -11,7 +11,7 @@ namespace ControlledVocabularies.Descriptors.Tests
         public void Indexer_Infers_Kind_And_Strategy_For_Code()
         {
             var v = new InMemoryVocabulary("T", KeyDomain.Species, KeyPurpose.Species);
-            v.AddField(SpeciesFields.SpeciesCode, KeyPurpose.Species, strategy: MatchStrategy.None);
+            v.AddField(SpeciesFields.SpeciesCode, KeyPurpose.Species, FieldKind.Code, strategy: MatchStrategy.None);
             v.AddRow((SpeciesFields.SpeciesCode, "HKE"));
             v.AddRow((SpeciesFields.SpeciesCode, "GUP"));
             v.AddRow((SpeciesFields.SpeciesCode, "MUL"));
@@ -26,7 +26,7 @@ namespace ControlledVocabularies.Descriptors.Tests
         public void Indexer_Infers_Label_With_Fuzzy_And_TokenOverlap()
         {
             var v = new InMemoryVocabulary("T", KeyDomain.Species, KeyPurpose.Species);
-            v.AddField("name", KeyPurpose.NotSet, strategy: MatchStrategy.None);
+            v.AddField("name", KeyPurpose.NotSet, FieldKind.Unknown, strategy: MatchStrategy.None);
 
             foreach (var s in Enumerable.Range(0, 150))
                 v.AddRow(("name", $"Drifting longlines variant {s}"));
@@ -43,7 +43,7 @@ namespace ControlledVocabularies.Descriptors.Tests
         public void Indexer_Infers_Uri_As_NoMatchable()
         {
             var v = new InMemoryVocabulary("T", KeyDomain.Species, KeyPurpose.Species);
-            v.AddField("link", KeyPurpose.Species, strategy:MatchStrategy.None);
+            v.AddField("link", KeyPurpose.Species, FieldKind.Uri, strategy:MatchStrategy.None);
             v.AddRow(("link", "https://example.org/A"));
             v.AddRow(("link", "https://example.org/B"));
 

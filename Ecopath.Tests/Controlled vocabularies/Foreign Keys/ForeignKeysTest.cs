@@ -168,10 +168,10 @@ namespace ControlledVocabularies.ForeignKeys.Tests
         public void Indexer_Infers_Code_Uri_Label()
         {
             var v = new InMemoryVocabulary("T", KeyDomain.Species, KeyPurpose.Species);
-            v.AddField("code", KeyPurpose.Species, true, strategy: MatchStrategy.Exact);
-            v.AddField("name", KeyPurpose.Species, true, strategy: MatchStrategy.Fuzzy);
-            v.AddField("link", KeyPurpose.Species, strategy:MatchStrategy.Exact);
-            v.AddField("secret", KeyPurpose.Species, strategy:MatchStrategy.Exact);
+            v.AddField("code", KeyPurpose.Species, FieldKind.Code, true, strategy: MatchStrategy.Exact);
+            v.AddField("name", KeyPurpose.Species, FieldKind.Label, true, strategy: MatchStrategy.Fuzzy);
+            v.AddField("link", KeyPurpose.Species, FieldKind.Uri, strategy:MatchStrategy.Exact);
+            v.AddField("secret", KeyPurpose.Species, FieldKind.Unknown, strategy:MatchStrategy.Exact);
 
             v.AddRow(("code", "ESP"), ("name", "European Union"), ("link", "https://example.org/x"), ("secret", "777"));
             v.Load().Should().BeTrue();
@@ -187,7 +187,7 @@ namespace ControlledVocabularies.ForeignKeys.Tests
         {
             var src = MultiLevelKey.FromPairs([("code", "esp")], KeyDomain.FleetSegment, strict: false);
             var tgtRow = MultiLevelKey.FromPairs([("code", "ESP")], KeyDomain.FleetSegment, strict: false);
-            var descr = new KeyFieldDescriptor("code", KeyDomain.FleetSegment, KeyPurpose.Gear, isRequired: true, weight: 1, strategy: MatchStrategy.Exact) { Kind = FieldKind.Code };
+            var descr = new KeyFieldDescriptor("code", KeyDomain.FleetSegment, KeyPurpose.Gear, FieldKind.Code, isRequired: true, weight: 1, strategy: MatchStrategy.Exact) { Kind = FieldKind.Code };
 
             var r = new ControlledVocabularies.Resolve.StrategyKeyResolver([tgtRow], [descr]);
             var best = r.FindBestMatch(src);

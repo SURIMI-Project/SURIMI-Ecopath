@@ -31,16 +31,16 @@ namespace ControlledVocabularies.Vocabularies
         protected override bool LoadFromSource()
         {
             // Declare fields with pragmatic strategies
-            AddField(COL_GEAR_CODE, Domain, Purpose, isRequired: true, weight: 10, strategy: MatchStrategy.Exact);
-            AddField(COL_GEAR_NAME, Domain, Purpose, isRequired: true, weight: 7, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy | MatchStrategy.TokenOverlap);
+            AddField(COL_GEAR_CODE, Domain, Purpose, FieldKind.Code, isRequired: true, weight: 10, strategy: MatchStrategy.Exact);
+            AddField(COL_GEAR_NAME, Domain, Purpose, FieldKind.Label, isRequired: true, weight: 7, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy | MatchStrategy.TokenOverlap);
 
             // Nice-to-have structure for later joins/search
-            AddField(COL_ISSCFG_CODE, Domain, Purpose, isRequired: false, weight: 6, strategy: MatchStrategy.Exact);
-            AddField(COL_ISSCFG_NAME, Domain, Purpose, isRequired: false, weight: 5, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy);
-            AddField(COL_GROUP_CODE, Domain, Purpose, isRequired: false, weight: 3, strategy: MatchStrategy.Exact);
-            AddField(COL_GROUP_NAME, Domain, Purpose, isRequired: false, weight: 3, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy);
-            AddField(COL_CONF_CODE, Domain, Purpose, isRequired: false, weight: 2, strategy: MatchStrategy.Exact);
-            AddField(COL_CONF_NAME, Domain, Purpose, isRequired: false, weight: 2, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy);
+            AddField(COL_ISSCFG_CODE, Domain, Purpose, FieldKind.Code, isRequired: false, weight: 6, strategy: MatchStrategy.Exact);
+            AddField(COL_ISSCFG_NAME, Domain, Purpose, FieldKind.Label, isRequired: false, weight: 5, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy);
+            AddField(COL_GROUP_CODE, Domain, Purpose, FieldKind.Code, isRequired: false, weight: 3, strategy: MatchStrategy.Exact);
+            AddField(COL_GROUP_NAME, Domain, Purpose, FieldKind.Label, isRequired: false, weight: 3, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy);
+            AddField(COL_CONF_CODE, Domain, Purpose, FieldKind.Code, isRequired: false, weight: 2, strategy: MatchStrategy.Exact);
+            AddField(COL_CONF_NAME, Domain, Purpose, FieldKind.Label, isRequired: false, weight: 2, strategy: MatchStrategy.Exact | MatchStrategy.Fuzzy);
 
             try
             {

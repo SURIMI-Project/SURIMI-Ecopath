@@ -1,5 +1,8 @@
 ﻿namespace ControlledVocabularies.Core
 {
+    /// <summary>
+    /// The knowledge domain data adheres to.
+    /// </summary>
     public enum KeyDomain
     {
         NotSet = 0,
@@ -14,6 +17,9 @@
         Metadata       // Versioning, timestamps
     }
 
+    /// <summary>
+    /// The different purposes that the data has in the given knowledge domain.
+    /// </summary>
     [Flags]
     public enum KeyPurpose : ulong
     {
@@ -31,6 +37,16 @@
         TimeStamp = 1UL << 9,
         Version = 1UL << 10,
         // ... reserve more bits
+    }
+
+    public enum FieldKind
+    {
+        Unknown = 0,
+        Code,       // short, opaque identifiers (ESP, DL, 09.32)
+        Label,      // human-readable strings (Drifting longlines)
+        Uri,        // URLs/DOIs
+        Numeric,    // numeric (int/float) treated specially for range logic
+        DateTime    // dates, timestamps, years - important for versioning & temporal context
     }
 
     public class SpeciesFields
@@ -65,16 +81,6 @@
         Regex = 1 << 5,
         NumericRange = 1 << 6,
         ForeignKey = 1 << 7
-    }
-
-    public enum FieldKind
-    {
-        Unknown = 0,
-        Code,       // short, opaque identifiers (ESP, DL, 09.32)
-        Label,      // human-readable strings (Drifting longlines)
-        Uri,        // URLs/DOIs
-        Numeric,    // numeric (int/float) treated specially for range logic
-        DateTime    // dates, timestamps, years - important for versioning & temporal context
     }
 
     /// <summary>

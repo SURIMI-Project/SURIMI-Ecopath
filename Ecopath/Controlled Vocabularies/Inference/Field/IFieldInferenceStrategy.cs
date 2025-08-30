@@ -11,6 +11,6 @@ namespace ControlledVocabularies.Inference.Field
         string Name { get; }
         double Priority { get; } // Higher priority strategies run first
 
-        FieldInferenceResult Analyze(string fieldName, List<string> sampleValues, IEnumerable<MultiLevelKey> allRecords, ModelContext context);
+        FieldInferenceResult Analyze(string fieldName, IEnumerable<string> sampleValues, IEnumerable<MultiLevelKey> allRecords, ModelContext context);
     }
 }

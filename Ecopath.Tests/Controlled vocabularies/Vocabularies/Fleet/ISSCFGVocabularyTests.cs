@@ -42,7 +42,7 @@ namespace ControlledVocabularies.Vocabularies.Tests
             isscfgVocab.Load();
 
             var indexer = new KeyFieldDescriptorIndexer();
-            var descriptor = new KeyFieldDescriptor(isscfgVocab.CodeFieldName, KeyDomain.FleetSegment, KeyPurpose.Gear);
+            var descriptor = new KeyFieldDescriptor(isscfgVocab.CodeFieldName, KeyDomain.FleetSegment, KeyPurpose.Gear, FieldKind.Code);
 
             // Just to make sure, see comment below
             descriptor.UseAutoWeight.Should().BeTrue();

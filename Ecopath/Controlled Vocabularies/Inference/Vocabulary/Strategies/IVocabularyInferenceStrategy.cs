@@ -1,14 +1,15 @@
 ﻿using ControlledVocabularies.Context;
+using ControlledVocabularies.Core;
+using ControlledVocabularies.Registries;
 using ControlledVocabularies.Vocabularies;
 
-namespace ControlledVocabularies.Inference
+namespace ControlledVocabularies.Inference.Vocabulary
 {
-    public interface IVocabularyAnalysisStrategy
+    public interface IVocabularyInferenceStrategy
     {
         string Name { get; }
-        double Priority { get; } // higher runs first
+        double Priority { get; }  // higher runs first
 
-        // fieldInfoProvider gives access to the per-field inferences you already compute
-        void Analyze( IControlledVocabulary vocab, ModelContext context, SemanticInferenceResult accumulator, System.Func<string, FieldInferenceInfo> fieldInfoProvider);
+        VocabularyStrategyResult Analyze( IControlledVocabulary vocabulary, ModelContext? modelContext, IVocabularyRegistry? registry);
     }
 }

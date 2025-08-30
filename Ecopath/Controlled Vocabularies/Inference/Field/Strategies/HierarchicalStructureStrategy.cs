@@ -11,8 +11,7 @@ namespace ControlledVocabularies.Inference.Field.Strategies
         public string Name => "HierarchicalStructure";
         public double Priority => 8.0;
 
-        public FieldInferenceResult Analyze(string fieldName, List<string> sampleValues,
-            IEnumerable<MultiLevelKey> allRecords, ModelContext context)
+        public FieldInferenceResult Analyze(string fieldName, IEnumerable<string> sampleValues, IEnumerable<MultiLevelKey> allRecords, ModelContext context)
         {
             var result = new FieldInferenceResult { StrategyName = Name };
 
@@ -43,14 +42,14 @@ namespace ControlledVocabularies.Inference.Field.Strategies
             return result;
         }
 
-        private HierarchicalAnalysis AnalyzeHierarchicalPatterns(List<string> values)
+        private HierarchicalAnalysis AnalyzeHierarchicalPatterns(IEnumerable<string> values)
         {
             var analysis = new HierarchicalAnalysis();
             var commonSeparators = new[] { '.', '-', '_', ':', '[', ']', '(', ')' };
             var separatorCounts = new Dictionary<char, int>();
             var patternCounts = new Dictionary<string, int>();
 
-            foreach (var value in values.Take(50)) // Sample for performance
+            foreach (var value in values) // Sample for performance
             {
                 if (string.IsNullOrWhiteSpace(value)) continue;
 
@@ -74,7 +73,7 @@ namespace ControlledVocabularies.Inference.Field.Strategies
             }
 
             // Determine if hierarchical
-            var totalValues = values.Count;
+            var totalValues = values.Count();
             var threshold = totalValues * 0.3; // 30% threshold for pattern recognition
 
             analysis.Separators = separatorCounts.Where(kv => kv.Value > threshold)

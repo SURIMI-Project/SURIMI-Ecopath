@@ -1,72 +1,143 @@
-﻿// ControlledVocabularies.Inference.Vocabulary/VocabularyInferenceEngine.cs
-using ControlledVocabularies.Common;
+﻿using ControlledVocabularies.Common;
 using ControlledVocabularies.Context;
 using ControlledVocabularies.Core;
 using ControlledVocabularies.Descriptors;
-using ControlledVocabularies.Inference;
 using ControlledVocabularies.Inference.Field;
+using ControlledVocabularies.Inference.Vocabulary.Strategies;
+using ControlledVocabularies.Match;
 using ControlledVocabularies.Registries;
 using ControlledVocabularies.Utils;
 using ControlledVocabularies.Vocabularies;
-using System;
 
 namespace ControlledVocabularies.Inference.Vocabulary
 {
     /// <summary>
-    /// No-LINQ vocabulary-level inferrer/engine.
-    /// - Clear loops (no LINQ, no lambdas)
+    /// Vocabulary-level inferrer/engine.
     /// - Reuses FieldFilter for sampling
     /// - Reuses KeyFieldDescriptorIndexer for descriptor stats
+    /// - Delegates vocabulary-wide logic to VocabularyInferenceOrchestrator
     /// </summary>
     public sealed class VocabularyInferenceEngine
     {
         private readonly IVocabularyRegistry? _registry;
         private readonly KeyFieldDescriptorIndexer _fieldIndexer;
+        private readonly VocabularyInferenceOrchestrator _orchestrator;
+
+        // Token matching (normalized) goes through the matcher for API consistency
+        private readonly ContainsFieldMatcher _contains = new ContainsFieldMatcher();
+
+        // Purpose consensus knob; keep local to avoid forcing a LocalSettings change tonight
+        // (feel free to move to LocalSettings later as PurposeInclusionFraction).
+        private const double PurposeInclusionFraction = 0.30; // include any purpose >= 30% of the top vote
+
+        // Pre-normalized token snippets used across helpers
+        private static readonly string TokName = FieldPolicy.ForSchema("name");
+        private static readonly string TokLabel = FieldPolicy.ForSchema("label");
+        private static readonly string TokTitle = FieldPolicy.ForSchema("title");
+        private static readonly string TokScientific = FieldPolicy.ForSchema("scientific");
+        private static readonly string TokCommon = FieldPolicy.ForSchema("common");
+        private static readonly string TokVernacular = FieldPolicy.ForSchema("vernacular");
+        private static readonly string TokGear = FieldPolicy.ForSchema("gear");
+        private static readonly string TokCode = FieldPolicy.ForSchema("code");
+        private static readonly string TokId = FieldPolicy.ForSchema("id");
+        private static readonly string TokIdentifier = FieldPolicy.ForSchema("identifier");
+        private static readonly string TokAlpha3 = FieldPolicy.ForSchema("alpha3");
+        private static readonly string TokDescription = FieldPolicy.ForSchema("description");
+        private static readonly string TokComment = FieldPolicy.ForSchema("comment");
+        private static readonly string TokNote = FieldPolicy.ForSchema("note");
+        private static readonly string TokRemark = FieldPolicy.ForSchema("remark");
+        private static readonly string TokDetail = FieldPolicy.ForSchema("detail");
+        private static readonly string TokRegion = FieldPolicy.ForSchema("region");
+        private static readonly string TokArea = FieldPolicy.ForSchema("area");
+        private static readonly string TokLocation = FieldPolicy.ForSchema("location");
+        private static readonly string TokGeographic = FieldPolicy.ForSchema("geographic");
+        private static readonly string TokLatitude = FieldPolicy.ForSchema("latitude");
+        private static readonly string TokLongitude = FieldPolicy.ForSchema("longitude");
+        private static readonly string TokYear = FieldPolicy.ForSchema("year");
+        private static readonly string TokDate = FieldPolicy.ForSchema("date");
+        private static readonly string TokTime = FieldPolicy.ForSchema("time");
+        private static readonly string TokPeriod = FieldPolicy.ForSchema("period");
+        private static readonly string TokVersion = FieldPolicy.ForSchema("version");
+        private static readonly string TokCreated = FieldPolicy.ForSchema("created");
+        private static readonly string TokModified = FieldPolicy.ForSchema("modified");
+        private static readonly string TokUpdated = FieldPolicy.ForSchema("updated");
+        private static readonly string TokBinomial = FieldPolicy.ForSchema("binomial");
+        private static readonly string TokSpecies = FieldPolicy.ForSchema("species");
+        private static readonly string TokTaxonomy = FieldPolicy.ForSchema("taxonomy");
+        private static readonly string TokTaxon = FieldPolicy.ForSchema("taxon");
+        private static readonly string TokHabitat = FieldPolicy.ForSchema("habitat");
+        private static readonly string TokDepth = FieldPolicy.ForSchema("depth");
 
         public VocabularyInferenceEngine(IVocabularyRegistry? registry = null)
         {
             _registry = registry;
             _fieldIndexer = new KeyFieldDescriptorIndexer(registry);
+
+            _orchestrator = new VocabularyInferenceOrchestrator();
+            _orchestrator.RegisterStrategy(new NamePatternVocabularyStrategy());
+            _orchestrator.RegisterStrategy(new DescriptorConsensusStrategy());
+            _orchestrator.RegisterStrategy(new ForeignKeyDiscoveryStrategy());
         }
 
+        /// <summary>
+        /// Analyze a controlled vocabulary to infer its intended semantics (domain, purpose, FK candidates).
+        /// </summary>
         public SemanticInferenceResult Analyze(IControlledVocabulary vocabulary)
         {
+            var context = GlobalServiceLocator.Get<ModelContext>();
             var result = new SemanticInferenceResult(vocabulary.VocabularyName);
 
-            // 1) Hints from vocabulary name
-            InferVocabularyDomainFromName(vocabulary.VocabularyName, result);
-
-            // 2) Field-by-field analysis (enhanced; uses descriptor stats)
-            foreach (var fieldName in vocabulary.FieldNames)
+            // 1) Field-level analysis
+            var fieldsEnumerator = vocabulary.FieldNames.GetEnumerator();
+            while (fieldsEnumerator.MoveNext())
             {
-                var fieldInfo = AnalyzeFieldEnhanced(vocabulary, fieldName);
+                var fieldName = fieldsEnumerator.Current;
+                var fieldInfo = AnalyzeField(vocabulary, fieldName);
                 result.AddFieldInference(fieldInfo);
             }
 
-            // 3) Primary semantics from weighted field hints + name hints
-            InferPrimarySemantics(result);
+            // 2) Vocabulary-wide strategies (composed)
+            var composite = _orchestrator.Analyze(vocabulary, context, _registry);
 
-            // 4) FK hypotheses if registry available
-            if (_registry != null)
+            // Merge strategy outputs (keep generic reason to avoid coupling on strategy payload shape)
+            var dhEnum = composite.DomainHints.GetEnumerator();
+            while (dhEnum.MoveNext())
             {
-                TestForeignKeyHypotheses(vocabulary, result);
+                result.AddDomainHint(dhEnum.Current.Domain, dhEnum.Current.Confidence, "Strategy votes");
             }
-            else
+
+            var phEnum = composite.PurposeHints.GetEnumerator();
+            while (phEnum.MoveNext())
             {
-                result.AddDiagnostic("Registry unavailable – FK discovery deferred.");
+                result.AddPurposeHint(phEnum.Current.Purpose, phEnum.Current.Confidence, "Strategy votes");
             }
+
+            var fkEnum = composite.ForeignKeyCandidates.GetEnumerator();
+            while (fkEnum.MoveNext())
+            {
+                result.AddForeignKeyCandidate(fkEnum.Current);
+            }
+
+            var diEnum = composite.Diagnostics.GetEnumerator();
+            while (diEnum.MoveNext())
+            {
+                result.AddDiagnostic(diEnum.Current);
+            }
+
+            // 3) Consensus on primary semantics
+            InferPrimarySemantics(result);
 
             return result;
         }
 
         // ---------------------------
-        // Field analysis (no LINQ)
+        // Field analysis
         // ---------------------------
-        private FieldInferenceInfo AnalyzeFieldEnhanced(IControlledVocabulary vocab, string fieldName)
+        private FieldInferenceInfo AnalyzeField(IControlledVocabulary vocab, string fieldName)
         {
             var info = new FieldInferenceInfo(fieldName);
 
-            // Samples (raw, de-duplicated per FieldFilter + LocalSettings)
+            // Sample values
             var samples = FieldFilter.ExtractFieldValues(vocab.Records, fieldName);
             if (samples.Count == 0)
             {
@@ -74,31 +145,32 @@ namespace ControlledVocabularies.Inference.Vocabulary
                 return info;
             }
 
-            // Descriptor: use existing or build a temporary one via indexer
+            // Descriptor (ensure indexed once)
             var descriptor = GetOrCreateDescriptor(vocab, fieldName, samples);
             info.SetDescriptor(descriptor);
 
-            // Importance (names > codes > context > desc > unknown)
+            // Importance from name signals
             AnalyzeImportance(fieldName, samples, descriptor, info);
 
-            // Hierarchical signal for codes (structural insight)
+            // Code specifics: hierarchical patterns (taxonomic-like dot trees, etc.)
             if (descriptor.Kind == FieldKind.Code)
             {
                 var nesting = CalculateHierarchicalNesting(samples);
                 info.SetHierarchicalNesting(nesting);
+
                 if (nesting.IsHierarchical)
                 {
                     info.AddReason("Hierarchical code structure detected.");
                     if (IndexOfChar(nesting.Separators, '.') >= 0)
                     {
-                        info.AddSemanticHint(KeyDomain.Species, KeyPurpose.Species, 0.6,
-                            "Dot-separated hierarchy – taxonomic hint.");
+                        info.AddSemanticHint(KeyDomain.Species, KeyPurpose.Species, 0.6, "Dot-separated hierarchy – taxonomic hint.");
                     }
                 }
             }
 
-            // Name/label strategy hints
-            if (descriptor.Strategy == (MatchStrategy.Exact | MatchStrategy.Fuzzy))
+            // Strategy hints (check Exact+Fuzzy via mask)
+            const MatchStrategy NameMask = MatchStrategy.Exact | MatchStrategy.Fuzzy;
+            if ((descriptor.Strategy & NameMask) == NameMask)
             {
                 info.AddReason("Exact+Fuzzy strategy – likely name/label.");
             }
@@ -109,38 +181,51 @@ namespace ControlledVocabularies.Inference.Vocabulary
                 info.AddReason("Exact-only code – likely identifier/foreign key.");
             }
 
-            // Registry-powered semantic nudges (fast pass)
+            // Quick semantic nudges from field name tokens
             InferFieldSemanticsFromName(fieldName, info);
 
             return info;
         }
 
-        private KeyFieldDescriptor GetOrCreateDescriptor(IControlledVocabulary vocab, string fieldName, System.Collections.Generic.List<string> samples)
+        private KeyFieldDescriptor GetOrCreateDescriptor(IControlledVocabulary vocab, string fieldName, List<string> samples)
         {
-            var existing = vocab.GetKeyFieldDescriptor(fieldName);
-            if (existing != null) return existing;
+            var descriptor = vocab.GetKeyFieldDescriptor(fieldName);
+            if (descriptor == null)
+            {
+                descriptor = new KeyFieldDescriptor(fieldName, KeyDomain.NotSet, KeyPurpose.NotSet, FieldKind.Unknown, false, 0, MatchStrategy.None);
+            }
 
-            var temp = new KeyFieldDescriptor(fieldName, KeyDomain.NotSet, KeyPurpose.NotSet, false, 0, MatchStrategy.None);
-            // Build statistics/kind/strategy/weight via indexer
-            _fieldIndexer.BuildIndex(fieldName, vocab.Records, temp);
-            return temp;
+            // Avoid re-indexing when already done
+            if (!descriptor.IsIndexed)
+            {
+                _fieldIndexer.BuildIndex(fieldName, vocab.Records, descriptor);
+            }
+
+            return descriptor;
         }
 
-        private void AnalyzeImportance(string fieldName, System.Collections.Generic.List<string> samples, KeyFieldDescriptor descriptor, FieldInferenceInfo info)
+        private void AnalyzeImportance(string fieldName, List<string> samples, KeyFieldDescriptor descriptor, FieldInferenceInfo info)
         {
-            var lname = fieldName.ToLowerInvariant();
+            // Normalize the field name once using policy, then test via ContainsFieldMatcher
+            var lname = FieldPolicy.ForSchema(fieldName);
 
             if (IsNameField(lname))
             {
                 info.ImportanceWeight = FieldImportanceWeight.Name;
                 info.AddReason("Name field – high semantic importance.");
 
-                if (Contains(lname, "scientific") || Contains(lname, "binomial"))
+                if (ContainsToken(lname, TokScientific) || ContainsToken(lname, TokBinomial) || ContainsToken(lname, TokSpecies))
+                {
                     info.AddSemanticHint(KeyDomain.Species, KeyPurpose.Species, 0.95, "Scientific name.");
-                else if (Contains(lname, "common") || Contains(lname, "vernacular"))
+                }
+                else if (ContainsToken(lname, TokCommon) || ContainsToken(lname, TokVernacular))
+                {
                     info.AddSemanticHint(KeyDomain.Species, KeyPurpose.Species, 0.85, "Common name.");
-                else if (Contains(lname, "gear") && Contains(lname, "name"))
+                }
+                else if (ContainsToken(lname, TokGear) && ContainsToken(lname, TokName))
+                {
                     info.AddSemanticHint(KeyDomain.FleetSegment, KeyPurpose.Gear, 0.9, "Gear name.");
+                }
                 return;
             }
 
@@ -149,7 +234,7 @@ namespace ControlledVocabularies.Inference.Vocabulary
                 info.ImportanceWeight = FieldImportanceWeight.Code;
                 info.IsPotentialForeignKey = true;
                 info.ForeignKeyConfidence = CalculateCodeFieldFKConfidence(samples, descriptor);
-                info.AddReason("Code field – potential FK.");
+                info.AddReason("Code field – potential PK or FK.");
                 return;
             }
 
@@ -172,75 +257,31 @@ namespace ControlledVocabularies.Inference.Vocabulary
         }
 
         // ---------------------------
-        // Vocabulary name hints
-        // ---------------------------
-        private void InferVocabularyDomainFromName(string vocabName, SemanticInferenceResult result)
-        {
-            var name = FieldPolicy.ForSchema(vocabName);
-
-            // Registry similarity
-            if (_registry != null)
-            {
-                foreach (var v in _registry.GetAll())
-                {
-                    var other = FieldPolicy.ForSchema(v.VocabularyName);
-                    if (Contains(name, other) || Contains(other, name))
-                    {
-                        result.AddDomainHint(v.Domain, 0.8, "Name similar to existing vocabulary.");
-                        result.AddPurposeHint(v.Purpose, 0.8, "Purpose inferred by name similarity.");
-                    }
-                }
-            }
-
-            // Simple patterns
-            if (Contains(name, "species") || Contains(name, "fish") || Contains(name, "marine") ||
-                Contains(name, "taxon") || Contains(name, "biological"))
-            {
-                result.AddDomainHint(KeyDomain.Species, 0.7, "Name suggests species domain.");
-            }
-
-            if (Contains(name, "gear") || Contains(name, "fishing") || Contains(name, "fleet") || Contains(name, "vessel") || Contains(name, "metier"))
-            {
-                result.AddDomainHint(KeyDomain.FleetSegment, 0.8, "Name suggests fleet segment domain.");
-                result.AddPurposeHint(KeyPurpose.Gear | KeyPurpose.Fleet, 0.6, "Gear/Fleet cues present.");
-            }
-
-            if (Contains(name, "country") || Contains(name, "nation") || Contains(name, "region") ||
-                Contains(name, "geographic") || Contains(name, "spatial"))
-            {
-                result.AddDomainHint(KeyDomain.Country, 0.8, "Name suggests geographic/country domain.");
-            }
-
-            if (Contains(name, "lifestage") || Contains(name, "stage") || Contains(name, "life"))
-            {
-                result.AddDomainHint(KeyDomain.Species, 0.7, "Name hints species.");
-                result.AddPurposeHint(KeyPurpose.Lifestage, 0.9, "Lifestage purpose.");
-            }
-        }
-
-        // ---------------------------
-        // Primary semantics (no LINQ)
+        // Consensus (no LINQ)
         // ---------------------------
         private void InferPrimarySemantics(SemanticInferenceResult result)
         {
-            var domainVotes = new System.Collections.Generic.Dictionary<KeyDomain, double>();
-            var purposeVotes = new System.Collections.Generic.Dictionary<KeyPurpose, double>();
+            var domainVotes = new Dictionary<KeyDomain, double>();
+            var purposeVotes = new Dictionary<KeyPurpose, double>();
 
-            // Field-driven votes (weighted)
-            foreach (var field in result.FieldInferences)
+            // Field-driven votes (weighted by importance)
+            var fields = result.FieldInferences.GetEnumerator();
+            while (fields.MoveNext())
             {
+                var field = fields.Current;
                 double importance = (int)field.ImportanceWeight / 5.0;
-                int i = 0;
+
                 var hints = field.SemanticHints;
-                var hintsCount = hints.Count;
-                while (i < hintsCount)
+                int i = 0;
+                int n = hints.Count;
+                while (i < n)
                 {
                     var hint = hints[i];
                     double weighted = hint.Confidence * importance;
 
-                    double prev;
-                    if (!domainVotes.TryGetValue(hint.Domain, out prev)) prev = 0.0;
-                    domainVotes[hint.Domain] = prev + weighted;
+                    double prevD;
+                    if (!domainVotes.TryGetValue(hint.Domain, out prevD)) prevD = 0.0;
+                    domainVotes[hint.Domain] = prevD + weighted;
 
                     double prevP;
                     if (!purposeVotes.TryGetValue(hint.Purpose, out prevP)) prevP = 0.0;
@@ -250,74 +291,79 @@ namespace ControlledVocabularies.Inference.Vocabulary
                 }
             }
 
-            // Vocabulary name hints
-            foreach (var dh in result.DomainHints)
+            // Merge vocabulary-level hints (from strategies)
+            var dh = result.DomainHints.GetEnumerator();
+            while (dh.MoveNext())
             {
                 double prev;
-                if (!domainVotes.TryGetValue(dh.Domain, out prev)) prev = 0.0;
-                domainVotes[dh.Domain] = prev + dh.Confidence;
-            }
-            foreach (var ph in result.PurposeHints)
-            {
-                double prev;
-                if (!purposeVotes.TryGetValue(ph.Purpose, out prev)) prev = 0.0;
-                purposeVotes[ph.Purpose] = prev + ph.Confidence;
+                if (!domainVotes.TryGetValue(dh.Current.Domain, out prev)) prev = 0.0;
+                domainVotes[dh.Current.Domain] = prev + dh.Current.Confidence;
             }
 
-            // Pick domain with max vote; compute a simple confidence
+            var ph = result.PurposeHints.GetEnumerator();
+            while (ph.MoveNext())
+            {
+                double prev;
+                if (!purposeVotes.TryGetValue(ph.Current.Purpose, out prev)) prev = 0.0;
+                purposeVotes[ph.Current.Purpose] = prev + ph.Current.Confidence;
+            }
+
+            // Pick best domain + confidence (score / sum)
             KeyDomain bestDomain = KeyDomain.NotSet;
-            double bestDomainScore = -1.0;
-            double domainTotal = 0.0;
+            double bestScore = -1.0;
+            double sumScores = 0.0;
 
-            foreach (var kv in domainVotes)
+            var dvEnum = domainVotes.GetEnumerator();
+            while (dvEnum.MoveNext())
             {
-                domainTotal += kv.Value;
-                if (kv.Value > bestDomainScore)
+                var kv = dvEnum.Current;
+                sumScores += kv.Value;
+                if (kv.Value > bestScore)
                 {
-                    bestDomainScore = kv.Value;
+                    bestScore = kv.Value;
                     bestDomain = kv.Key;
                 }
             }
 
-            if (bestDomainScore >= 0.0)
+            if (bestScore >= 0.0)
             {
                 result.InferredDomain = bestDomain;
-                if (domainTotal <= 0.0) domainTotal = 1.0;
-                result.DomainConfidence = Math.Min(1.0, bestDomainScore / domainTotal);
+                if (sumScores <= 0.0) sumScores = 1.0;
+                result.DomainConfidence = System.Math.Min(1.0, bestScore / sumScores);
             }
 
-            // Purposes: include any purpose >= 30% of the top purpose vote
+            // Purposes: include any >= fraction of the top purpose score
+            double topPurpose = 0.0;
+            var pvEnum1 = purposeVotes.GetEnumerator();
+            while (pvEnum1.MoveNext())
+            {
+                if (pvEnum1.Current.Value > topPurpose) topPurpose = pvEnum1.Current.Value;
+            }
+
             KeyPurpose inferred = KeyPurpose.NotSet;
-            double bestPurposeScore = -1.0;
-            double topPurposeScore = 0.0;
+            double threshold = topPurpose * PurposeInclusionFraction;
 
-            // find top score
-            foreach (var kv in purposeVotes)
+            var pvEnum2 = purposeVotes.GetEnumerator();
+            while (pvEnum2.MoveNext())
             {
-                if (kv.Value > topPurposeScore) topPurposeScore = kv.Value;
-            }
-            double threshold = topPurposeScore * 0.3;
-
-            // collect flagged purposes
-            foreach (var kv in purposeVotes)
-            {
-                if (kv.Value >= threshold)
+                if (pvEnum2.Current.Value >= threshold)
                 {
-                    inferred |= kv.Key;
+                    inferred |= pvEnum2.Current.Key;
                 }
             }
 
             if (inferred == KeyPurpose.NotSet)
             {
-                // fallback to max
+                // fallback: choose the max
                 double maxVal = -1.0;
                 KeyPurpose maxKey = KeyPurpose.NotSet;
-                foreach (var kv in purposeVotes)
+                var pvEnum3 = purposeVotes.GetEnumerator();
+                while (pvEnum3.MoveNext())
                 {
-                    if (kv.Value > maxVal)
+                    if (pvEnum3.Current.Value > maxVal)
                     {
-                        maxVal = kv.Value;
-                        maxKey = kv.Key;
+                        maxVal = pvEnum3.Current.Value;
+                        maxKey = pvEnum3.Current.Key;
                     }
                 }
                 inferred = maxKey;
@@ -327,178 +373,36 @@ namespace ControlledVocabularies.Inference.Vocabulary
         }
 
         // ---------------------------
-        // FK discovery (no LINQ)
-        // ---------------------------
-        private void TestForeignKeyHypotheses(IControlledVocabulary source, SemanticInferenceResult result)
-        {
-            // Collect FK-like fields (ordered manually by confidence)
-            var candidates = new System.Collections.Generic.List<FieldInferenceInfo>();
-            var i = 0;
-            var fields = result.FieldInferences.ToArray();
-            int n = fields.Count();
-            while (i < n)
-            {
-                var f = fields[i];
-                if (f.IsPotentialForeignKey && f.ForeignKeyConfidence > 0.3)
-                    candidates.Add(f);
-                i++;
-            }
-
-            // Try domain-compatible vocabs first, else all
-            System.Collections.Generic.List<IControlledVocabulary> targets;
-            if (_registry != null)
-            {
-                targets = new System.Collections.Generic.List<IControlledVocabulary>();
-                var byDom = _registry.GetByDomain(result.InferredDomain);
-                foreach (var v in byDom) targets.Add(v);
-                if (targets.Count == 0)
-                {
-                    // fallback to all
-                    targets.Clear();
-                    foreach (var v in _registry.GetAll()) targets.Add(v);
-                }
-            }
-            else
-            {
-                return;
-            }
-
-            // Evaluate
-            var c = 0;
-            var cCount = candidates.Count;
-            while (c < cCount)
-            {
-                var fkField = candidates[c];
-                TestFieldAsForeignKey(source, fkField, targets, result);
-                c++;
-            }
-        }
-
-        private void TestFieldAsForeignKey(
-            IControlledVocabulary source,
-            FieldInferenceInfo fkField,
-            System.Collections.Generic.List<IControlledVocabulary> targets,
-            SemanticInferenceResult result)
-        {
-            var sourceField = fkField.FieldName;
-
-            // For each target vocab, try to find best matching target field by code overlap
-            var t = 0;
-            var tCount = targets.Count;
-            while (t < tCount)
-            {
-                var target = targets[t];
-                if (!ReferenceEquals(target, source))
-                {
-                    var test = TestForeignKeyMatch(source, sourceField, target);
-                    if (test.IsViable)
-                    {
-                        var fk = new ForeignKeyMatchResult
-                        {
-                            SourceField = sourceField,
-                            SourceVocabulary = source.VocabularyName,
-                            TargetVocabulary = target.VocabularyName,
-                            TargetField = test.BestTargetField,
-                            Score = (int)(test.MatchRatio * 100),
-                            StrategyUsed = MatchStrategy.Exact,
-                            Justification = GenerateFKReasoning(fkField, test, target),
-                            MatchCount = test.MatchCount,
-                            Confidence = test.MatchRatio * fkField.ForeignKeyConfidence
-                        };
-                        result.AddForeignKeyCandidate(fk);
-                    }
-                }
-                t++;
-            }
-        }
-
-        private ForeignKeyTestResult TestForeignKeyMatch(IControlledVocabulary source, string sourceField, IControlledVocabulary target)
-        {
-            var r = new ForeignKeyTestResult();
-
-            // Normalize source values as codes (comparison-friendly)
-            var srcVals = FieldFilter.ExtractFieldValuesNormalized(
-                source.Records, sourceField, FieldKind.Code, false,
-                LocalSettings.DefaultMaxSamples, LocalSettings.DefaultDeduplicate);
-
-            if (srcVals.Count == 0) return r;
-
-            // Use a HashSet for source to speed membership checks
-            var srcSet = new System.Collections.Generic.HashSet<string>();
-            {
-                int i = 0; int n = srcVals.Count;
-                while (i < n) { srcSet.Add(srcVals[i]); i++; }
-            }
-
-            // Iterate target fields (prioritize code-like fields)
-            string bestField = "";
-            double bestRatio = 0.0;
-            int bestMatches = 0;
-
-            var fields = target.FieldNames;
-            foreach (var tf in fields)
-            {
-                // Collect target values normalized as codes
-                var tgtVals = FieldFilter.ExtractFieldValuesNormalized(
-                    target.Records, tf, FieldKind.Code, false,
-                    LocalSettings.DefaultMaxSamples, LocalSettings.DefaultDeduplicate);
-
-                if (tgtVals.Count == 0) continue;
-
-                // Count overlaps
-                int matches = 0;
-                int i = 0; int m = tgtVals.Count;
-                while (i < m)
-                {
-                    if (srcSet.Contains(tgtVals[i])) matches++;
-                    i++;
-                }
-
-                if (matches == 0) continue;
-
-                // Ratio relative to number of unique source values
-                double ratio = (double)matches / (double)srcSet.Count;
-                if (ratio > bestRatio)
-                {
-                    bestRatio = ratio;
-                    bestField = tf;
-                    bestMatches = matches;
-                }
-            }
-
-            r.BestTargetField = bestField;
-            r.MatchRatio = bestRatio;
-            r.MatchCount = bestMatches;
-            return r;
-        }
-
-        // ---------------------------
         // Small helpers (no LINQ)
         // ---------------------------
         private void InferFieldSemanticsFromName(string fieldName, FieldInferenceInfo info)
         {
-            var ln = fieldName.ToLowerInvariant();
+            var lname = FieldPolicy.ForSchema(fieldName);
 
-            if (Contains(ln, "taxonomy") || Contains(ln, "taxon"))
+            if (ContainsToken(lname, TokTaxonomy) || ContainsToken(lname, TokTaxon))
+            {
                 info.AddSemanticHint(KeyDomain.Species, KeyPurpose.Species, 0.8, "Taxonomic field.");
+            }
 
-            if (Contains(ln, "depth") || Contains(ln, "habitat"))
+            if (ContainsToken(lname, TokDepth) || ContainsToken(lname, TokHabitat))
+            {
                 info.AddSemanticHint(KeyDomain.Species, KeyPurpose.Species, 0.6, "Habitat context.");
+            }
         }
 
-        private void AnalyzeContextField(string lname, System.Collections.Generic.List<string> samples, FieldInferenceInfo info)
+        private void AnalyzeContextField(string lname, List<string> samples, FieldInferenceInfo info)
         {
-            if (Contains(lname, "region") || Contains(lname, "area"))
+            if (ContainsToken(lname, TokRegion) || ContainsToken(lname, TokArea))
             {
                 info.AddSemanticHint(KeyDomain.Geographic, KeyPurpose.SpatialExtent, 0.8, "Geographic context.");
             }
-            else if (Contains(lname, "year") || Contains(lname, "date"))
+            else if (ContainsToken(lname, TokYear) || ContainsToken(lname, TokDate))
             {
                 info.AddSemanticHint(KeyDomain.Temporal, KeyPurpose.TimeStamp, 0.8, "Temporal context.");
             }
         }
 
-        private double CalculateCodeFieldFKConfidence(System.Collections.Generic.List<string> samples, KeyFieldDescriptor d)
+        private double CalculateCodeFieldFKConfidence(List<string> samples, KeyFieldDescriptor d)
         {
             double conf = 0.5;
             if (d.AvgLength <= 5 && d.UniquenessRatio > 0.8) conf += 0.3;
@@ -506,18 +410,18 @@ namespace ControlledVocabularies.Inference.Vocabulary
             return conf > 1.0 ? 1.0 : conf;
         }
 
-        private HierarchicalNestingAnalysis CalculateHierarchicalNesting(System.Collections.Generic.List<string> values)
+        private HierarchicalNestingAnalysis CalculateHierarchicalNesting(List<string> values)
         {
             var analysis = new HierarchicalNestingAnalysis();
             var separators = new char[] { '.', '-', '_', ':', '/', '\\' };
 
-            // counts
-            var sepCounts = new System.Collections.Generic.Dictionary<char, int>();
+            var sepCounts = new Dictionary<char, int>();
             var maxDepth = 1;
             int total = 0;
 
             int take = values.Count;
-            if (LocalSettings.DefaultMaxSamples > 0 && LocalSettings.DefaultMaxSamples < take) take = LocalSettings.DefaultMaxSamples;
+            if (LocalSettings.DefaultMaxSamples > 0 && LocalSettings.DefaultMaxSamples < take)
+                take = LocalSettings.DefaultMaxSamples;
 
             int i = 0;
             while (i < take)
@@ -532,6 +436,7 @@ namespace ControlledVocabularies.Inference.Vocabulary
                         if (IndexOfChar(v, sep) >= 0)
                         {
                             int c = CountChar(v, sep);
+
                             int prev;
                             if (!sepCounts.TryGetValue(sep, out prev)) prev = 0;
                             sepCounts[sep] = prev + 1;
@@ -546,14 +451,14 @@ namespace ControlledVocabularies.Inference.Vocabulary
                 i++;
             }
 
-            // Choose common separators (>30% of considered values)
-            var chosen = new System.Collections.Generic.List<char>();
+            var chosen = new List<char>();
             if (total > 0)
             {
-                double threshold = total * 0.3;
-                foreach (var kv in sepCounts)
+                double threshold = total * 0.3; // 30% usage threshold
+                var it = sepCounts.GetEnumerator();
+                while (it.MoveNext())
                 {
-                    if (kv.Value > threshold) chosen.Add(kv.Key);
+                    if (it.Current.Value > threshold) chosen.Add(it.Current.Key);
                 }
             }
 
@@ -563,7 +468,6 @@ namespace ControlledVocabularies.Inference.Vocabulary
 
             if (analysis.IsHierarchical && total > 0)
             {
-                // Consistency ratio = (sum counts for chosen seps) / total
                 int sum = 0;
                 int j = 0;
                 while (j < chosen.Count)
@@ -582,64 +486,77 @@ namespace ControlledVocabularies.Inference.Vocabulary
             return analysis;
         }
 
-        private string GenerateFKReasoning(FieldInferenceInfo fkField, ForeignKeyTestResult fkTest, IControlledVocabulary target)
+        // Normalized token containment via matcher
+        private bool ContainsToken(string normalizedHaystack, string normalizedNeedle)
         {
-            return "Field '" + fkField.FieldName + "' matches " + fkTest.MatchCount + " values (" +
-                   (fkTest.MatchRatio * 100.0).ToString("F1") + "%) with '" + target.VocabularyName + "." +
-                   fkTest.BestTargetField + "' (confidence: " + fkField.ForeignKeyConfidence.ToString("F2") + ").";
+            return _contains.Score(normalizedNeedle, normalizedHaystack) > 0.0;
         }
 
-        // string helpers
-        private static bool Contains(string s, string sub) => s.IndexOf(sub, StringComparison.Ordinal) >= 0;
+        // Field kind/name heuristics (normalized names)
+        private bool IsNameField(string lname)
+        {
+            return ContainsToken(lname, TokName) ||
+                    ContainsToken(lname, TokLabel) ||
+                    ContainsToken(lname, TokTitle) ||
+                    ContainsToken(lname, TokScientific) ||
+                    ContainsToken(lname, TokCommon) ||
+                    ContainsToken(lname, TokVernacular);
+        }
+
+        private bool IsCodeField(string lname)
+        {
+            // suffix heuristic kept literal (schema-normalized "key" remains "key")
+            if (EndsWith(lname, "key")) return true;
+
+            return ContainsToken(lname, TokCode) ||
+                    ContainsToken(lname, TokId) ||
+                    lname == TokAlpha3 ||
+                    ContainsToken(lname, TokIdentifier);
+        }
+
+        private bool IsDescriptionField(string lname)
+        {
+            return ContainsToken(lname, TokDescription) ||
+                    ContainsToken(lname, TokComment) ||
+                    ContainsToken(lname, TokNote) ||
+                    ContainsToken(lname, TokRemark) ||
+                    ContainsToken(lname, TokDetail);
+        }
+
+        private bool IsContextField(string lname)
+        {
+            if (ContainsToken(lname, TokRegion) || ContainsToken(lname, TokArea) ||
+                ContainsToken(lname, TokLocation) || ContainsToken(lname, TokGeographic) ||
+                ContainsToken(lname, TokLatitude) || ContainsToken(lname, TokLongitude))
+                return true;
+
+            if (ContainsToken(lname, TokYear) || ContainsToken(lname, TokDate) ||
+                ContainsToken(lname, TokTime) || ContainsToken(lname, TokPeriod))
+                return true;
+
+            if (ContainsToken(lname, TokVersion) || ContainsToken(lname, TokCreated) ||
+                ContainsToken(lname, TokModified) || ContainsToken(lname, TokUpdated))
+                return true;
+
+            return false;
+        }
+
+        // Small string helpers
         private static int IndexOfChar(string s, char c) => s.IndexOf(c);
-        private static int IndexOfChar(System.Collections.Generic.List<char> list, char c)
+
+        private static int IndexOfChar(List<char> list, char c)
         {
             int i = 0; int n = list.Count;
             while (i < n) { if (list[i] == c) return i; i++; }
             return -1;
         }
+
         private static int CountChar(string s, char c)
         {
             int count = 0;
             int i = 0; int n = s.Length;
             while (i < n) { if (s[i] == c) count++; i++; }
             return count;
-        }
-
-        private static bool IsNameField(string lname)
-        {
-            return Contains(lname, "name") || Contains(lname, "label") || Contains(lname, "title") ||
-                   Contains(lname, "scientific") || Contains(lname, "common") || Contains(lname, "vernacular");
-        }
-
-        private static bool IsCodeField(string lname)
-        {
-            return Contains(lname, "code") || Contains(lname, "id") || EndsWith(lname, "_id") ||
-                   lname == "alpha3" || Contains(lname, "identifier");
-        }
-
-        private static bool IsDescriptionField(string lname)
-        {
-            return Contains(lname, "description") || Contains(lname, "comment") ||
-                   Contains(lname, "note") || Contains(lname, "remark") || Contains(lname, "detail");
-        }
-
-        private static bool IsContextField(string lname)
-        {
-            if (Contains(lname, "region") || Contains(lname, "area") ||
-                Contains(lname, "location") || Contains(lname, "geographic") ||
-                Contains(lname, "latitude") || Contains(lname, "longitude"))
-                return true;
-
-            if (Contains(lname, "year") || Contains(lname, "date") ||
-                Contains(lname, "time") || Contains(lname, "period"))
-                return true;
-
-            if (Contains(lname, "version") || Contains(lname, "created") ||
-                Contains(lname, "modified") || Contains(lname, "updated"))
-                return true;
-
-            return false;
         }
 
         private static bool EndsWith(string s, string suffix)
@@ -653,14 +570,6 @@ namespace ControlledVocabularies.Inference.Vocabulary
                 i++;
             }
             return true;
-        }
-
-        private struct ForeignKeyTestResult
-        {
-            public int MatchCount;
-            public double MatchRatio;
-            public string BestTargetField;
-            public bool IsViable { get { return MatchRatio > 0.1; } }
         }
     }
 }

@@ -24,7 +24,7 @@ namespace ControlledVocabularies.Inference.Field
 
         public void RegisterStrategy(IFieldInferenceStrategy strategy) => _strategies.Add(strategy);
 
-        public CompositeFieldInferenceResult AnalyzeField(string fieldName, List<string> sampleValues, IEnumerable<MultiLevelKey> allRecords, ModelContext context)
+        public CompositeFieldInferenceResult AnalyzeField(string fieldName, IEnumerable<string> sampleValues, IEnumerable<MultiLevelKey> allRecords, ModelContext context)
         {
             var results = new List<FieldInferenceResult>();
 
