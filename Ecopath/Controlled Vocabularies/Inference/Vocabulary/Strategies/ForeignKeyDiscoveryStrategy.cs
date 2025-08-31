@@ -96,16 +96,19 @@ namespace ControlledVocabularies.Inference.Vocabulary.Strategies
 
         private bool IsLikelyForeignKeyCandidate(string fieldName, KeyFieldDescriptor? d)
         {
-            var schema = FieldPolicy.ForSchema(fieldName);
-            var looksCode =
-                schema.Contains("code") ||
-                schema.Contains("id") ||
-                schema.EndsWith("-id") ||
-                schema == "alpha3";
+            var looksCode = FieldNameHelper.IsCodeField(fieldName, out _);
 
             if (d == null) return looksCode;
             if (d.Kind == FieldKind.Code) return true;
-            if (d.AvgLength > 0 && d.AvgLength <= 6 && d.UniquenessRatio >= 0.7) return true;
+
+            // Use centralized thresholds
+            if (d.AvgLength > 0 &&
+                d.AvgLength <= ControlledVocabularies.Common.LocalSettings.Heuristics_MaxLikelyCodeLen &&
+                d.UniquenessRatio >= ControlledVocabularies.Common.LocalSettings.Heuristics_MinUniquenessForCode)
+            {
+                return true;
+            }
+
             return looksCode;
         }
 
