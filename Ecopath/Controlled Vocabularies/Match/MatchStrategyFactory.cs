@@ -10,6 +10,7 @@ namespace ControlledVocabularies.Match
             {
                 MatchStrategy.Exact => new ExactFieldMatcher(),
                 MatchStrategy.Fuzzy => new FuzzyFieldMatcher(),
+                MatchStrategy.Keyword => new KeywordFieldMatcher(),
                 MatchStrategy.TokenOverlap => new TokenOverlapFieldMatcher(),
                 _ => new ExactFieldMatcher()
             };
