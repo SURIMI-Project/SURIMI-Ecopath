@@ -34,6 +34,7 @@ namespace ControlledVocabularies.Inference.Field.Strategies
             var maxCodeLen = LocalSettings.Heuristics_MaxLikelyCodeLen;
             var minUpperForCode = LocalSettings.Heuristics_MinUppercaseRatioForCode;
             var minUniqueForCode = LocalSettings.Heuristics_MinUniquenessForCode;
+            var grace = LocalSettings.Heuristics_Grace;
             bool keywordOn = LocalSettings.Heuristics_EnableKeywordStrategy;
 
             FieldKind kind = FieldKind.Unknown;
@@ -70,25 +71,23 @@ namespace ControlledVocabularies.Inference.Field.Strategies
                 {
                     kind = FieldKind.Label;
 
-                    if (avgLength <= maxShort)
+                    if (avgLength <= maxShort + grace)
                     {
                         strategy = MatchStrategy.Exact | MatchStrategy.Fuzzy;
                         weight = 6;
                         conf = 0.60;
                     }
-                    else if (avgLength <= maxMedium)
+
+                    if ((maxShort - grace) <= avgLength && avgLength <= (maxMedium + grace))
                     {
-                        strategy = keywordOn
-                            ? MatchStrategy.Fuzzy | MatchStrategy.Keyword
-                            : MatchStrategy.Fuzzy;
+                        strategy = strategy | (keywordOn ? MatchStrategy.Fuzzy | MatchStrategy.Keyword : MatchStrategy.Fuzzy);
                         weight = keywordOn ? 5 : 5;
                         conf = 0.60;
                     }
-                    else
+
+                    if ((maxMedium - grace) < avgLength)
                     {
-                        strategy = keywordOn
-                            ? MatchStrategy.Keyword | MatchStrategy.TokenOverlap
-                            : MatchStrategy.TokenOverlap;
+                        strategy = strategy | (keywordOn ? MatchStrategy.Keyword | MatchStrategy.TokenOverlap : MatchStrategy.TokenOverlap);
                         weight = keywordOn ? 3 : 3;
                         conf = 0.60;
                     }

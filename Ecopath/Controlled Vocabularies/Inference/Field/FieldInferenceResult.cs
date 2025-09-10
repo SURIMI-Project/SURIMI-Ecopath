@@ -9,6 +9,8 @@ namespace ControlledVocabularies.Inference.Field
     {
         public string StrategyName { get; set; } = "";
         public double Confidence { get; set; } // 0.0 - 1.0
+        public int ConfidenceScore => (int)(Confidence * 100);
+
         public FieldKind? SuggestedKind { get; set; }
         public MatchStrategy? SuggestedStrategy { get; set; }
         public int? SuggestedWeight { get; set; }

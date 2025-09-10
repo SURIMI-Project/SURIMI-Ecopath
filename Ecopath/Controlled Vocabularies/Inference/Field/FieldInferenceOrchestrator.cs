@@ -2,6 +2,7 @@
 using ControlledVocabularies.Context;
 using ControlledVocabularies.Core;
 using ControlledVocabularies.Inference.Field.Strategies;
+using ControlledVocabularies.Registries;
 
 namespace ControlledVocabularies.Inference.Field
 {
@@ -12,14 +13,13 @@ namespace ControlledVocabularies.Inference.Field
     {
         private readonly List<IFieldInferenceStrategy> _strategies = new();
 
-        public FieldInferenceOrchestrator()
+        public FieldInferenceOrchestrator(IVocabularyRegistry? _registry)
         {
-            // Register strategies in priority order
             RegisterStrategy(new CodeNamePairStrategy());
             RegisterStrategy(new HierarchicalStructureStrategy());
             RegisterStrategy(new RepetitiveMeaningfulStrategy());
+            RegisterStrategy(new DomainSpecificTermStrategy(_registry));
             RegisterStrategy(new BasicStatisticsStrategy()); // Fallback
-                                                             // ... more strategies
         }
 
         public void RegisterStrategy(IFieldInferenceStrategy strategy) => _strategies.Add(strategy);

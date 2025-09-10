@@ -41,41 +41,31 @@ namespace ControlledVocabularies.Inference.Field
             if (validResults.Count == 0)
                 return ConsensusResult.NoSuggestions();
 
-            var normalizedResults = new List<NormalizedResult>();
-            foreach (var result in validResults)
-            {
-                var normalized = new NormalizedResult
-                {
-                    Original = result,
-                    ConfidenceScore = (int)(result.Confidence * 100)
-                };
-                normalizedResults.Add(normalized);
-            }
 
-            var highConfidenceResults = new List<NormalizedResult>();
-            foreach (var result in normalizedResults)
+            var highConfidenceResults = new List<FieldInferenceResult>();
+            foreach (var result in results)
             {
-                if (result.ConfidenceScore >= 80 && result.Original.SuggestedKind.HasValue)
+                if (result.ConfidenceScore >= 80 && result.SuggestedKind.HasValue)
                     highConfidenceResults.Add(result);
             }
 
             if (highConfidenceResults.Count > 0)
                 return CalculateHighConfidenceConsensus(highConfidenceResults);
 
-            return CalculateVoteTallyConsensus(normalizedResults);
+            return CalculateVoteTallyConsensus(results);
         }
 
-        private ConsensusResult CalculateHighConfidenceConsensus(List<NormalizedResult> highConfidenceResults)
+        private ConsensusResult CalculateHighConfidenceConsensus(List<FieldInferenceResult> highConfidenceResults)
         {
-            NormalizedResult winner = highConfidenceResults[0];
+            FieldInferenceResult winner = highConfidenceResults[0];
             foreach (var result in highConfidenceResults)
             {
                 if (result.ConfidenceScore > winner.ConfidenceScore)
                     winner = result;
             }
 
-            var strategy = InferStrategyFromKind(winner.Original.SuggestedKind!.Value);
-            var weight = winner.Original.SuggestedWeight ?? CalculateAverageWeight(highConfidenceResults);
+            var strategy = winner.SuggestedStrategy ?? CalculateAverageStrategy(highConfidenceResults);
+            var weight = winner.SuggestedWeight ?? CalculateAverageWeight(highConfidenceResults);
 
             int totalConfidence = 0;
             foreach (var result in highConfidenceResults)
@@ -86,7 +76,7 @@ namespace ControlledVocabularies.Inference.Field
 
             return new ConsensusResult
             {
-                Kind = winner.Original.SuggestedKind.Value,
+                Kind = winner.SuggestedKind!.Value,
                 Strategy = strategy,
                 Weight = weight,
                 Confidence = avgConfidence,
@@ -94,17 +84,17 @@ namespace ControlledVocabularies.Inference.Field
             };
         }
 
-        private ConsensusResult CalculateVoteTallyConsensus(List<NormalizedResult> normalizedResults)
+        private ConsensusResult CalculateVoteTallyConsensus(List<FieldInferenceResult> normalizedResults)
         {
-            var kindGroups = new Dictionary<FieldKind, List<NormalizedResult>>();
+            var kindGroups = new Dictionary<FieldKind, List<FieldInferenceResult>>();
 
             foreach (var result in normalizedResults)
             {
-                if (result.Original.SuggestedKind.HasValue)
+                if (result.SuggestedKind.HasValue)
                 {
-                    var kind = result.Original.SuggestedKind.Value;
+                    var kind = result.SuggestedKind.Value;
                     if (!kindGroups.ContainsKey(kind))
-                        kindGroups[kind] = new List<NormalizedResult>();
+                        kindGroups[kind] = new List<FieldInferenceResult>();
 
                     kindGroups[kind].Add(result);
                 }
@@ -124,7 +114,7 @@ namespace ControlledVocabularies.Inference.Field
                 {
                     totalScore += result.ConfidenceScore;
                     totalConfidence += result.ConfidenceScore;
-                    contributingResults.Add(result.Original);
+                    contributingResults.Add(result);
                 }
 
                 var vote = new KindVote
@@ -146,7 +136,7 @@ namespace ControlledVocabularies.Inference.Field
                     winningVote = vote;
             }
 
-            var strategy = InferStrategyFromKind(winningVote.Kind);
+            var strategy = CalculateAverageStrategy(winningVote.ContributingResults);
             var weight = CalculateAverageWeight(winningVote.ContributingResults);
 
             return new ConsensusResult
@@ -157,35 +147,6 @@ namespace ControlledVocabularies.Inference.Field
                 Confidence = winningVote.AverageConfidence,
                 Method = "VoteTally"
             };
-        }
-
-        private MatchStrategy InferStrategyFromKind(FieldKind kind)
-        {
-            if (kind == FieldKind.Code) return MatchStrategy.Exact;
-            if (kind == FieldKind.Label) return MatchStrategy.Exact | MatchStrategy.Fuzzy;
-            if (kind == FieldKind.Uri) return MatchStrategy.Exact;
-            if (kind == FieldKind.Numeric) return MatchStrategy.Exact;
-            if (kind == FieldKind.DateTime) return MatchStrategy.Exact;
-            return MatchStrategy.Exact;
-        }
-
-        private int CalculateAverageWeight(List<NormalizedResult> normalizedResults)
-        {
-            var resultsWithWeights = new List<WeightedWeight>();
-            foreach (var result in normalizedResults)
-            {
-                if (result.Original.SuggestedWeight.HasValue)
-                {
-                    var weightedWeight = new WeightedWeight
-                    {
-                        Weight = result.Original.SuggestedWeight.Value,
-                        Confidence = result.Original.Confidence
-                    };
-                    resultsWithWeights.Add(weightedWeight);
-                }
-            }
-
-            return CalculateAverageWeightFromWeightedWeights(resultsWithWeights);
         }
 
         private int CalculateAverageWeight(List<FieldInferenceResult> results)
@@ -226,6 +187,18 @@ namespace ControlledVocabularies.Inference.Field
             return result;
         }
 
+        private MatchStrategy CalculateAverageStrategy(List<FieldInferenceResult> normalizedResults)
+        {
+            MatchStrategy total = MatchStrategy.None;
+            foreach (var result in normalizedResults)
+            {
+                if (result.SuggestedStrategy.HasValue)
+                {
+                    total |= result.SuggestedStrategy!.Value;
+                }
+            }
+            return total;
+        }
         public bool MeetsThreshold(int minScore = 50) => OverallConfidence >= minScore;
 
         public IEnumerable<string> GetAllEvidence()
@@ -260,14 +233,6 @@ namespace ControlledVocabularies.Inference.Field
             return $"Composite[{FieldName}]: {RecommendedKind}, {RecommendedStrategy} @ {RecommendedWeight} " +
                    $"[{OverallConfidence}/100] via {ConsensusMethod}{evidence}";
         }
-    }
-
-    public class NormalizedResult
-    {
-        public FieldInferenceResult Original { get; set; }
-        public int ConfidenceScore { get; set; }
-
-        public override string ToString() => $"{Original.StrategyName}: {ConfidenceScore}/100";
     }
 
     public class KindVote
