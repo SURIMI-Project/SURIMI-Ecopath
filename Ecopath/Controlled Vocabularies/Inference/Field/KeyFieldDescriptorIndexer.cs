@@ -2,7 +2,6 @@
 using ControlledVocabularies.Context;
 using ControlledVocabularies.Core;
 using ControlledVocabularies.Descriptors;
-using ControlledVocabularies.Inference.Field.Strategies;
 using ControlledVocabularies.Registries;
 using ControlledVocabularies.Utils;
 
@@ -11,22 +10,10 @@ namespace ControlledVocabularies.Inference.Field
     public class KeyFieldDescriptorIndexer : IKeyFieldDescriptorIndexer
     {
         private readonly FieldInferenceOrchestrator _orchestrator;
-        private readonly IVocabularyRegistry? _registry;
 
         public KeyFieldDescriptorIndexer(IVocabularyRegistry? registry = null)
         {
-            _registry = registry;
-            _orchestrator = new FieldInferenceOrchestrator();
-            RegisterDefaultStrategies();
-        }
-
-        private void RegisterDefaultStrategies()
-        {
-            _orchestrator.RegisterStrategy(new CodeNamePairStrategy());
-            _orchestrator.RegisterStrategy(new HierarchicalStructureStrategy());
-            _orchestrator.RegisterStrategy(new RepetitiveMeaningfulStrategy());
-            _orchestrator.RegisterStrategy(new DomainSpecificTermStrategy(_registry));
-            _orchestrator.RegisterStrategy(new BasicStatisticsStrategy());
+            _orchestrator = new FieldInferenceOrchestrator(registry);
         }
 
         public bool BuildIndex(string fieldName, IEnumerable<MultiLevelKey> records, KeyFieldDescriptor descriptor)

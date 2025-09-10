@@ -7,6 +7,7 @@ using EwEUtils.Core;
 using System.Diagnostics;
 using System.Text;
 using ControlledVocabularies.Core;
+using ControlledVocabularies.Common;
 
 namespace Ecopath.EwE
 {
@@ -47,8 +48,6 @@ namespace Ecopath.EwE
         private readonly IEwECore m_core;
         /// <summary>The Ecospace run thread, if any.</summary>
         private Thread? m_thread;
-        /// <summary>The framework logger. Very pretty.</summary>
-        private readonly ILogger<EwEController> m_logger;
         /// <summary>EwE configuration that defines how EwE entities relate to common concepts (species, fishing, markets, etc).</summary>
         private readonly IEwEConfiguration m_configuration;
 
@@ -86,10 +85,10 @@ namespace Ecopath.EwE
 
             // To make sure we can find local resources. This is rather hack.
             Directory.SetCurrentDirectory(System.AppDomain.CurrentDomain.BaseDirectory);
-            m_logger = logger;
+            LocalSettings.Logger = logger;
 
             //m_core.PluginManager = new cPluginManager();
-            m_logger.LogInformation("EwE loaded {0} plug-in(s)", m_core.PluginManager.LoadPlugins());
+            LocalSettings.Logger.LogInformation("EwE loaded {0} plug-in(s)", m_core.PluginManager.LoadPlugins());
 
             IPlugin? pi = GetPlugin(typeof(cEcospaceBridgePlugin));
             if (pi != null)
@@ -169,23 +168,23 @@ namespace Ecopath.EwE
                 throw new FileNotFoundException("EwE model file '{0}' cannot be found", m_configuration.ModelName); 
             if (!m_core.LoadModel(m_configuration.ModelName))
                 throw new Exception($"EwE could not load model '{m_configuration.ModelName}'");
-            m_logger.LogInformation("EwE - Ecopath loaded file '{0}', model '{1}'", m_configuration.ModelName, m_core.EcopathDataStructures.ModelName);
+            LocalSettings.Logger.LogInformation("EwE - Ecopath loaded file '{0}', model '{1}'", m_configuration.ModelName, m_core.EcopathDataStructures.ModelName);
 
             // Check Ecopath balancing
             bool bIsBalanced = false;
             if (!m_core.RunEcopath(ref bIsBalanced) | !bIsBalanced)
                 throw new Exception("EwE - Ecopath does not balance");
-            m_logger.LogInformation("EwE - Ecopath does balance");
+            LocalSettings.Logger.LogInformation("EwE - Ecopath does balance");
 
             // Check and load Ecosim
             if (m_configuration.EcosimScenario <= 0 | !m_core.LoadEcosimScenario(m_configuration.EcosimScenario))
                 throw new Exception($"EwE - Ecosim scenario {m_configuration.EcosimScenario} not loaded");
-            m_logger.LogInformation("EwE - Ecosim scenario {0} loaded", m_configuration.EcosimScenario);
+            LocalSettings.Logger.LogInformation("EwE - Ecosim scenario {0} loaded", m_configuration.EcosimScenario);
             if (m_configuration.EcosimTimeSeries > 0)
             {
                 if (!m_core.LoadTimeSeries(m_configuration.EcosimTimeSeries))
                     throw new Exception($"EwE - Ecosim time series {m_configuration.EcosimTimeSeries} not loaded");
-                m_logger.LogInformation("EwE - Ecosim time series {0} loaded", m_configuration.EcosimTimeSeries);
+                LocalSettings.Logger.LogInformation("EwE - Ecosim time series {0} loaded", m_configuration.EcosimTimeSeries);
             }
 
             // Configure Ecosim
@@ -193,15 +192,15 @@ namespace Ecopath.EwE
             parms.NumberYears = m_configuration.MaxRunYears; // No of years apply to both Sim and Space
 
             // Run Ecosim
-            m_logger.LogInformation("EwE - Going to run Ecosim for {0} years", parms.NumberYears);
+            LocalSettings.Logger.LogInformation("EwE - Going to run Ecosim for {0} years", parms.NumberYears);
             if (!m_core.RunEcosim())
                 throw new Exception("EwE - Ecosim failed to run");
-            m_logger.LogInformation("EwE - Ecosim run successfully");
+            LocalSettings.Logger.LogInformation("EwE - Ecosim run successfully");
 
             // Check and load Ecospace
             if (m_configuration.EcospaceScenario <= 0 | !m_core.LoadEcospaceScenario(m_configuration.EcospaceScenario))
                 throw new Exception($"EwE - Ecospace scenario {m_configuration.EcospaceScenario} not loaded");
-            m_logger.LogInformation("EwE - Ecospace scenario {0} loaded", m_configuration.EcospaceScenario);
+            LocalSettings.Logger.LogInformation("EwE - Ecospace scenario {0} loaded", m_configuration.EcospaceScenario);
 
             // Now load the configuration
             m_configuration.Load(m_core);
@@ -215,7 +214,7 @@ namespace Ecopath.EwE
             info.AppendLine("EwE fleet - market mappings:");
             foreach (var mapping in m_configuration.Mappings(KeyDomain.Market))
                 info.AppendLine(string.Format(" - {0}", mapping.ToInfoString(m_core)));
-            m_logger.LogInformation(info.ToString());
+            LocalSettings.Logger.LogInformation(info.ToString());
 
             // Build species proportion accounting
             foreach (int iGroup in m_configuration.FishedGroups)
@@ -225,7 +224,7 @@ namespace Ecopath.EwE
             cEcospaceDataStructures ds = m_core.EcospaceDataStructures;
             ds.SpinUpYears = m_configuration.SpinupYears;
             ds.UseSpinUp = (m_configuration.SpinupYears > 0);
-            m_logger.LogInformation("EwE - Ecospace spin-up for {0} years", ds.UseSpinUp ? m_configuration.SpinupYears.ToString() : "off");
+            LocalSettings.Logger.LogInformation("EwE - Ecospace spin-up for {0} years", ds.UseSpinUp ? m_configuration.SpinupYears.ToString() : "off");
 
             // Start running Ecospace up to the point where intended simulations begin
             var tcs = new TaskCompletionSource();
@@ -250,7 +249,7 @@ namespace Ecopath.EwE
             if (completedTask != tcs.Task)
             {
                 // We hit a timeout; need to log that
-                m_logger.LogInformation("EwE - Ecospace initialization timed out; this run is dead in the water");
+                LocalSettings.Logger.LogInformation("EwE - Ecospace initialization timed out; this run is dead in the water");
                 ForceStop();
             }
             // Ready when running Ecospace is waiting for further instructions
@@ -275,7 +274,7 @@ namespace Ecopath.EwE
             OnRunStateChanged += Handler;
 
             // Carry on
-            m_logger.LogInformation("EwE - Continue");
+            LocalSettings.Logger.LogInformation("EwE - Continue");
             RunState = RunStates.running;
             m_core.EcospacePaused = false;
 
@@ -396,7 +395,7 @@ namespace Ecopath.EwE
                         else
                         {
                             // ToDo_JS: decide how to respond to a potential EwE misconfiguration.
-                            m_logger.LogWarning("EwE - !! Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.MarketCode, price.SpeciesCode);
+                            LocalSettings.Logger.LogWarning("EwE - !! Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.MarketCode, price.SpeciesCode);
                             //throw new Exception("Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.marketCode, price.SpeciesCode);
                         }
                     }
@@ -723,7 +722,7 @@ namespace Ecopath.EwE
 
         private void ForceStop()
         {
-            m_logger.LogInformation("EwE - !! Force stop received");
+            LocalSettings.Logger.LogInformation("EwE - !! Force stop received");
             try
             {
                 if (m_thread != null && m_thread.IsAlive)
@@ -779,12 +778,12 @@ namespace Ecopath.EwE
                             // Tick
                             m_iSpinUpStep += 1;
                             if (m_iSpinUpStep % cCore.N_MONTHS == 0)
-                                m_logger.LogInformation("EwE - finished spinup year {0}", (int) (m_iSpinUpStep / cCore.N_MONTHS));
+                                LocalSettings.Logger.LogInformation("EwE - finished spinup year {0}", (int) (m_iSpinUpStep / cCore.N_MONTHS));
                         }
                         else
                         {
                             if (iTime % cCore.N_MONTHS == 0)
-                                m_logger.LogInformation("EwE - finished year {0}", m_core.EcospaceTimestepToAbsoluteTime(iTime).Year);
+                                LocalSettings.Logger.LogInformation("EwE - finished year {0}", m_core.EcospaceTimestepToAbsoluteTime(iTime).Year);
                         }
                         break;
 
@@ -801,7 +800,7 @@ namespace Ecopath.EwE
                             CacheBiomassData();
                             CacheCatchAndSalesData();
 
-                            m_logger.LogInformation("EwE - pausing at timestep {0}", iTime + 1);
+                            LocalSettings.Logger.LogInformation("EwE - pausing at timestep {0}", iTime + 1);
                             RunState = RunStates.waiting;
                             m_core.EcospacePaused = true;
                         }
@@ -814,7 +813,7 @@ namespace Ecopath.EwE
                         break;
 
                     case cEcospaceBridgePlugin.EventType.EndRun:
-                        m_logger.LogInformation("EwE - end run callback");
+                        LocalSettings.Logger.LogInformation("EwE - end run callback");
                         
                         // Clear all modifications made to core data, if any
                         m_core.DiscardChanges();
@@ -830,7 +829,7 @@ namespace Ecopath.EwE
             }
             catch (Exception ex)
             {
-                m_logger.LogInformation("EwE - exception {0} on bridgecallback {1}", ex.Message, e.ToString());
+                LocalSettings.Logger.LogInformation("EwE - exception {0} on bridgecallback {1}", ex.Message, e.ToString());
             }
         }
 
