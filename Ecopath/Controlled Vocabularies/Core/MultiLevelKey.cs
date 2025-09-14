@@ -1,7 +1,10 @@
 ﻿using ControlledVocabularies.Common;
 using ControlledVocabularies.Descriptors;
 using ControlledVocabularies.Utils;
+using ControlledVocabularies.Vocabularies;
+using Microsoft.AspNetCore.StaticFiles.Infrastructure;
 using System.Data;
+using System.Diagnostics.Eventing.Reader;
 using System.Reflection;
 using System.Text;
 
@@ -188,7 +191,7 @@ namespace ControlledVocabularies.Core
             return true;
         }
 
-        public void SetField(string key, string value, bool bPurgeVocabularyName = false)
+        public void SetField(string key, string value)
         {
             if (string.IsNullOrWhiteSpace(key)) return;
 
@@ -201,10 +204,16 @@ namespace ControlledVocabularies.Core
             }
 
             int iSep = value.IndexOf(':');
-            string vocab = (iSep == -1 || bPurgeVocabularyName) ? string.Empty : value.Substring(0, iSep);
-            value = (iSep == -1) ? value : value.Substring(iSep + 1);
-
-            this.Fields[key] = new MultiLevelKeyField(value, vocab);
+            string vocab = (iSep == -1) ? string.Empty : value.Substring(0, iSep);
+            if (!IsURL(vocab))
+            {
+                value = (iSep == -1) ? value : value.Substring(iSep + 1);
+                this.Fields[key] = new MultiLevelKeyField(value, vocab);
+            }
+            else
+            {
+                this.Fields[key] = new MultiLevelKeyField(value, String.Empty);
+            }
 
             // Try to complement a missing KeyFieldDescriptor if allowed
             if (!this.Descriptors.ContainsKey(key) && !_strict)
@@ -290,6 +299,11 @@ namespace ControlledVocabularies.Core
             return null;
         }
 
+        public static bool IsURL(string name)
+        {
+            name = FieldPolicy.ForSchema(name).Trim();
+            return (name.StartsWith("http", StringComparison.OrdinalIgnoreCase) || name.StartsWith("doi:", StringComparison.OrdinalIgnoreCase) || name.Contains("://"));
+        }
         #endregion // Internals
     }
 }

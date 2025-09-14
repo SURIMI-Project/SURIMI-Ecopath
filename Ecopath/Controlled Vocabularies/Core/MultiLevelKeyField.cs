@@ -1,4 +1,6 @@
-﻿namespace ControlledVocabularies.Core
+﻿using OpenTelemetry.Trace;
+
+namespace ControlledVocabularies.Core
 {
     /// <inheritdoc/>
     /// <todo>Make Value/Vocabulary init-only or enforce freeze via IFreezable to prevent mutation in published records.</todo>
@@ -7,7 +9,8 @@
     {
         public MultiLevelKeyField(string value, string vocabulary)
         {
-            System.Diagnostics.Debug.Assert(value.IndexOf(':') == -1);
+            // How about URI / URL / DOI?
+            //System.Diagnostics.Debug.Assert(value.IndexOf(':') == -1);
             Value = value;
             Vocabulary = vocabulary;
         }
@@ -18,7 +21,9 @@
         {
             if (string.IsNullOrEmpty(value)) return null;
             int iSep = value.IndexOf(':');
-            if (iSep == -1)
+            bool hasUri = value.StartsWith("http", StringComparison.OrdinalIgnoreCase) || value.StartsWith("doi:", StringComparison.OrdinalIgnoreCase) || value.Contains("://");
+
+            if ((iSep == -1) || hasUri)
                 return new MultiLevelKeyField(value, string.Empty);
             return new MultiLevelKeyField(value.Substring(iSep + 1), value.Substring(0, iSep));
         }
