@@ -51,7 +51,7 @@ namespace ControlledVocabularies.Descriptors.Tests
 
             var d = v.GetKeyFieldDescriptor("link")!;
             d.Kind.Should().Be(FieldKind.Uri);
-            d.Strategy.Should().Be(MatchStrategy.None);
+            d.Strategy.Should().Be(MatchStrategy.Exact);
         }
     }
 }

@@ -24,7 +24,7 @@ namespace ControlledVocabularies.Inference.Field.Strategies
             double uniqueness = samples.Distinct().Count() / (double)samples.Count;
             double uppercaseRatio = CalculateUppercaseRatio(samples);
             bool allNumeric = samples.All(v => double.TryParse(v, out _));
-            bool hasUri = samples.Any(v => v.StartsWith("http", StringComparison.OrdinalIgnoreCase) || v.Contains("://"));
+            bool hasUri = samples.Any(v => v.StartsWith("http", StringComparison.OrdinalIgnoreCase) || v.StartsWith("doi:", StringComparison.OrdinalIgnoreCase) || v.Contains("://"));
             bool hasWhitespace = HasWhitespace(samples);
 
             bool looksCodeByName = FieldNameHelper.IsCodeField(fieldName, out _);

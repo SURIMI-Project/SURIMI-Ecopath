@@ -42,8 +42,7 @@ namespace ControlledVocabularies.Core
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        /// <param name="bPurgeVocabularyName">If true, strips out the vocabulary name from the value</param>
-        void SetField(string key, string value, bool bPurgeVocabularyName = false);
+        void SetField(string key, string value);
 
         /// <summary>
         /// ASsociate a <see cref="IKeyFieldDescriptor"/> to the given field.

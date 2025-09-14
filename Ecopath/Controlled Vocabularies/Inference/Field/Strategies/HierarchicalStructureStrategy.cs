@@ -52,6 +52,7 @@ namespace ControlledVocabularies.Inference.Field.Strategies
             foreach (var value in values) // Sample for performance
             {
                 if (string.IsNullOrWhiteSpace(value)) continue;
+                if (MultiLevelKey.IsURL(value)) continue;
 
                 // Count separators
                 foreach (var sep in commonSeparators)
