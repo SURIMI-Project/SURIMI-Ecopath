@@ -12,6 +12,7 @@ namespace ControlledVocabularies.Vocabularies
     {
         private const string COL_CODE = "Alpha3_Code";
         private const string COL_NAME = "Scientific_Name";
+        private const string COL_FAO = "FAO_code";
 
         public override string VocabularyName => "ASFIS";
         public override KeyDomain Domain => KeyDomain.Species;
@@ -29,6 +30,7 @@ namespace ControlledVocabularies.Vocabularies
 
             AddField(COL_CODE, Domain, Purpose, FieldKind.Code, true, 10, MatchStrategy.Exact);
             AddField(COL_NAME, Domain, Purpose, FieldKind.Label, true, 8, MatchStrategy.Exact | MatchStrategy.Fuzzy | MatchStrategy.TokenOverlap);
+            AddField(COL_FAO, Domain, Purpose, FieldKind.Code, true, 8, MatchStrategy.Exact);
 
             try
             {

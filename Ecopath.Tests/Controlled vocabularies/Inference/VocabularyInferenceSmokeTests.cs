@@ -74,6 +74,7 @@ namespace ControlledVocabularies.Inference.Tests
             //_registry.Register(worms);
             _registry.Register(asfis);
 
+            // This test will fail as the WoRMS CSV file is still missing the FAO key
             var res = _orchestrator.Analyze(worms, null, registry: _registry);
 
             bool found = false;
