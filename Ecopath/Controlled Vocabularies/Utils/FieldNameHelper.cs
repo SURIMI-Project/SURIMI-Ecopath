@@ -77,7 +77,7 @@ namespace ControlledVocabularies.Utils
                 {
                     if (IsNameField(other, out var stem2) && StringComparer.Ordinal.Equals(stem, stem2))
                     {
-                        pairedField = other; relation = "Code↔Name"; return true;
+                        pairedField = other; relation = "CodeName"; return true;
                     }
                 }
                 return false;
@@ -89,7 +89,7 @@ namespace ControlledVocabularies.Utils
                 {
                     if (IsCodeField(other, out var stem2) && StringComparer.Ordinal.Equals(stem, stem2))
                     {
-                        pairedField = other; relation = "Name↔Code"; return true;
+                        pairedField = other; relation = "NameCode"; return true;
                     }
                 }
                 return false;
