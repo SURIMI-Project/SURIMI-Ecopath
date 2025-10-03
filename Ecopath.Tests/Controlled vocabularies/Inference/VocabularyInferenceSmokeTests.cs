@@ -1,9 +1,13 @@
-﻿using ControlledVocabularies.Core;
-using ControlledVocabularies.Inference.Vocabulary;
-using ControlledVocabularies.Inference.Vocabulary.Strategies;
-using ControlledVocabularies.Registries;
-using ControlledVocabularies.Utils;
-using ControlledVocabularies.Vocabularies;
+﻿using Eii.ControlledVocabularies.Inference.Vocabulary;
+using Eii.ControlledVocabularies.Inference.Vocabulary.Strategies;
+using Eii.ControlledVocabularies.Registries;
+using Eii.ControlledVocabularies.Utils;
+using Eii.ControlledVocabularies.Vocabularies;
+using Eii.ControlledVocabularies.Vocabularies.Country;
+using Eii.ControlledVocabularies.Vocabularies.Gear;
+using Eii.ControlledVocabularies.Vocabularies.LifeStage;
+using Eii.ControlledVocabularies.Vocabularies.LifeStage.Species;
+using Eii.ControlledVocabularies.Vocabularies.Species;
 using FluentAssertions;
 using Xunit;
 

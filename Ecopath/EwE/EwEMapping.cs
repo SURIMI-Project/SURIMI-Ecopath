@@ -1,7 +1,8 @@
-﻿using ControlledVocabularies.Core;
+﻿using Eii.ControlledVocabularies.Core;
 using Ecopath.EwE.Wrapper;
 using EwECore;
 using System.Diagnostics;
+using Eii.ControlledVocabularies.Utils;
 
 public class EwEMapping : MultiLevelKey
 {

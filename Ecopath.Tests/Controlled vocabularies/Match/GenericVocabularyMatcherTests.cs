@@ -1,6 +1,8 @@
-﻿using ControlledVocabularies.Core;
-using ControlledVocabularies.Utils;
-using ControlledVocabularies.Vocabularies;
+﻿using Eii.ControlledVocabularies.Core;
+using Eii.ControlledVocabularies.Match;
+using Eii.ControlledVocabularies.Utils;
+using Eii.ControlledVocabularies.Vocabularies.LifeStage;
+using Eii.ControlledVocabularies.Vocabularies.Species;
 using FluentAssertions;
 using Xunit;
 
