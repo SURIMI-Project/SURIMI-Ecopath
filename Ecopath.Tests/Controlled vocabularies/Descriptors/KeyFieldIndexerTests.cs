@@ -1,5 +1,5 @@
-﻿using ControlledVocabularies.Core;
-using ControlledVocabularies.Vocabularies;
+﻿using Eii.ControlledVocabularies.Utils;
+using Eii.ControlledVocabularies.Vocabularies;
 using FluentAssertions;
 using Xunit;
 
