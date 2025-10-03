@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using Eii.ControlledVocabularies.Utils;
+using FluentAssertions;
 using Xunit;
 
 namespace ControlledVocabularies.Utils.Tests

@@ -1,11 +1,16 @@
-﻿using ControlledVocabularies.Common;
-using ControlledVocabularies.Core;
-using ControlledVocabularies.Descriptors;
-using ControlledVocabularies.Match;
-using ControlledVocabularies.Registries;
-using ControlledVocabularies.Utils;
-using ControlledVocabularies.Vocabularies;
-using ControlledVocabularies.Vocabularies.Tests;
+﻿using ControlledVocabularies.Vocabularies.Tests;
+using Eii.ControlledVocabularies.Common;
+using Eii.ControlledVocabularies.Core;
+using Eii.ControlledVocabularies.Descriptors;
+using Eii.ControlledVocabularies.Match;
+using Eii.ControlledVocabularies.Registries;
+using Eii.ControlledVocabularies.Utils;
+using Eii.ControlledVocabularies.Vocabularies;
+using Eii.ControlledVocabularies.Vocabularies.Country;
+using Eii.ControlledVocabularies.Vocabularies.Gear;
+using Eii.ControlledVocabularies.Vocabularies.LifeStage;
+using Eii.ControlledVocabularies.Vocabularies.Species;
+using Eii.ControlledVocabularies.Resolve;
 using FluentAssertions;
 using Xunit;
 
@@ -189,7 +194,7 @@ namespace ControlledVocabularies.ForeignKeys.Tests
             var tgtRow = MultiLevelKey.FromPairs([("code", "ESP")], KeyDomain.FleetSegment, strict: false);
             var descr = new KeyFieldDescriptor("code", KeyDomain.FleetSegment, KeyPurpose.Gear, FieldKind.Code, isRequired: true, weight: 1, strategy: MatchStrategy.Exact) { Kind = FieldKind.Code };
 
-            var r = new ControlledVocabularies.Resolve.StrategyKeyResolver([tgtRow], [descr]);
+            var r = new StrategyKeyResolver([tgtRow], [descr]);
             var best = r.FindBestMatch(src);
             best!.Score.Should().Be(100);
         }

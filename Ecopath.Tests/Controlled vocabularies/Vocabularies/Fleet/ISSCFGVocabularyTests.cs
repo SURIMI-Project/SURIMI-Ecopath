@@ -1,6 +1,7 @@
-﻿using ControlledVocabularies.Core;
-using ControlledVocabularies.Descriptors;
-using ControlledVocabularies.Inference.Field;
+﻿using Eii.ControlledVocabularies.Descriptors;
+using Eii.ControlledVocabularies.Inference.Field;
+using Eii.ControlledVocabularies.Utils;
+using Eii.ControlledVocabularies.Vocabularies.Gear;
 using FluentAssertions;
 using Xunit;
 
