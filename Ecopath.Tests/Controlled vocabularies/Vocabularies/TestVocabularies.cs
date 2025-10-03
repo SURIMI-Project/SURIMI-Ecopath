@@ -1,6 +1,6 @@
-﻿using ControlledVocabularies.Core;
-using ControlledVocabularies.ForeignKeys;
-using ControlledVocabularies.Utils;
+﻿using Eii.ControlledVocabularies.ForeignKeys;
+using Eii.ControlledVocabularies.Utils;
+using Eii.ControlledVocabularies.Vocabularies;
 
 namespace ControlledVocabularies.Vocabularies.Tests
 {

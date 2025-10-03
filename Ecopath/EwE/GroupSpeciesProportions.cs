@@ -1,5 +1,4 @@
-﻿using Ecopath.EwE;
-using ControlledVocabularies.Core;
+﻿using Eii.ControlledVocabularies.Core;
 
 /// <summary>
 /// <para>Ecospace operates at the FG level, where multiple species may share biomass, 
