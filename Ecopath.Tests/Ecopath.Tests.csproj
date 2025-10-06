@@ -10,6 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Controlled vocabularies\**" />
+    <EmbeddedResource Remove="Controlled vocabularies\**" />
+    <None Remove="Controlled vocabularies\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Eii.Ecopath.EwECore" Version="6.7.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="Moq" Version="4.18.0" />
@@ -27,10 +33,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Ecopath\Ecopath.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Controlled vocabularies\Core\" />
   </ItemGroup>
 
 </Project>
