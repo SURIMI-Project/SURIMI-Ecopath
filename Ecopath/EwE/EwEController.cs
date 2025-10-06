@@ -1,6 +1,7 @@
 ﻿using Ecopath.EwE.Wrapper;
 using Ecopath.Models;
 using Eii.ControlledVocabularies.Core;
+using Eii.ControlledVocabularies.Descriptors;
 using Eii.ControlledVocabularies.Utils;
 using EwEBridge.Ecospace;
 using EwECore;
@@ -50,6 +51,7 @@ namespace Ecopath.EwE
         private Thread? m_thread;
         /// <summary>EwE configuration that defines how EwE entities relate to common concepts (species, fishing, markets, etc).</summary>
         private readonly IEwEConfiguration m_configuration;
+        private readonly IKeyFieldDescriptorRegistry m_keyFieldDescriptors;
 
         private readonly ILogger<EwEController> m_logger;
 
@@ -77,10 +79,12 @@ namespace Ecopath.EwE
 
         #endregion // Private vars 
 
-        public EwEController(ILogger<EwEController> logger, IEwEConfiguration configuration, IEwECore core)
+        public EwEController(ILogger<EwEController> logger, IEwEConfiguration configuration, IEwECore core, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry)
         {
             m_configuration = configuration;
             m_core = core;
+            m_keyFieldDescriptors = keyFieldDescriptorRegistry;
+
 
             cLog.VerboseLevel = eVerboseLevel.Disabled; // Turn off all internal event logging
             RunState = RunStates.idle;
@@ -419,7 +423,7 @@ namespace Ecopath.EwE
             foreach (var grid in m_catchIn.DispositionGrids)
             {
                 // Try to parse species code in grid
-                MultiLevelKey key = MultiLevelKey.FromObject(grid.Species, KeyDomain.Species);
+                MultiLevelKey key = MultiLevelKey.FromObject(grid.Species, KeyDomain.Species, m_keyFieldDescriptors);
                 // Resolve mapping key for grid fleet segment
                 foreach (var fleetinfo in m_configuration.ResolveFleets(grid.FleetSegment))
                 {

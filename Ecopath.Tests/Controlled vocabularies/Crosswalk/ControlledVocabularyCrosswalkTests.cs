@@ -1,6 +1,8 @@
 ﻿using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.CrossWalk;
+using Eii.ControlledVocabularies.Descriptors;
 using Eii.ControlledVocabularies.ForeignKeys;
+using Eii.ControlledVocabularies.Inference.Field;
 using Eii.ControlledVocabularies.Match;
 using Eii.ControlledVocabularies.Registries;
 using Eii.ControlledVocabularies.Utils;
@@ -13,32 +15,44 @@ namespace ControlledVocabularies.CrossWalk.Tests
 {
     public class WoRMSToASFISCrossWalkTests
     {
-        private readonly VocabularyRegistry m_registry;
+        private readonly IVocabularyRegistry m_registry;
         private readonly WoRMSSpeciesVocabulary m_wormsVocab;
         private readonly ASFISSpeciesCodeVocabulary m_asfisVocab;
         private readonly ForeignKeyResolver m_fkResolver;
         private readonly VocabularyCompatibilityScorer m_scorer;
+        private readonly IKeyFieldDescriptorIndexer m_keyFieldDescriptorIndexer;
+        private readonly IFieldInferenceOrchestrator _orchestrator;
+        private readonly IKeyFieldDescriptorRegistry m_keyFieldDescriptorRegistry;
+        private readonly IVocabularyMatcher m_vocabularyMatcher;
 
         public WoRMSToASFISCrossWalkTests()
         {
             m_registry = new VocabularyRegistry();
-            m_wormsVocab = new WoRMSSpeciesVocabulary();
-            m_asfisVocab = new ASFISSpeciesCodeVocabulary();
+
             m_scorer = new VocabularyCompatibilityScorer();
+            m_keyFieldDescriptorRegistry = new KeyFieldDescriptorRegistry();
+
+            // Create FK resolver with registry
+            m_fkResolver = new ForeignKeyResolver(m_registry, m_keyFieldDescriptorRegistry);
+
+            m_vocabularyMatcher = new GenericVocabularyMatcher(m_registry, m_fkResolver, m_keyFieldDescriptorRegistry);
+
+            _orchestrator = new FieldInferenceOrchestrator(m_registry, m_keyFieldDescriptorRegistry, m_vocabularyMatcher);
+            m_wormsVocab = new WoRMSSpeciesVocabulary(_orchestrator);
+            m_asfisVocab = new ASFISSpeciesCodeVocabulary(_orchestrator);
+            m_keyFieldDescriptorIndexer = new KeyFieldDescriptorIndexer();
 
             // Load vocabularies
-            m_wormsVocab.Load().Should().BeTrue();
-            m_asfisVocab.Load().Should().BeTrue();
+            m_wormsVocab.Load(m_keyFieldDescriptorIndexer).Should().BeTrue();
+            m_asfisVocab.Load(m_keyFieldDescriptorIndexer).Should().BeTrue();
 
             // Register in registry
-            m_registry.Register(m_wormsVocab);
-            m_registry.Register(m_asfisVocab);
+            m_registry.Register(m_wormsVocab, m_keyFieldDescriptorIndexer);
+            m_registry.Register(m_asfisVocab, m_keyFieldDescriptorIndexer);
 
             // Configure cross-references
             m_wormsVocab.ConfigureCrossReferences(m_registry);
 
-            // Create FK resolver with registry
-            m_fkResolver = new ForeignKeyResolver(m_registry);
         }
 
         [Fact]
@@ -50,7 +64,7 @@ namespace ControlledVocabularies.CrossWalk.Tests
                 ("ScientificName", "Gadus morhua"),
                 ("CommonName", "Atlantic cod"),
                 ("FAO_Code", "COD")  // This is the FK bridge - no vocab prefix!
-            ], KeyDomain.Species);
+            ], KeyDomain.Species, m_keyFieldDescriptorRegistry);
 
             // Act - Use foreign key resolver
             var fkResult = m_fkResolver.TryResolve(wormsKey, m_wormsVocab, m_asfisVocab);
@@ -68,7 +82,7 @@ namespace ControlledVocabularies.CrossWalk.Tests
         public void Should_Use_Exact_Matching_For_Foreign_Keys()
         {
             // Arrange - Test the exact matching behavior
-            var wormsKey = MultiLevelKey.FromPairs([("FAO_Code", "HAD")], KeyDomain.Species);
+            var wormsKey = MultiLevelKey.FromPairs([("FAO_Code", "HAD")], KeyDomain.Species, m_keyFieldDescriptorRegistry);
 
             // Act
             var result = m_fkResolver.TryResolve(wormsKey, m_wormsVocab, m_asfisVocab);
@@ -87,7 +101,7 @@ namespace ControlledVocabularies.CrossWalk.Tests
             // but could match via fallback to any compatible field
             var wormsKey = MultiLevelKey.FromPairs([
                 ("FAO_Code", "PIL")  // Sardine
-            ], KeyDomain.Species);
+            ], KeyDomain.Species, m_keyFieldDescriptorRegistry);
 
             // Act
             var result = m_fkResolver.TryResolve(wormsKey, m_wormsVocab, m_asfisVocab);
@@ -105,7 +119,7 @@ namespace ControlledVocabularies.CrossWalk.Tests
                 ("AphiaID", "999999"),
                 ("ScientificName", "Unknown species")
                 // Note: No FAO_Code field!
-            ], KeyDomain.Species);
+            ], KeyDomain.Species, m_keyFieldDescriptorRegistry);
 
             // Act
             var fkResult = m_fkResolver.TryResolve(wormsKeyNoFK, m_wormsVocab, m_asfisVocab);
@@ -120,7 +134,7 @@ namespace ControlledVocabularies.CrossWalk.Tests
         public void Should_Use_Schema_Normalized_Vocabulary_Names()
         {
             // Arrange - Test that vocabulary name normalization works
-            var wormsKey = MultiLevelKey.FromPairs([("FAO_Code", "COD")], KeyDomain.Species);
+            var wormsKey = MultiLevelKey.FromPairs([("FAO_Code", "COD")], KeyDomain.Species, m_keyFieldDescriptorRegistry);
 
             // Act
             var result = m_fkResolver.TryResolve(wormsKey, m_wormsVocab, m_asfisVocab);
@@ -170,7 +184,7 @@ namespace ControlledVocabularies.CrossWalk.Tests
             // Arrange - When FK resolution fails, try general matching
             var problematicKey = MultiLevelKey.FromPairs([
                 ("CommonName", "Atlantic cod") // No direct FK, but matchable content
-            ], KeyDomain.Species);
+            ], KeyDomain.Species, m_keyFieldDescriptorRegistry);
 
             // Act - FK resolver first
             var fkResult = m_fkResolver.TryResolve(problematicKey, m_wormsVocab, m_asfisVocab);
@@ -178,7 +192,7 @@ namespace ControlledVocabularies.CrossWalk.Tests
             if (!fkResult.IsMatch)
             {
                 // Fall back to general vocabulary matching
-                var generalMatcher = new GenericVocabularyMatcher();
+                var generalMatcher = new GenericVocabularyMatcher(m_registry, m_fkResolver, m_keyFieldDescriptorRegistry);
                 var generalResult = generalMatcher.Match(problematicKey, m_wormsVocab, m_asfisVocab);
 
                 // Assert - Should find match via general approach

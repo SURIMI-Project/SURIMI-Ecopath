@@ -1,11 +1,12 @@
 ﻿using Ecopath.EwE;
 using Ecopath.EwE.Wrapper;
 using Ecopath.Models;
+using Eii.ControlledVocabularies.Descriptors;
 using EwEPlugin;
+using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
-using FluentAssertions;
 
 namespace Ecopath.Tests.EwE
 {
@@ -15,6 +16,7 @@ namespace Ecopath.Tests.EwE
         private readonly Mock<IEwEConfiguration> _configMock = new();
         private readonly Mock<IEwECore> _coreMock = new();
         private readonly Mock<IPluginManager> _pluginManagerMock = new();
+        private readonly Mock<IKeyFieldDescriptorRegistry> m_keyFieldDescriptors = new();
 
         public EwEControllerTests()
         {
@@ -31,7 +33,7 @@ namespace Ecopath.Tests.EwE
 
 
             // Act
-            var controller = new EwEController(_loggerMock.Object, _configMock.Object, _coreMock.Object);
+            var controller = new EwEController(_loggerMock.Object, _configMock.Object, _coreMock.Object, m_keyFieldDescriptors.Object);
 
             // Assert
             controller.RunState.Should().Be(EwEController.RunStates.idle);
@@ -41,7 +43,7 @@ namespace Ecopath.Tests.EwE
         public void IsWaiting_ReturnsTrue_WhenRunStateIsWaiting()
         {
             // Arrange
-            var controller = new EwEController(_loggerMock.Object, _configMock.Object, _coreMock.Object);
+            var controller = new EwEController(_loggerMock.Object, _configMock.Object, _coreMock.Object, m_keyFieldDescriptors.Object);
             typeof(EwEController)
                 .GetProperty("RunState")!
                 .SetValue(controller, EwEController.RunStates.waiting);
@@ -54,7 +56,7 @@ namespace Ecopath.Tests.EwE
         public async Task UpdatePricesAsync_SetsPricesIn_ReturnsTrue()
         {
             // Arrange
-            var controller = new EwEController(_loggerMock.Object, _configMock.Object, _coreMock.Object);
+            var controller = new EwEController(_loggerMock.Object, _configMock.Object, _coreMock.Object, m_keyFieldDescriptors.Object);
             var prices = new List<SpeciesPrice>
         {
             new SpeciesPrice
@@ -80,7 +82,7 @@ namespace Ecopath.Tests.EwE
         public async Task UpdateCatchDispositionSummaryAsync_SetsCatchIn_ReturnsTrue()
         {
             // Arrange
-            var controller = new EwEController(_loggerMock.Object, _configMock.Object, _coreMock.Object);
+            var controller = new EwEController(_loggerMock.Object, _configMock.Object, _coreMock.Object, m_keyFieldDescriptors.Object);
             var summary = new CatchDispositionSummary { MeasurementUnit = "kg" };
 
             // Act
@@ -94,7 +96,7 @@ namespace Ecopath.Tests.EwE
         public async Task GetBiomassAsync_ReturnsBiomass()
         {
             // Arrange
-            var controller = new EwEController(_loggerMock.Object, _configMock.Object, _coreMock.Object);
+            var controller = new EwEController(_loggerMock.Object, _configMock.Object, _coreMock.Object, m_keyFieldDescriptors.Object);
 
             // Act
             var biomass = await controller.GetBiomassAsync();
@@ -108,7 +110,7 @@ namespace Ecopath.Tests.EwE
         public async Task GetSalesSummariesAsync_ReturnsSalesSummaries()
         {
             // Arrange
-            var controller = new EwEController(_loggerMock.Object, _configMock.Object, _coreMock.Object);
+            var controller = new EwEController(_loggerMock.Object, _configMock.Object, _coreMock.Object, m_keyFieldDescriptors.Object);
 
             // Act
             var sales = await controller.GetSalesSummariesAsync(DateTime.UtcNow, DateTime.UtcNow);
@@ -121,7 +123,7 @@ namespace Ecopath.Tests.EwE
         public async Task GetCatchDispositionSummaryAsync_ReturnsCatchDispositionSummary()
         {
             // Arrange
-            var controller = new EwEController(_loggerMock.Object, _configMock.Object, _coreMock.Object);
+            var controller = new EwEController(_loggerMock.Object, _configMock.Object, _coreMock.Object, m_keyFieldDescriptors.Object);
 
             // Act
             var summary = await controller.GetCatchDispositionSummaryAsync(DateTime.UtcNow, DateTime.UtcNow);

@@ -1,4 +1,8 @@
-﻿using Eii.ControlledVocabularies.ForeignKeys;
+﻿using Eii.ControlledVocabularies.Descriptors;
+using Eii.ControlledVocabularies.ForeignKeys;
+using Eii.ControlledVocabularies.Inference.Field;
+using Eii.ControlledVocabularies.Match;
+using Eii.ControlledVocabularies.Registries;
 using Eii.ControlledVocabularies.Utils;
 using Eii.ControlledVocabularies.Vocabularies;
 
@@ -8,13 +12,25 @@ namespace ControlledVocabularies.Vocabularies.Tests
     {
         private readonly string _name;
         private readonly (string code, string label)[] _rows;
+        private readonly IFieldInferenceOrchestrator _orchestrator;
+        private readonly IKeyFieldDescriptorRegistry m_keyFieldDescriptorRegistry;
+        private readonly IVocabularyMatcher m_vocabularyMatcher;
+        private IForeignKeyResolver m_foreignKeyResolver;
 
-        public TestSpeciesVocabulary(string name = "TestSpecies",
-                                     System.Collections.Generic.IEnumerable<(string code, string label)>? rows = null)
+        public TestSpeciesVocabulary(IFieldInferenceOrchestrator fieldInferenceOrchestrator, string name = "TestSpecies",
+                                     System.Collections.Generic.IEnumerable<(string code, string label)>? rows = null) : base(fieldInferenceOrchestrator)
         {
             _name = name;
             _rows = (rows ?? new[] { ("COD", "Gadus morhua") }).ToArray();
-            Load();
+
+            var m_vocabularyRegistry = new VocabularyRegistry();
+            var keyFieldDescriptorIndexer = new KeyFieldDescriptorIndexer();
+            m_foreignKeyResolver = new ForeignKeyResolver(m_vocabularyRegistry, m_keyFieldDescriptorRegistry);
+
+            m_vocabularyMatcher = new GenericVocabularyMatcher(m_vocabularyRegistry, m_foreignKeyResolver, m_keyFieldDescriptorRegistry);
+            _orchestrator = new FieldInferenceOrchestrator(m_vocabularyRegistry, new KeyFieldDescriptorRegistry(), m_vocabularyMatcher);
+
+            Load(keyFieldDescriptorIndexer);
         }
 
         public override string VocabularyName => _name;
@@ -40,7 +56,12 @@ namespace ControlledVocabularies.Vocabularies.Tests
 
     internal sealed class TestSourceWithFKVocabulary : ControlledVocabularyBase
     {
-        public TestSourceWithFKVocabulary() { Load(); }
+        public TestSourceWithFKVocabulary(IFieldInferenceOrchestrator m_fieldInferenceOrchestrator) : base (m_fieldInferenceOrchestrator)
+        {
+            var registry = new VocabularyRegistry();
+            var keyFieldDescriptorIndexer = new KeyFieldDescriptorIndexer();
+            Load(keyFieldDescriptorIndexer); 
+        }
 
         public override string VocabularyName => "TestSource";
         public override string CodeFieldName => "id"; // arbitrary
@@ -80,7 +101,12 @@ namespace ControlledVocabularies.Vocabularies.Tests
 
     internal sealed class TestLifestageVocabulary : ControlledVocabularyBase
     {
-        public TestLifestageVocabulary() { Load(); }
+        public TestLifestageVocabulary(IFieldInferenceOrchestrator fieldInferenceOrchestrator) : base(fieldInferenceOrchestrator)
+        {
+            var registry = new VocabularyRegistry();
+            var keyFieldDescriptorIndexer = new KeyFieldDescriptorIndexer();
+            Load(keyFieldDescriptorIndexer); 
+        }
 
         public override string VocabularyName => "TestLifestage";
         public override string CodeFieldName => "id";
@@ -112,7 +138,10 @@ namespace ControlledVocabularies.Vocabularies.Tests
             m_fieldName = fieldName;
             m_domain = domain;
             m_purpose = purpose;
-            Load(); // create descriptors immediately
+
+            var registry = new VocabularyRegistry();
+            var keyFieldDescriptorIndexer = new KeyFieldDescriptorIndexer();
+            Load(keyFieldDescriptorIndexer); // create descriptors immediately
         }
 
         public override string VocabularyName => m_vocabName;

@@ -9,8 +9,11 @@ namespace ControlledVocabularies.Resolve.Tests
 {
     public class StrategyKeyResolverTests
     {
+        private readonly IKeyFieldDescriptorRegistry m_keyFieldDescriptorRegistry;
+
         public StrategyKeyResolverTests()
         {
+            m_keyFieldDescriptorRegistry = new KeyFieldDescriptorRegistry();
         }
 
         [Fact]
@@ -20,14 +23,14 @@ namespace ControlledVocabularies.Resolve.Tests
             List<EwEMapping> m_mappings = new();
             KeyFieldDescriptorRegistry m_keyFieldDescriptors = new();
 
-            m_mappings.Add(new EwEMapping("speciescode=ASFIS:MUR; stage=dwc:juvenile", KeyDomain.Species, 22));       // Mullet (j)
-            m_mappings.Add(new EwEMapping("speciescode=ASFIS:MUR; stage=dwc:adult", KeyDomain.Species, 23));          // Mullet (a)
-            m_mappings.Add(new EwEMapping("speciescode=ASFIS:HKE; stage=dwc:juvenile", KeyDomain.Species, 26));       // European Hake (j)
-            m_mappings.Add(new EwEMapping("speciescode=ASFIS:HKE; stage=dwc:adult", KeyDomain.Species, 27));          // European Hake (a)
-            m_mappings.Add(new EwEMapping("speciescode=ASFIS:ANE; stage=dwc:juvenile", KeyDomain.Species, 39));       // Anchovy (j)
-            m_mappings.Add(new EwEMapping("speciescode=ASFIS:ANE; stage=dwc:adult", KeyDomain.Species, 40));          // Anchovy (a)
-            m_mappings.Add(new EwEMapping("speciescode=ASFIS:PIL; stage=dwc:juvenile", KeyDomain.Species, 41));       // Sardine (j)
-            m_mappings.Add(new EwEMapping("speciescode=ASFIS:PIL; stage=dwc:adult", KeyDomain.Species, 42));          // Sardine (a)
+            m_mappings.Add(new EwEMapping("speciescode=ASFIS:MUR; stage=dwc:juvenile", KeyDomain.Species, 22, m_keyFieldDescriptors));       // Mullet (j)
+            m_mappings.Add(new EwEMapping("speciescode=ASFIS:MUR; stage=dwc:adult", KeyDomain.Species, 23, m_keyFieldDescriptors));          // Mullet (a)
+            m_mappings.Add(new EwEMapping("speciescode=ASFIS:HKE; stage=dwc:juvenile", KeyDomain.Species, 26, m_keyFieldDescriptors));       // European Hake (j)
+            m_mappings.Add(new EwEMapping("speciescode=ASFIS:HKE; stage=dwc:adult", KeyDomain.Species, 27, m_keyFieldDescriptors));          // European Hake (a)
+            m_mappings.Add(new EwEMapping("speciescode=ASFIS:ANE; stage=dwc:juvenile", KeyDomain.Species, 39, m_keyFieldDescriptors));       // Anchovy (j)
+            m_mappings.Add(new EwEMapping("speciescode=ASFIS:ANE; stage=dwc:adult", KeyDomain.Species, 40, m_keyFieldDescriptors));          // Anchovy (a)
+            m_mappings.Add(new EwEMapping("speciescode=ASFIS:PIL; stage=dwc:juvenile", KeyDomain.Species, 41, m_keyFieldDescriptors));       // Sardine (j)
+            m_mappings.Add(new EwEMapping("speciescode=ASFIS:PIL; stage=dwc:adult", KeyDomain.Species, 42, m_keyFieldDescriptors));          // Sardine (a)
 
 
             // Register the different species fields that the application may be interested in
@@ -39,7 +42,7 @@ namespace ControlledVocabularies.Resolve.Tests
             var resolver = new StrategyKeyResolver(m_mappings, m_keyFieldDescriptors.GetAll(KeyDomain.Species));
 
             // Act
-            MultiLevelKey key = MultiLevelKey.FromPairs([(FishingFields.GearCode, "Bogus"), (MarketFields.MarketCode, "EVen more bogus")], KeyDomain.Species);
+            MultiLevelKey key = MultiLevelKey.FromPairs([(FishingFields.GearCode, "Bogus"), (MarketFields.MarketCode, "EVen more bogus")], KeyDomain.Species, m_keyFieldDescriptorRegistry);
             var match = resolver.FindAllMatches(key);
 
             // Assert
@@ -53,8 +56,8 @@ namespace ControlledVocabularies.Resolve.Tests
             List<EwEMapping> m_mappings = new();
             KeyFieldDescriptorRegistry m_keyFieldDescriptors = new();
 
-            m_mappings.Add(new EwEMapping("speciescode=ASFIS:MUR; stage=dwc:juvenile", KeyDomain.Species, 22)); // Mullet (j)
-            m_mappings.Add(new EwEMapping("speciescode=ASFIS:MUR; stage=dwc:adult", KeyDomain.Species, 23));    // Mullet (a)
+            m_mappings.Add(new EwEMapping("speciescode=ASFIS:MUR; stage=dwc:juvenile", KeyDomain.Species, 22, m_keyFieldDescriptors)); // Mullet (j)
+            m_mappings.Add(new EwEMapping("speciescode=ASFIS:MUR; stage=dwc:adult", KeyDomain.Species, 23, m_keyFieldDescriptors));    // Mullet (a)
 
             m_keyFieldDescriptors.Register(new KeyFieldDescriptor(SpeciesFields.SpeciesCode, KeyDomain.Species, KeyPurpose.Species, FieldKind.Code, true, 10));
             m_keyFieldDescriptors.Register(new KeyFieldDescriptor(SpeciesFields.Stage, KeyDomain.Species, KeyPurpose.Lifestage, FieldKind.Label, false, 3));
@@ -62,7 +65,7 @@ namespace ControlledVocabularies.Resolve.Tests
             var resolver = new StrategyKeyResolver(m_mappings, m_keyFieldDescriptors.GetAll(KeyDomain.Species));
 
             // Act
-            MultiLevelKey key = MultiLevelKey.FromPairs([(SpeciesFields.SpeciesCode, "ASFIS:MUR"), (SpeciesFields.Lifestage, "surimi:juvenile")], KeyDomain.Species);
+            MultiLevelKey key = MultiLevelKey.FromPairs([(SpeciesFields.SpeciesCode, "ASFIS:MUR"), (SpeciesFields.Lifestage, "surimi:juvenile")], KeyDomain.Species, m_keyFieldDescriptorRegistry);
             var matches = resolver.FindAllMatches(key);
 
             // Assert

@@ -1,5 +1,9 @@
-﻿using Eii.ControlledVocabularies.Inference.Vocabulary;
+﻿using Eii.ControlledVocabularies.Descriptors;
+using Eii.ControlledVocabularies.ForeignKeys;
+using Eii.ControlledVocabularies.Inference.Field;
+using Eii.ControlledVocabularies.Inference.Vocabulary;
 using Eii.ControlledVocabularies.Inference.Vocabulary.Strategies;
+using Eii.ControlledVocabularies.Match;
 using Eii.ControlledVocabularies.Registries;
 using Eii.ControlledVocabularies.Utils;
 using Eii.ControlledVocabularies.Vocabularies;
@@ -9,41 +13,53 @@ using Eii.ControlledVocabularies.Vocabularies.LifeStage;
 using Eii.ControlledVocabularies.Vocabularies.LifeStage.Species;
 using Eii.ControlledVocabularies.Vocabularies.Species;
 using FluentAssertions;
+using Microsoft.Win32;
 using Xunit;
 
 namespace ControlledVocabularies.Inference.Tests
 {
     public class VocabularyInferenceSmokeTests
     {
-        private readonly VocabularyRegistry _registry;
-        private readonly VocabularyInferenceOrchestrator _orchestrator;
+        private readonly IVocabularyRegistry m_registry;
+        private readonly IKeyFieldDescriptorIndexer m_keyFieldDescriptorIndexer;
+        private readonly VocabularyInferenceOrchestrator m_orchestrator;
+        private readonly IFieldInferenceOrchestrator m_fieldInferenceOrchestrator;
+        private readonly IKeyFieldDescriptorRegistry m_keyFieldDescriptorRegistry;
+        private readonly ForeignKeyResolver m_fkResolver;
+        private readonly IVocabularyMatcher m_vocabularyMatcher;
 
         public VocabularyInferenceSmokeTests()
         {
-            _registry = new VocabularyRegistry();
+            m_registry = new VocabularyRegistry();
+            m_keyFieldDescriptorRegistry = new KeyFieldDescriptorRegistry();
+            m_fkResolver = new ForeignKeyResolver(m_registry, m_keyFieldDescriptorRegistry);
+            m_vocabularyMatcher = new GenericVocabularyMatcher(m_registry, m_fkResolver, m_keyFieldDescriptorRegistry);
+            m_fieldInferenceOrchestrator = new FieldInferenceOrchestrator(m_registry, m_keyFieldDescriptorRegistry, m_vocabularyMatcher);
+            m_keyFieldDescriptorIndexer = new KeyFieldDescriptorIndexer();
+
 
             // Register known vocabs
             var vocabs = new IControlledVocabulary[]
             {
-                new ASFISSpeciesCodeVocabulary(),
-                new WoRMSSpeciesVocabulary(),
-                new SURIMILifestageVocabulary(),
-                new NERCLifeStageVocabulary(),
-                new ISSCFGGearCodeVocabulary(),
-                new ISO3166CountryCodeVocabulary()
+                new ASFISSpeciesCodeVocabulary(m_fieldInferenceOrchestrator),
+                new WoRMSSpeciesVocabulary(m_fieldInferenceOrchestrator),
+                new SURIMILifestageVocabulary(m_fieldInferenceOrchestrator),
+                new NERCLifeStageVocabulary(m_fieldInferenceOrchestrator),
+                new ISSCFGGearCodeVocabulary(m_fieldInferenceOrchestrator),
+                new ISO3166CountryCodeVocabulary(m_fieldInferenceOrchestrator)
             };
 
             var i = 0;
             while (i < vocabs.Length)
             {
-                _registry.Register(vocabs[i]);
+                m_registry.Register(vocabs[i], m_keyFieldDescriptorIndexer);
                 i++;
             }
 
             // Build inference orchestrator with strategies
-            _orchestrator = new VocabularyInferenceOrchestrator();
-            _orchestrator.RegisterStrategy(new NamePatternVocabularyStrategy(_registry));
-            _orchestrator.RegisterStrategy(new ForeignKeyDiscoveryStrategy(_registry));
+            m_orchestrator = new VocabularyInferenceOrchestrator();
+            m_orchestrator.RegisterStrategy(new NamePatternVocabularyStrategy(m_registry));
+            m_orchestrator.RegisterStrategy(new ForeignKeyDiscoveryStrategy(m_registry));
         }
 
         [Theory]
@@ -56,9 +72,9 @@ namespace ControlledVocabularies.Inference.Tests
         public void Should_Infer_Primary_Domain_And_Purpose(Type vocabType, KeyDomain expectedDomain, KeyPurpose expectedPurpose)
         {
             var vocab = (IControlledVocabulary)Activator.CreateInstance(vocabType)!;
-            vocab.Load();
+            vocab.Load(m_keyFieldDescriptorIndexer);
 
-            var result = _orchestrator.Analyze(vocab, null, registry: _registry);
+            var result = m_orchestrator.Analyze(vocab, null, registry: m_registry);
 
             result.InferredDomain.Should().Be(expectedDomain);
             result.InferredPurpose.Should().Be(expectedPurpose);
@@ -68,18 +84,18 @@ namespace ControlledVocabularies.Inference.Tests
         [Fact]
         public void Should_Find_WoRMS_to_ASFIS_FK_Candidate()
         {
-            var worms = new WoRMSSpeciesVocabulary();
-            var asfis = new ASFISSpeciesCodeVocabulary();
-            worms.Load();
-            asfis.Load();
+            var worms = new WoRMSSpeciesVocabulary(m_fieldInferenceOrchestrator);
+            var asfis = new ASFISSpeciesCodeVocabulary(m_fieldInferenceOrchestrator);
+            worms.Load(m_keyFieldDescriptorIndexer);
+            asfis.Load(m_keyFieldDescriptorIndexer);
 
             // Only want to explore asfis here
-            _registry.Clear();
+            m_registry.Clear();
             //_registry.Register(worms);
-            _registry.Register(asfis);
+            m_registry.Register(asfis, m_keyFieldDescriptorIndexer);
 
             // This test will fail as the WoRMS CSV file is still missing the FAO key
-            var res = _orchestrator.Analyze(worms, null, registry: _registry);
+            var res = m_orchestrator.Analyze(worms, null, registry: m_registry);
 
             bool found = false;
             foreach (var fk in res.ForeignKeyCandidates) 

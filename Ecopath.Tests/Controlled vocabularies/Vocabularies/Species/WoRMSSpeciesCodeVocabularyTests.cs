@@ -1,4 +1,8 @@
 ﻿using Eii.ControlledVocabularies.Core;
+using Eii.ControlledVocabularies.Descriptors;
+using Eii.ControlledVocabularies.ForeignKeys;
+using Eii.ControlledVocabularies.Inference.Field;
+using Eii.ControlledVocabularies.Match;
 using Eii.ControlledVocabularies.Registries;
 using Eii.ControlledVocabularies.Utils;
 using Eii.ControlledVocabularies.Vocabularies.LifeStage.Species;
@@ -10,14 +14,33 @@ namespace ControlledVocabularies.Vocabularies.Tests
 {
     public class WoRMSSpeciesVocabularyTests
     {
+        private readonly IVocabularyRegistry m_registry;
+        private readonly IKeyFieldDescriptorIndexer _keyFieldDescriptorIndexer;
+        private readonly IVocabularyMatcher m_vocabularyMatcher;
+        private readonly IKeyFieldDescriptorRegistry m_keyFieldDescriptorRegistry;
+        private readonly ForeignKeyResolver m_fkResolver;
+        private readonly IStrategyBasedMatcher m_matcher;
+        private readonly IFieldInferenceOrchestrator m_fieldInferenceOrchestrator;
+
+        public WoRMSSpeciesVocabularyTests()
+        {
+            m_registry = new VocabularyRegistry();
+            m_keyFieldDescriptorRegistry = new KeyFieldDescriptorRegistry();
+            _keyFieldDescriptorIndexer = new KeyFieldDescriptorIndexer();
+            m_fkResolver = new ForeignKeyResolver(m_registry, m_keyFieldDescriptorRegistry);
+            m_vocabularyMatcher = new GenericVocabularyMatcher(m_registry, m_fkResolver, m_keyFieldDescriptorRegistry);
+            m_matcher = new StrategyBasedMatcher(m_keyFieldDescriptorRegistry);
+            m_fieldInferenceOrchestrator = new FieldInferenceOrchestrator(m_registry, m_keyFieldDescriptorRegistry, m_vocabularyMatcher);
+        }
+
         [Fact]
         public void Should_Load_WoRMS_Vocabulary_Successfully()
         {
             // Arrange
-            var wormsVocab = new WoRMSSpeciesVocabulary();
+            var wormsVocab = new WoRMSSpeciesVocabulary(m_fieldInferenceOrchestrator);
 
             // Act
-            var loaded = wormsVocab.Load();
+            var loaded = wormsVocab.Load(_keyFieldDescriptorIndexer);
 
             // Assert
             loaded.Should().BeTrue();
@@ -31,8 +54,8 @@ namespace ControlledVocabularies.Vocabularies.Tests
         public void Should_Include_Essential_Species_Fields()
         {
             // Arrange & Act
-            var wormsVocab = new WoRMSSpeciesVocabulary();
-            wormsVocab.Load();
+            var wormsVocab = new WoRMSSpeciesVocabulary(m_fieldInferenceOrchestrator);
+            wormsVocab.Load(_keyFieldDescriptorIndexer);
 
             // Assert
             var fieldNames = wormsVocab.FieldNames.ToList();
@@ -46,11 +69,11 @@ namespace ControlledVocabularies.Vocabularies.Tests
         public void Should_Find_Species_By_Scientific_Name()
         {
             // Arrange
-            var wormsVocab = new WoRMSSpeciesVocabulary();
-            wormsVocab.Load();
+            var wormsVocab = new WoRMSSpeciesVocabulary(m_fieldInferenceOrchestrator);
+            wormsVocab.Load(_keyFieldDescriptorIndexer);
 
             // Act
-            var codResult = wormsVocab.FindCode("Gadus morhua");
+            var codResult = wormsVocab.FindCode("Gadus morhua", m_matcher);
 
             // Assert - Should find Atlantic cod
             codResult.Should().NotBeNullOrEmpty();
@@ -61,11 +84,11 @@ namespace ControlledVocabularies.Vocabularies.Tests
         public void Should_Find_Species_By_Common_Name_Fuzzy_Match()
         {
             // Arrange
-            var wormsVocab = new WoRMSSpeciesVocabulary();
-            wormsVocab.Load();
+            var wormsVocab = new WoRMSSpeciesVocabulary(m_fieldInferenceOrchestrator);
+            wormsVocab.Load(_keyFieldDescriptorIndexer);
 
             // Act - Slightly misspelled common name
-            var codResult = wormsVocab.FindCode("atlantic cod");
+            var codResult = wormsVocab.FindCode("atlantic cod", m_matcher);
 
             // Assert - Should still find it via fuzzy matching
             codResult.Should().NotBeNullOrEmpty();
@@ -76,11 +99,11 @@ namespace ControlledVocabularies.Vocabularies.Tests
         {
             // Arrange
             var registry = new VocabularyRegistry();
-            var wormsVocab = new WoRMSSpeciesVocabulary();
-            var asfisVocab = new ASFISSpeciesCodeVocabulary();
+            var wormsVocab = new WoRMSSpeciesVocabulary(m_fieldInferenceOrchestrator);
+            var asfisVocab = new ASFISSpeciesCodeVocabulary(m_fieldInferenceOrchestrator);
 
-            registry.Register(wormsVocab);
-            registry.Register(asfisVocab);
+            registry.Register(wormsVocab, _keyFieldDescriptorIndexer);
+            registry.Register(asfisVocab, _keyFieldDescriptorIndexer);
 
             // Act
             wormsVocab.ConfigureCrossReferences(registry);
@@ -95,17 +118,17 @@ namespace ControlledVocabularies.Vocabularies.Tests
         public void Should_Enable_WoRMS_To_ASFIS_Resolution()
         {
             // Arrange
-            var wormsVocab = new WoRMSSpeciesVocabulary();
-            var asfisVocab = new ASFISSpeciesCodeVocabulary();
-            wormsVocab.Load();
-            asfisVocab.Load();
+            var wormsVocab = new WoRMSSpeciesVocabulary(m_fieldInferenceOrchestrator);
+            var asfisVocab = new ASFISSpeciesCodeVocabulary(m_fieldInferenceOrchestrator);
+            wormsVocab.Load(_keyFieldDescriptorIndexer);
+            asfisVocab.Load(_keyFieldDescriptorIndexer);
 
             // Act - Create a key with WoRMS data
             var wormsKey = MultiLevelKey.FromPairs([
                 ("AphiaID", "WoRMS:126436"),
                 ("ScientificName", "Gadus morhua"),
                 ("FAO_Code", "COD")
-            ], KeyDomain.Species);
+            ], KeyDomain.Species, m_keyFieldDescriptorRegistry);
 
             // Assert - Should be resolvable to ASFIS via FAO_Code field
             wormsKey.GetField("FAO_Code")!.Value.Should().Be("COD");
@@ -119,8 +142,8 @@ namespace ControlledVocabularies.Vocabularies.Tests
         public void Should_Have_Taxonomic_Hierarchy_For_Advanced_Matching()
         {
             // Arrange & Act
-            var wormsVocab = new WoRMSSpeciesVocabulary();
-            wormsVocab.Load();
+            var wormsVocab = new WoRMSSpeciesVocabulary(m_fieldInferenceOrchestrator);
+            wormsVocab.Load(_keyFieldDescriptorIndexer);
 
             var records = wormsVocab.Records.ToList();
             var codRecord = records.First(r => r.GetField("ScientificName")?.Value == "Gadus morhua");
