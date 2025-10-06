@@ -2,6 +2,7 @@
 using EwECore;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Utils;
+using Eii.ControlledVocabularies.EwE;
 
 public static class GroupSpeciesProportionsFactory
 {
