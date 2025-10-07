@@ -36,6 +36,7 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
         }
         catch (Exception ex)
         {
+            m_logger.LogInformation("In Initialise. EwE - exception ...{Message}", ex.Message);
             throw;
         }
     }
@@ -56,6 +57,7 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
         }
         catch (Exception ex)
         {
+            m_logger.LogInformation("In Finalise. - exception ...{Message}", ex.Message);
             throw;
         }
     }
@@ -76,6 +78,7 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
         }
         catch (Exception ex)
         {
+            m_logger.LogInformation("In Cancel. - exception ...{Message}", ex.Message);
             throw;
         }
     }

@@ -32,4 +32,6 @@ RUN dotnet publish "./Ecopath.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+# Also copy includes produced during build
+COPY --from=build /app/build/Includes /app/Includes/
 ENTRYPOINT ["dotnet", "Ecopath.dll"]
