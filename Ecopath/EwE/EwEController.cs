@@ -756,7 +756,7 @@ namespace Ecopath.EwE
             }
             catch (Exception ex)
             {
-                //_logger.LogInformation("EwE - exception ...");
+                m_logger.LogInformation("In ForceStopEwE. - exception ...{Message}", ex.Message);
             }
 
             RunState = RunStates.idle; // Manually reset to idle if needed
