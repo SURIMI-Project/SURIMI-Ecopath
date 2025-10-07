@@ -1,13 +1,16 @@
-﻿/// <summary>
-/// Should inherit from MatchResult
-/// </summary>
-public class EwEMappingMatch
+﻿namespace Ecopath.EwE
 {
-    public EwEMappingMatch(EwEMapping mapping, int score) 
-    { 
-        this.EwEMapping = mapping;
-        this.Score = score;
+    /// <summary>
+    /// Should inherit from MatchResult
+    /// </summary>
+    public class EwEMappingMatch
+    {
+        public EwEMappingMatch(EwEMapping mapping, int score)
+        {
+            this.EwEMapping = mapping;
+            this.Score = score;
+        }
+        public EwEMapping EwEMapping { get; }
+        public int Score { get; }
     }
-    public EwEMapping EwEMapping { get; }
-    public int Score { get; }
 }
