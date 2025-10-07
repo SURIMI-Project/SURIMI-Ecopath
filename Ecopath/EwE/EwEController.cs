@@ -1,7 +1,6 @@
 ﻿using Ecopath.EwE.Wrapper;
 using Ecopath.Models;
 using Eii.ControlledVocabularies.Core;
-using Eii.ControlledVocabularies.EwE;
 using Eii.ControlledVocabularies.Utils;
 using EwEBridge.Ecospace;
 using EwECore;
