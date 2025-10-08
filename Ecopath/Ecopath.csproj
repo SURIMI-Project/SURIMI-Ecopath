@@ -21,6 +21,9 @@
     <PackageReference Include="BSR.Surimi.Surimi-Protocol.Grpc.Csharp" Version="1.73.10101.13+01790b97f17e" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="Eii.ControlledVocabularies" Version="1.0.10" />
+    <PackageReference Include="Eii.Ecopath.EwECore" Version="6.7.2" />
+    <PackageReference Include="Eii.Ecopath.EwEPlugin" Version="6.7.2" />
+    <PackageReference Include="Eii.Ecopath.EwEUtils" Version="6.7.2" />
     <PackageReference Include="FuzzySharp" Version="2.0.2" />
     <PackageReference Include="Google.Api.CommonProtos" Version="2.17.0" />
     <PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
@@ -38,31 +41,13 @@
 	  <Reference Include="EwEBridgePlugin">
 	    <HintPath>Includes\EwEBridgePlugin.dll</HintPath>
 	  </Reference>
-	  <Reference Include="EwECore">
-	    <HintPath>Includes\EwECore.dll</HintPath>
-	  </Reference>
 	  <Reference Include="EwELicense">
 	    <HintPath>Includes\EwELicense.dll</HintPath>
-	  </Reference>
-	  <Reference Include="EwEPlugin">
-	    <HintPath>Includes\EwEPlugin.dll</HintPath>
-	  </Reference>
-	  <Reference Include="EwEUtils">
-	    <HintPath>Includes\EwEUtils.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
 
 	<ItemGroup>
 	  <None Update="Includes\Anchovy Bay Spatial.eiixml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Includes\EwECore.pdb">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Includes\EwEPlugin.pdb">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Includes\EwEUtils.pdb">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
 	  <None Update="Includes\GSA0607EwENBS.eiixml">
