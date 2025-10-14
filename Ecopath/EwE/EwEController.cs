@@ -543,8 +543,9 @@ namespace Ecopath.EwE
 
                                     grid.BiomassCells.Add(new BiomassCell()
                                     {
-                                        Latitude = bm.RowToLat(ir),
-                                        Longitude = bm.ColToLon(ic),
+                                        // JS 14Oct25: report cell centroid
+                                        Latitude = bm.RowToLat((float)(ir + 0.5)),
+                                        Longitude = bm.ColToLon((float)(ic + 0.5)),
                                         Biomass = biomassSpecies
                                     });
                                 }
@@ -645,8 +646,9 @@ namespace Ecopath.EwE
                                     {
                                         grid.DispositionCells.Add(new DispositionCell()
                                         {
-                                            Latitude = bm.RowToLat(ir),
-                                            Longitude = bm.ColToLon(ic),
+                                            // JS 14Oct25: report cell centroid
+                                            Latitude = bm.RowToLat((float)(ir + 0.5)),
+                                            Longitude = bm.ColToLon((float)(ic + 0.5)),
 
                                             GrossCatchBiomass = catches[ir, ic],
                                             LiveDiscardsBiomass = livedisc[ir, ic],
