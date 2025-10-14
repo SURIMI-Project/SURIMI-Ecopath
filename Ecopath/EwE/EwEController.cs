@@ -209,13 +209,13 @@ namespace Ecopath.EwE
             StringBuilder info = new();
             info.AppendLine("EwE FG - species mappings:");
             foreach (var mapping in m_configuration.Mappings(KeyDomain.Species))
-                info.AppendLine(string.Format(" - {0}", mapping.ToInfoString(m_core)));
+                info.AppendLine(string.Format(" - {0}", GetMappingInfoString(mapping,m_core)));
             info.AppendLine("EwE fleet - fleetsegment mappings:");
             foreach (var mapping in m_configuration.Mappings(KeyDomain.FleetSegment))
-                info.AppendLine(string.Format(" - {0}", mapping.ToInfoString(m_core)));
+                info.AppendLine(string.Format(" - {0}", GetMappingInfoString(mapping,m_core)));
             info.AppendLine("EwE fleet - market mappings:");
             foreach (var mapping in m_configuration.Mappings(KeyDomain.Market))
-                info.AppendLine(string.Format(" - {0}", mapping.ToInfoString(m_core)));
+                info.AppendLine(string.Format(" - {0}", GetMappingInfoString(mapping, m_core)));
             m_logger.LogInformation(info.ToString());
 
             // Build species proportion accounting
@@ -361,6 +361,29 @@ namespace Ecopath.EwE
         #endregion // Public interaction
 
         #region Data interactions
+
+        private string GetMappingInfoString(EwEMapping mapping, IEwECore core)
+        {
+            cCoreInputOutputBase? item = null;
+
+            switch (mapping.Domain)
+            {
+                case KeyDomain.Species:
+                    item = core.get_EcopathGroupInputs(mapping.Index);
+                    break;
+                case KeyDomain.FleetSegment:
+                case KeyDomain.Market:
+                    item = core.get_EcopathFleetInputs(mapping.Index);
+                    break;
+                default:
+                    Debug.Assert(false);
+                    break;
+            }
+            if (item == null)
+                return string.Format("INVALID {0} => {1}", mapping.Index, base.ToString());
+
+            return string.Format("EwE index {0}:\"{1}\" @{2} => {3}", mapping.Index, item.Name, mapping.Proportion, base.ToString());
+        }
 
         private void Clear()
         {
@@ -734,7 +757,7 @@ namespace Ecopath.EwE
             }
             catch (Exception ex)
             {
-                //_logger.LogInformation("EwE - exception ...");
+                m_logger.LogInformation("In ForceStopEwE. - exception ...{Message}", ex.Message);
             }
 
             RunState = RunStates.idle; // Manually reset to idle if needed
