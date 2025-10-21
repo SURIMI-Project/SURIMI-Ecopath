@@ -4,6 +4,10 @@ using Ecopath.Services;
 using Eii.ControlledVocabularies.Common;
 using Eii.ControlledVocabularies.Descriptors;
 using Eii.ControlledVocabularies.Registries;
+using Eii.ControlledVocabularies.Vocabularies.Country;
+using Eii.ControlledVocabularies.Vocabularies.Gear;
+using Eii.ControlledVocabularies.Vocabularies.LifeStage;
+using Eii.ControlledVocabularies.Vocabularies.Species;
 
 namespace Ecopath;
 
@@ -24,6 +28,10 @@ public class Program
         builder.Services.AddSingleton<IEwECore, EwE.Wrapper.EwECore>();
         builder.Services.AddSingleton<IEwEConfiguration, EwEConfiguration>();
         builder.Services.AddSingleton<IEwEController, EwEController>();
+        builder.Services.AddSingleton<ASFISSpeciesCodeVocabulary>();
+        builder.Services.AddSingleton<ISSCFGGearCodeVocabulary>();
+        builder.Services.AddSingleton<ISO3166CountryCodeVocabulary>();
+        builder.Services.AddSingleton<SURIMILifestageVocabulary>();
 
         var app = builder.Build();
 
