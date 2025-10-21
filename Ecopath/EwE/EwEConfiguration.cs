@@ -37,6 +37,10 @@ namespace Ecopath.EwE
         private readonly List<EwEMapping> m_mappings = new();
         private readonly KeyFieldDescriptorRegistry m_keyFieldDescriptors;
         private readonly VocabularyRegistry m_vocabularies = new();
+        private readonly ASFISSpeciesCodeVocabulary m_asfisVocabulary;
+        private readonly ISSCFGGearCodeVocabulary m_iSSCFGGearCodeVocabulary;
+        private readonly ISO3166CountryCodeVocabulary m_iSO3166CountryCodeVocabulary;
+        private readonly SURIMILifestageVocabulary m_SURIMILifestageVocabulary;
 
         // The EwE indices of externally managed fleets.
         private readonly HashSet<int> m_externalFleets = new();
@@ -62,8 +66,13 @@ namespace Ecopath.EwE
             }
         }
 
-        public EwEConfiguration()
+        public EwEConfiguration(ASFISSpeciesCodeVocabulary asfisVocabulary, ISSCFGGearCodeVocabulary iSSCFGGearCodeVocabulary, ISO3166CountryCodeVocabulary iSO3166CountryCodeVocabulary, SURIMILifestageVocabulary sURIMILifestageVocabulary)
         {
+            m_asfisVocabulary = asfisVocabulary;
+            m_iSSCFGGearCodeVocabulary = iSSCFGGearCodeVocabulary;
+            m_iSO3166CountryCodeVocabulary = iSO3166CountryCodeVocabulary;
+            m_SURIMILifestageVocabulary = sURIMILifestageVocabulary;
+
             ModelName = @"Includes/GSA0607EwENBS.eiixml";
             EcosimScenario = 1;
             EcosimTimeSeries = 0;
@@ -104,10 +113,10 @@ namespace Ecopath.EwE
             m_keyFieldDescriptors.Register(new KeyFieldDescriptor(MarketFields.MarketCode, KeyDomain.FleetSegment, KeyPurpose.Market, FieldKind.Code, true, 10));
 
             // Register available look-up vocabularies
-            m_vocabularies.Register(new ASFISSpeciesCodeVocabulary());
-            m_vocabularies.Register(new SURIMILifestageVocabulary());
-            m_vocabularies.Register(new ISSCFGGearCodeVocabulary());
-            m_vocabularies.Register(new ISO3166CountryCodeVocabulary());
+            m_vocabularies.Register(m_asfisVocabulary);
+            m_vocabularies.Register(m_SURIMILifestageVocabulary);
+            m_vocabularies.Register(m_iSSCFGGearCodeVocabulary);
+            m_vocabularies.Register(m_iSO3166CountryCodeVocabulary);
         }
 
 
@@ -240,10 +249,10 @@ namespace Ecopath.EwE
         public IEnumerable<EwEMapping> Mappings(KeyDomain domain)
         {
             foreach (var kvp in m_mappings.Where(n => n.Domain == domain))
-               yield return kvp;
+                yield return kvp;
         }
 
-         /// <summary>
+        /// <summary>
         /// Set whether fishing by a given gear fleet is managed outside the EwE software.
         /// </summary>
         public void SetExternalFleet(int iFleet, bool isExternal)
@@ -283,7 +292,7 @@ namespace Ecopath.EwE
             IControlledVocabulary? vocSpecies = m_vocabularies.Get("asfis");
             IControlledVocabulary? vocLifeStage = m_vocabularies.Get("surimi.lifestage");
 
-            if (vocSpecies == null ||  vocLifeStage == null) return;
+            if (vocSpecies == null || vocLifeStage == null) return;
 
             GenericVocabularyMatcher m = new();
 
@@ -332,7 +341,7 @@ namespace Ecopath.EwE
                         if (grp.iStanza > 0)
                         {
                             Console.WriteLine("EwE Config error: regular taxon {0} attached to stanza group {1}", taxon.DBID, taxon.iGroup);
-                            continue;   
+                            continue;
                         }
 
                         if (this.FishedGroups.Contains(taxon.iGroup))
@@ -350,7 +359,7 @@ namespace Ecopath.EwE
                 }
             }
         }
-        
+
         private void ReadFleetMappings()
         {
             // The name of the vocabulary is implied here, but should be read from the fields
