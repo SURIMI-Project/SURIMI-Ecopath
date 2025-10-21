@@ -46,15 +46,6 @@
   </ItemGroup>
 
 	<ItemGroup>
-	  <Reference Include="EwEBridgePlugin">
-	    <HintPath>Includes\EwEBridgePlugin.dll</HintPath>
-	  </Reference>
-	  <Reference Include="EwELicense">
-	    <HintPath>Includes\EwELicense.dll</HintPath>
-	  </Reference>
-	</ItemGroup>
-
-	<ItemGroup>
 	  <None Update="Includes\Anchovy Bay Spatial.eiixml">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
