@@ -29,9 +29,7 @@
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="Eii.ControlledVocabularies" Version="1.0.14" />
     <PackageReference Include="Eii.Ecopath.Bridge" Version="1.0.2" />
-    <PackageReference Include="Eii.Ecopath.EwECore" Version="6.7.5" />
-    <PackageReference Include="Eii.Ecopath.EwEPlugin" Version="6.7.3" />
-    <PackageReference Include="Eii.Ecopath.EwEUtils" Version="6.7.2" />
+    <PackageReference Include="Eii.Ecopath.EwECore" Version="6.7.6" />
     <PackageReference Include="FuzzySharp" Version="2.0.2" />
     <PackageReference Include="Google.Api.CommonProtos" Version="2.17.0" />
     <PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
