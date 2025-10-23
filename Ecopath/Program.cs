@@ -2,7 +2,9 @@ using Ecopath.EwE;
 using Ecopath.EwE.Wrapper;
 using Ecopath.Services;
 using Eii.ControlledVocabularies.Common;
+using Eii.ControlledVocabularies.Context;
 using Eii.ControlledVocabularies.Descriptors;
+using Eii.ControlledVocabularies.Inference.Field;
 using Eii.ControlledVocabularies.Registries;
 using Eii.ControlledVocabularies.Vocabularies.Country;
 using Eii.ControlledVocabularies.Vocabularies.Gear;
@@ -32,6 +34,9 @@ public class Program
         builder.Services.AddSingleton<ISSCFGGearCodeVocabulary>();
         builder.Services.AddSingleton<ISO3166CountryCodeVocabulary>();
         builder.Services.AddSingleton<SURIMILifestageVocabulary>();
+        builder.Services.AddSingleton<ModelContext>();
+        builder.Services.AddSingleton<IKeyFieldDescriptorIndexer, KeyFieldDescriptorIndexer>();
+        builder.Services.AddSingleton<IVocabularyRegistry, VocabularyRegistry>();
 
         var app = builder.Build();
 

@@ -27,7 +27,6 @@
   <ItemGroup>
     <PackageReference Include="BSR.Surimi.Surimi-Protocol.Grpc.Csharp" Version="1.73.10101.13+01790b97f17e" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
-    <PackageReference Include="Eii.ControlledVocabularies" Version="1.0.16" />
     <PackageReference Include="Eii.Ecopath.Bridge" Version="1.0.2" />
     <PackageReference Include="Eii.Ecopath.EwECore" Version="6.7.6" />
     <PackageReference Include="Google.Api.CommonProtos" Version="2.17.0" />
@@ -39,6 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Eii\Eii.ControlledVocabularies\Eii.ControlledVocabularies\Eii.ControlledVocabularies.csproj" />
     <ProjectReference Include="..\SURIMI.ServiceDefaults\SURIMI.ServiceDefaults.csproj" />
   </ItemGroup>
 

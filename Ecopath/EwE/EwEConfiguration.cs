@@ -41,6 +41,7 @@ namespace Ecopath.EwE
         private readonly ISSCFGGearCodeVocabulary m_iSSCFGGearCodeVocabulary;
         private readonly ISO3166CountryCodeVocabulary m_iSO3166CountryCodeVocabulary;
         private readonly SURIMILifestageVocabulary m_SURIMILifestageVocabulary;
+        private readonly ModelContext m_modelContext;
 
         // The EwE indices of externally managed fleets.
         private readonly HashSet<int> m_externalFleets = new();
@@ -66,12 +67,13 @@ namespace Ecopath.EwE
             }
         }
 
-        public EwEConfiguration(ASFISSpeciesCodeVocabulary asfisVocabulary, ISSCFGGearCodeVocabulary iSSCFGGearCodeVocabulary, ISO3166CountryCodeVocabulary iSO3166CountryCodeVocabulary, SURIMILifestageVocabulary sURIMILifestageVocabulary)
+        public EwEConfiguration(ASFISSpeciesCodeVocabulary asfisVocabulary, ISSCFGGearCodeVocabulary iSSCFGGearCodeVocabulary, ISO3166CountryCodeVocabulary iSO3166CountryCodeVocabulary, SURIMILifestageVocabulary sURIMILifestageVocabulary, ModelContext modelContext)
         {
             m_asfisVocabulary = asfisVocabulary;
             m_iSSCFGGearCodeVocabulary = iSSCFGGearCodeVocabulary;
             m_iSO3166CountryCodeVocabulary = iSO3166CountryCodeVocabulary;
             m_SURIMILifestageVocabulary = sURIMILifestageVocabulary;
+            m_modelContext = modelContext;
 
             ModelName = @"Includes/GSA0607EwENBS.eiixml";
             EcosimScenario = 1;
@@ -87,15 +89,14 @@ namespace Ecopath.EwE
             StartYear = 2001;
 #endif
             var reg = ModelContextDescriptorRegistry.Create();
-            var context = new ModelContext(reg);
+            m_modelContext.SetKeyFieldDescriptotRegistry(reg);
 
             // ToDo: make this real once the model has loaded
-            context.SetModelName("EwE Demo");
-            context.SetAreaName("NE Atlantic");
-            context.SetBoundingBox(35.0, -25.0, 70.0, 20.0);
-            context.SetYears(1990, 2020);
-            context.SetTimestamp(DateTime.UtcNow);
-            GlobalServiceLocator.Replace(context);
+            m_modelContext.SetModelName("EwE Demo");
+            m_modelContext.SetAreaName("NE Atlantic");
+            m_modelContext.SetBoundingBox(35.0, -25.0, 70.0, 20.0);
+            m_modelContext.SetYears(1990, 2020);
+            m_modelContext.SetTimestamp(DateTime.UtcNow);
 
             m_keyFieldDescriptors = GlobalServiceLocator.Get<KeyFieldDescriptorRegistry>()!;
 
