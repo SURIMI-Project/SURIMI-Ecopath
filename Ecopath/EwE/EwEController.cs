@@ -487,7 +487,8 @@ namespace Ecopath.EwE
 
                                         m_groupSpeciesProportions[iGroup].ApplyFishingMortality(ir, ic, groupinfo.EwEMapping, @catch, (double)ds.Bcell[ir, ic, iGroup]);
 
-                                        ds.Bcell[ir, ic, iGroup] = @catch;
+                                        ds.Bcell[ir, ic, iGroup] -= @catch;
+
                                         ds.CatchMap[ir, ic, iGroup] += @catch;
                                         ds.CatchFleetMap[ir, ic, iFleet] += @catch;
                                         ds.Landings[iFleet, iGroup] += @catch;
