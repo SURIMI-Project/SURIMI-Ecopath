@@ -8,6 +8,8 @@ using Eii.ControlledVocabularies.Vocabularies.Country;
 using Eii.ControlledVocabularies.Vocabularies.Gear;
 using Eii.ControlledVocabularies.Vocabularies.LifeStage;
 using Eii.ControlledVocabularies.Vocabularies.Species;
+using EwEUtils.Logging;
+using Serilog;
 
 namespace Ecopath;
 
@@ -15,6 +17,18 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        // Configure Serilog
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.Console()
+            .CreateLogger();
+
+        // Initialize LoggerFactory
+        LoggingContext.LoggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder.AddSerilog();
+        });
+
         var builder = WebApplication.CreateBuilder(args);
         builder.AddServiceDefaults();
 
