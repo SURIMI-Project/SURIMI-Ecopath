@@ -82,7 +82,6 @@ namespace Ecopath.EwE
             m_configuration = configuration;
             m_core = core;
 
-            cLog.VerboseLevel = eVerboseLevel.Disabled; // Turn off all internal event logging
             RunState = RunStates.idle;
 
             // To make sure we can find local resources. This is rather hack.
