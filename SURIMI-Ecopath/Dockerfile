@@ -15,18 +15,42 @@ ENV OTEL_SERVICE_NAME=Ecopath
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
+ARG GITHUB_TOKEN
+ARG BSR_TOKEN
 WORKDIR /src
-COPY ["NuGet.config", "Ecopath/"]
-COPY ["Ecopath/Ecopath.csproj", "Ecopath/"]
-RUN dotnet restore "./Ecopath/Ecopath.csproj"
+
+# Copy NuGet configuration
+COPY ["NuGet.config", "."]
+
+# Add authentication for GitHub Packages
+RUN if [ ! -z "$GITHUB_TOKEN" ]; then \
+    dotnet nuget update source github-Official-EwE \
+    --username github \
+    --password $GITHUB_TOKEN \
+    --store-password-in-clear-text \
+    --configfile NuGet.config; \
+    fi
+
+# Add authentication for BSR (if token is provided)
+RUN if [ ! -z "$BSR_TOKEN" ]; then \
+    dotnet nuget update source BSR \
+    --username bsr \
+    --password $BSR_TOKEN \
+    --store-password-in-clear-text \
+    --configfile NuGet.config; \
+    fi
+
+COPY ["SURIMI.ServiceDefaults/SURIMI.ServiceDefaults.csproj", "SURIMI.ServiceDefaults/"]
+COPY ["SURIMI-Ecopath/SURIMI-Ecopath.csproj", "SURIMI-Ecopath/"]
+RUN dotnet restore "./SURIMI-Ecopath/SURIMI-Ecopath.csproj"
 COPY . .
-WORKDIR "/src/Ecopath"
-RUN dotnet build "./Ecopath.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/SURIMI-Ecopath"
+RUN dotnet build "./SURIMI-Ecopath.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./Ecopath.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./SURIMI-Ecopath.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
@@ -34,4 +58,4 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 # Also copy includes produced during build
 COPY --from=build /app/build/Includes /app/Includes/
-ENTRYPOINT ["dotnet", "Ecopath.dll"]
+ENTRYPOINT ["dotnet", "SURIMI-Ecopath.dll"]
