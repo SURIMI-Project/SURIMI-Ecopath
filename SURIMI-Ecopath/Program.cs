@@ -26,6 +26,10 @@ public class Program
             logBuilder.AddDebug();
         });
 
+        // Create a logger for the Program class
+        var logger = LoggingContext.LoggerFactory.CreateLogger<Program>();
+        logger.LogInformation("Ecopath starting up.......................");
+
         builder.AddServiceDefaults();
 
         // Add services to the container.
@@ -59,6 +63,8 @@ public class Program
         GlobalServiceLocator.Register(new KeyFieldDescriptorRegistry());
         GlobalServiceLocator.Register(new VocabularyRegistry());
 
+        logger.LogInformation("Ecopath running.......................");
         app.Run();
+        logger.LogInformation("Ecopath shutting down.......................");
     }
 }
