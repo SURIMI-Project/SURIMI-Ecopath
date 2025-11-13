@@ -9,7 +9,6 @@ using Eii.ControlledVocabularies.Vocabularies.Gear;
 using Eii.ControlledVocabularies.Vocabularies.LifeStage;
 using Eii.ControlledVocabularies.Vocabularies.Species;
 using EwEUtils.Logging;
-using Serilog;
 
 namespace Ecopath;
 
@@ -17,19 +16,16 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        // Configure Serilog
-        Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
-            .WriteTo.Console()
-            .CreateLogger();
+        var builder = WebApplication.CreateBuilder(args);
 
-        // Initialize LoggerFactory
-        LoggingContext.LoggerFactory = LoggerFactory.Create(builder =>
+        // Initialize LoggerFactory of EwE sources that don't get the ILogger via Dependency injection
+        LoggingContext.LoggerFactory = LoggerFactory.Create(logBuilder =>
         {
-            builder.AddSerilog();
+            logBuilder.AddConfiguration(builder.Configuration.GetSection("Logging"));   // so you can add a 'Logging' section to the appsettings.json to configure logging
+            logBuilder.AddConsole();
+            logBuilder.AddDebug();
         });
 
-        var builder = WebApplication.CreateBuilder(args);
         builder.AddServiceDefaults();
 
         // Add services to the container.
