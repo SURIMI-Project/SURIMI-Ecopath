@@ -8,6 +8,7 @@ using Eii.ControlledVocabularies.Vocabularies.Country;
 using Eii.ControlledVocabularies.Vocabularies.Gear;
 using Eii.ControlledVocabularies.Vocabularies.LifeStage;
 using Eii.ControlledVocabularies.Vocabularies.Species;
+using EwEUtils.Logging;
 
 namespace Ecopath;
 
@@ -16,6 +17,15 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        // Initialize LoggerFactory of EwE sources that don't get the ILogger via Dependency injection
+        LoggingContext.LoggerFactory = LoggerFactory.Create(logBuilder =>
+        {
+            logBuilder.AddConfiguration(builder.Configuration.GetSection("Logging"));   // so you can add a 'Logging' section to the appsettings.json to configure logging
+            logBuilder.AddConsole();
+            logBuilder.AddDebug();
+        });
+
         builder.AddServiceDefaults();
 
         // Add services to the container.
