@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ecopath\Ecopath.csproj" />
+    <ProjectReference Include="..\Ecopath\SURIMI-Ecopath.csproj" />
   </ItemGroup>
 
 </Project>

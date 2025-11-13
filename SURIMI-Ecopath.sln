@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35919.96
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecopath", "Ecopath\Ecopath.csproj", "{BE662BA1-2E26-63CA-73C2-AE6D3CF5C945}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SURIMI-Ecopath", "Ecopath\SURIMI-Ecopath.csproj", "{BE662BA1-2E26-63CA-73C2-AE6D3CF5C945}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SURIMI.ServiceDefaults", "SURIMI.ServiceDefaults\SURIMI.ServiceDefaults.csproj", "{C3E0D297-7EA5-49FF-B8BD-D5A2D0BB2643}"
 EndProject
@@ -16,7 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecopath.Tests", "Ecopath.Tests\Ecopath.Tests.csproj", "{981DE17F-84AF-479D-8733-2AFFF01CEDCF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SURIMI-Ecopath.Tests", "Ecopath.Tests\SURIMI-Ecopath.Tests.csproj", "{981DE17F-84AF-479D-8733-2AFFF01CEDCF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
