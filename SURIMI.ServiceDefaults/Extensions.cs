@@ -16,6 +16,8 @@ public static class Extensions
 {
     public static TBuilder AddServiceDefaults<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
+        Console.WriteLine($"Using OTLP exporter for OpenTelemetry on url:{builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]}  Protocol:{builder.Configuration["OTEL_EXPORTER_OTLP_PROTOCOL"]} ServiceName: {builder.Configuration["OTEL_SERVICE_NAME"]}");
+
         builder.ConfigureOpenTelemetry();
 
         builder.AddDefaultHealthChecks();
