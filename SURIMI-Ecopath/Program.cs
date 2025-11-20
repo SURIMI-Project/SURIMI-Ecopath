@@ -1,8 +1,7 @@
 using Ecopath.EwE;
 using Ecopath.EwE.Wrapper;
 using Ecopath.Services;
-using Eii.ControlledVocabularies.Common;
-using Eii.ControlledVocabularies.Context;
+using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
 using Eii.ControlledVocabularies.ForeignKeys;
 using Eii.ControlledVocabularies.Inference.Field;
@@ -54,6 +53,7 @@ public class Program
         builder.Services.AddSingleton<IForeignKeyResolver, ForeignKeyResolver>();
         builder.Services.AddSingleton<FieldInferenceOrchestrator>();
         builder.Services.AddSingleton<IKeyFieldDescriptorIndexer, KeyFieldDescriptorIndexer>();
+        builder.Services.AddSingleton<IMultiLevelKeyFactory, MultiLevelKeyFactory>();
 
         var app = builder.Build();
 
