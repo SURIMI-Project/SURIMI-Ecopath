@@ -41,6 +41,7 @@ namespace Ecopath.EwE
         private readonly ISSCFGGearCodeVocabulary m_iSSCFGGearCodeVocabulary;
         private readonly ISO3166CountryCodeVocabulary m_iSO3166CountryCodeVocabulary;
         private readonly SURIMILifestageVocabulary m_SURIMILifestageVocabulary;
+        private readonly IMultiLevelKeyFactory m_multiLevelKeyFactory;
 
         // The EwE indices of externally managed fleets.
         private readonly HashSet<int> m_externalFleets = new();
@@ -66,13 +67,14 @@ namespace Ecopath.EwE
             }
         }
 
-        public EwEConfiguration(ASFISSpeciesCodeVocabulary asfisVocabulary, ISSCFGGearCodeVocabulary iSSCFGGearCodeVocabulary, ISO3166CountryCodeVocabulary iSO3166CountryCodeVocabulary, SURIMILifestageVocabulary sURIMILifestageVocabulary, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry)
+        public EwEConfiguration(ASFISSpeciesCodeVocabulary asfisVocabulary, ISSCFGGearCodeVocabulary iSSCFGGearCodeVocabulary, ISO3166CountryCodeVocabulary iSO3166CountryCodeVocabulary, SURIMILifestageVocabulary sURIMILifestageVocabulary, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory)
         {
             m_asfisVocabulary = asfisVocabulary;
             m_iSSCFGGearCodeVocabulary = iSSCFGGearCodeVocabulary;
             m_iSO3166CountryCodeVocabulary = iSO3166CountryCodeVocabulary;
             m_SURIMILifestageVocabulary = sURIMILifestageVocabulary;
             m_keyFieldDescriptorRegistry = keyFieldDescriptorRegistry;
+            m_multiLevelKeyFactory = multiLevelKeyFactory;
 
             ModelName = @"Includes/GSA0607EwENBS.eiixml";
             EcosimScenario = 1;
@@ -88,7 +90,7 @@ namespace Ecopath.EwE
             StartYear = 2001;
 #endif
             var reg = ModelContextDescriptorRegistry.Create();
-            var context = new ModelContext(reg);
+            var context = new ModelContext(reg, m_multiLevelKeyFactory);
 
             // ToDo: make this real once the model has loaded
             context.SetModelName("EwE Demo");
@@ -196,13 +198,13 @@ namespace Ecopath.EwE
 
         public IEnumerable<EwEMappingMatch> ResolveGroups(string speciescode)
         {
-            MultiLevelKey key = MultiLevelKey.FromPairs([(SpeciesFields.SpeciesCode, speciescode)], KeyDomain.Species, m_keyFieldDescriptorRegistry);
+            MultiLevelKey key = m_multiLevelKeyFactory.FromPairs([(SpeciesFields.SpeciesCode, speciescode)], KeyDomain.Species, m_keyFieldDescriptorRegistry);
             return ResolveGroups(key);
         }
 
         public IEnumerable<EwEMappingMatch> ResolveGroups(Ecopath.Models.Species species)
         {
-            return ResolveGroups(MultiLevelKey.FromObject(species, KeyDomain.Species, m_keyFieldDescriptorRegistry));
+            return ResolveGroups(m_multiLevelKeyFactory.FromObject(species, KeyDomain.Species, m_keyFieldDescriptorRegistry));
         }
 
         public IEnumerable<EwEMappingMatch> ResolveGroups(MultiLevelKey key)
@@ -218,13 +220,13 @@ namespace Ecopath.EwE
         public IEnumerable<EwEMappingMatch> ResolveFleets(Ecopath.Models.FleetSegment fleetsegment)
         {
             var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptorRegistry.GetAll(KeyDomain.FleetSegment));
-            foreach (var match in resolver.FindAllMatches(MultiLevelKey.FromObject(fleetsegment, KeyDomain.FleetSegment, m_keyFieldDescriptorRegistry)))
+            foreach (var match in resolver.FindAllMatches(m_multiLevelKeyFactory.FromObject(fleetsegment, KeyDomain.FleetSegment, m_keyFieldDescriptorRegistry)))
                 yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
         }
 
         public IEnumerable<EwEMappingMatch> ResolveMarkets(string gearcode, string marketcode)
         {
-            MultiLevelKey key = MultiLevelKey.FromPairs([(FishingFields.GearCode, gearcode), (MarketFields.MarketCode, marketcode)], KeyDomain.Market, m_keyFieldDescriptorRegistry);
+            MultiLevelKey key = m_multiLevelKeyFactory.FromPairs([(FishingFields.GearCode, gearcode), (MarketFields.MarketCode, marketcode)], KeyDomain.Market, m_keyFieldDescriptorRegistry);
             var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptorRegistry.GetAll(KeyDomain.Market));
             foreach (var match in resolver.FindAllMatches(key))
                 yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
