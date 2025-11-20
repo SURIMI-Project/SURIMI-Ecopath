@@ -2,7 +2,10 @@ using Ecopath.EwE;
 using Ecopath.EwE.Wrapper;
 using Ecopath.Services;
 using Eii.ControlledVocabularies.Common;
+using Eii.ControlledVocabularies.Context;
 using Eii.ControlledVocabularies.Descriptors;
+using Eii.ControlledVocabularies.ForeignKeys;
+using Eii.ControlledVocabularies.Inference.Field;
 using Eii.ControlledVocabularies.Registries;
 using Eii.ControlledVocabularies.Vocabularies.Country;
 using Eii.ControlledVocabularies.Vocabularies.Gear;
@@ -46,6 +49,11 @@ public class Program
         builder.Services.AddSingleton<ISSCFGGearCodeVocabulary>();
         builder.Services.AddSingleton<ISO3166CountryCodeVocabulary>();
         builder.Services.AddSingleton<SURIMILifestageVocabulary>();
+        builder.Services.AddSingleton<IKeyFieldDescriptorRegistry, KeyFieldDescriptorRegistry>();
+        builder.Services.AddSingleton<IVocabularyRegistry, VocabularyRegistry>();
+        builder.Services.AddSingleton<IForeignKeyResolver, ForeignKeyResolver>();
+        builder.Services.AddSingleton<FieldInferenceOrchestrator>();
+        builder.Services.AddSingleton<IKeyFieldDescriptorIndexer, KeyFieldDescriptorIndexer>();
 
         var app = builder.Build();
 
@@ -58,10 +66,6 @@ public class Program
         app.MapGrpcService<EcopathMarketService>();
 
         app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
-
-        // Just pretending, to be made real w Rik
-        GlobalServiceLocator.Register(new KeyFieldDescriptorRegistry());
-        GlobalServiceLocator.Register(new VocabularyRegistry());
 
         logger.LogInformation("Ecopath running.......................");
         app.Run();
