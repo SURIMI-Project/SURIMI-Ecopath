@@ -35,7 +35,7 @@ namespace Ecopath.EwE
         /// </list>
         /// </remarks>
         private readonly List<EwEMapping> m_mappings = new();
-        private readonly KeyFieldDescriptorRegistry m_keyFieldDescriptors;
+        private readonly IKeyFieldDescriptorRegistry m_keyFieldDescriptorRegistry;
         private readonly VocabularyRegistry m_vocabularies = new();
         private readonly ASFISSpeciesCodeVocabulary m_asfisVocabulary;
         private readonly ISSCFGGearCodeVocabulary m_iSSCFGGearCodeVocabulary;
@@ -66,12 +66,13 @@ namespace Ecopath.EwE
             }
         }
 
-        public EwEConfiguration(ASFISSpeciesCodeVocabulary asfisVocabulary, ISSCFGGearCodeVocabulary iSSCFGGearCodeVocabulary, ISO3166CountryCodeVocabulary iSO3166CountryCodeVocabulary, SURIMILifestageVocabulary sURIMILifestageVocabulary)
+        public EwEConfiguration(ASFISSpeciesCodeVocabulary asfisVocabulary, ISSCFGGearCodeVocabulary iSSCFGGearCodeVocabulary, ISO3166CountryCodeVocabulary iSO3166CountryCodeVocabulary, SURIMILifestageVocabulary sURIMILifestageVocabulary, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry)
         {
             m_asfisVocabulary = asfisVocabulary;
             m_iSSCFGGearCodeVocabulary = iSSCFGGearCodeVocabulary;
             m_iSO3166CountryCodeVocabulary = iSO3166CountryCodeVocabulary;
             m_SURIMILifestageVocabulary = sURIMILifestageVocabulary;
+            m_keyFieldDescriptorRegistry = keyFieldDescriptorRegistry;
 
             ModelName = @"Includes/GSA0607EwENBS.eiixml";
             EcosimScenario = 1;
@@ -95,22 +96,19 @@ namespace Ecopath.EwE
             context.SetBoundingBox(35.0, -25.0, 70.0, 20.0);
             context.SetYears(1990, 2020);
             context.SetTimestamp(DateTime.UtcNow);
-            GlobalServiceLocator.Replace(context);
-
-            m_keyFieldDescriptors = GlobalServiceLocator.Get<KeyFieldDescriptorRegistry>()!;
 
             // Register the different species fields that the application may be interested in
-            m_keyFieldDescriptors.Register(new KeyFieldDescriptor(SpeciesFields.SpeciesCode, KeyDomain.Species, KeyPurpose.Species, FieldKind.Code, true, 10));
-            m_keyFieldDescriptors.Register(new KeyFieldDescriptor(SpeciesFields.Stage, KeyDomain.Species, KeyPurpose.Lifestage, FieldKind.Label, false, 3));
-            m_keyFieldDescriptors.Register(new KeyFieldDescriptor(SpeciesFields.Length, KeyDomain.Species, KeyPurpose.Length, FieldKind.Label, false, 3));
-            m_keyFieldDescriptors.Register(new KeyFieldDescriptor(SpeciesFields.Age, KeyDomain.Species, KeyPurpose.Age, FieldKind.Label, false, 3));
+            m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(SpeciesFields.SpeciesCode, KeyDomain.Species, KeyPurpose.Species, FieldKind.Code, true, 10));
+            m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(SpeciesFields.Stage, KeyDomain.Species, KeyPurpose.Lifestage, FieldKind.Label, false, 3));
+            m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(SpeciesFields.Length, KeyDomain.Species, KeyPurpose.Length, FieldKind.Label, false, 3));
+            m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(SpeciesFields.Age, KeyDomain.Species, KeyPurpose.Age, FieldKind.Label, false, 3));
 
             // Register the different gear fields that the application may be interested in
-            m_keyFieldDescriptors.Register(new KeyFieldDescriptor(FishingFields.GearCode, KeyDomain.FleetSegment, KeyPurpose.Gear, FieldKind.Code, true, 10));
-            m_keyFieldDescriptors.Register(new KeyFieldDescriptor(FishingFields.Flag, KeyDomain.FleetSegment, KeyPurpose.Country, FieldKind.Code, false, 3));
+            m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(FishingFields.GearCode, KeyDomain.FleetSegment, KeyPurpose.Gear, FieldKind.Code, true, 10));
+            m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(FishingFields.Flag, KeyDomain.FleetSegment, KeyPurpose.Country, FieldKind.Code, false, 3));
 
             // Register the different market fields that the application may be interested in
-            m_keyFieldDescriptors.Register(new KeyFieldDescriptor(MarketFields.MarketCode, KeyDomain.FleetSegment, KeyPurpose.Market, FieldKind.Code, true, 10));
+            m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(MarketFields.MarketCode, KeyDomain.FleetSegment, KeyPurpose.Market, FieldKind.Code, true, 10));
 
             // Register available look-up vocabularies
             m_vocabularies.Register(m_asfisVocabulary);
@@ -144,30 +142,30 @@ namespace Ecopath.EwE
             string cfgtext = GetConfigBucket(core).Remark;
 
             // Register fleet segments as gear + flag pairs to match fleet + flag fishing
-            m_mappings.Add(new EwEMapping("gearcode=TB; flag=ESP", KeyDomain.FleetSegment, 1));
-            m_mappings.Add(new EwEMapping("gearcode=PS; flag=ESP", KeyDomain.FleetSegment, 2));
-            m_mappings.Add(new EwEMapping("gearcode=LL; flag=ESP", KeyDomain.FleetSegment, 3));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:Artisanal; flag=ESP", KeyDomain.FleetSegment, 4));
-            m_mappings.Add(new EwEMapping("gearcode=PS; flag=ESP", KeyDomain.FleetSegment, 2));
+            m_mappings.Add(new EwEMapping("gearcode=TB; flag=ESP", KeyDomain.FleetSegment, 1, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=PS; flag=ESP", KeyDomain.FleetSegment, 2, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=LL; flag=ESP", KeyDomain.FleetSegment, 3, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:Artisanal; flag=ESP", KeyDomain.FleetSegment, 4, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=PS; flag=ESP", KeyDomain.FleetSegment, 2, m_keyFieldDescriptorRegistry));
 
-            m_mappings.Add(new EwEMapping("gearcode=TB; flag=FRA", KeyDomain.FleetSegment, 5));
-            m_mappings.Add(new EwEMapping("gearcode=TM; flag=FRA", KeyDomain.FleetSegment, 6));
-            m_mappings.Add(new EwEMapping("gearcode=PS; flag=FRA", KeyDomain.FleetSegment, 7));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:Artisanal; flag=FRA", KeyDomain.FleetSegment, 8));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:Recreational; flag=FRA", KeyDomain.FleetSegment, 9));
+            m_mappings.Add(new EwEMapping("gearcode=TB; flag=FRA", KeyDomain.FleetSegment, 5, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=TM; flag=FRA", KeyDomain.FleetSegment, 6, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=PS; flag=FRA", KeyDomain.FleetSegment, 7, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:Artisanal; flag=FRA", KeyDomain.FleetSegment, 8 , m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:Recreational; flag=FRA", KeyDomain.FleetSegment, 9, m_keyFieldDescriptorRegistry));
 
             // Register fleet segments as gear + market code pairs to match fleet > market deliveries
-            m_mappings.Add(new EwEMapping("gearcode=TB; marketcode=ESP", KeyDomain.Market, 1));
-            m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=ESP", KeyDomain.Market, 2));
-            m_mappings.Add(new EwEMapping("gearcode=LL; marketcode=ESP", KeyDomain.Market, 3));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:Artisanal; marketcode=ESP", KeyDomain.Market, 4));
-            m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=ESP", KeyDomain.Market, 5));
+            m_mappings.Add(new EwEMapping("gearcode=TB; marketcode=ESP", KeyDomain.Market, 1, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=ESP", KeyDomain.Market, 2, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=LL; marketcode=ESP", KeyDomain.Market, 3, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:Artisanal; marketcode=ESP", KeyDomain.Market, 4, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=ESP", KeyDomain.Market, 5, m_keyFieldDescriptorRegistry));
 
-            m_mappings.Add(new EwEMapping("gearcode=TB; marketcode=FRA", KeyDomain.Market, 5));
-            m_mappings.Add(new EwEMapping("gearcode=TM; marketcode=FRA", KeyDomain.Market, 6));
-            m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=FRA", KeyDomain.Market, 7));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:Artisanal; marketcode=FRA", KeyDomain.Market, 8));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:Recreational; marketcode=FRA", KeyDomain.Market, 9));
+            m_mappings.Add(new EwEMapping("gearcode=TB; marketcode=FRA", KeyDomain.Market, 5, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=TM; marketcode=FRA", KeyDomain.Market, 6, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=FRA", KeyDomain.Market, 7, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:Artisanal; marketcode=FRA", KeyDomain.Market, 8, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:Recreational; marketcode=FRA", KeyDomain.Market, 9, m_keyFieldDescriptorRegistry));
 
             for (int iGroup = 1; iGroup <= core.nGroups; iGroup++)
                 if (core.get_EcopathGroupInputs(iGroup).IsFished)
@@ -198,13 +196,13 @@ namespace Ecopath.EwE
 
         public IEnumerable<EwEMappingMatch> ResolveGroups(string speciescode)
         {
-            MultiLevelKey key = MultiLevelKey.FromPairs([(SpeciesFields.SpeciesCode, speciescode)], KeyDomain.Species);
+            MultiLevelKey key = MultiLevelKey.FromPairs([(SpeciesFields.SpeciesCode, speciescode)], KeyDomain.Species, m_keyFieldDescriptorRegistry);
             return ResolveGroups(key);
         }
 
         public IEnumerable<EwEMappingMatch> ResolveGroups(Ecopath.Models.Species species)
         {
-            return ResolveGroups(MultiLevelKey.FromObject(species, KeyDomain.Species));
+            return ResolveGroups(MultiLevelKey.FromObject(species, KeyDomain.Species, m_keyFieldDescriptorRegistry));
         }
 
         public IEnumerable<EwEMappingMatch> ResolveGroups(MultiLevelKey key)
@@ -212,22 +210,22 @@ namespace Ecopath.EwE
             if (key.Domain != KeyDomain.Species)
                 yield break;
 
-            var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.GetAll(KeyDomain.Species));
+            var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptorRegistry.GetAll(KeyDomain.Species));
             foreach (var match in resolver.FindAllMatches(key))
                 yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
         }
 
         public IEnumerable<EwEMappingMatch> ResolveFleets(Ecopath.Models.FleetSegment fleetsegment)
         {
-            var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.GetAll(KeyDomain.FleetSegment));
-            foreach (var match in resolver.FindAllMatches(MultiLevelKey.FromObject(fleetsegment, KeyDomain.FleetSegment)))
+            var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptorRegistry.GetAll(KeyDomain.FleetSegment));
+            foreach (var match in resolver.FindAllMatches(MultiLevelKey.FromObject(fleetsegment, KeyDomain.FleetSegment, m_keyFieldDescriptorRegistry)))
                 yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
         }
 
         public IEnumerable<EwEMappingMatch> ResolveMarkets(string gearcode, string marketcode)
         {
-            MultiLevelKey key = MultiLevelKey.FromPairs([(FishingFields.GearCode, gearcode), (MarketFields.MarketCode, marketcode)], KeyDomain.Market);
-            var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptors.GetAll(KeyDomain.Market));
+            MultiLevelKey key = MultiLevelKey.FromPairs([(FishingFields.GearCode, gearcode), (MarketFields.MarketCode, marketcode)], KeyDomain.Market, m_keyFieldDescriptorRegistry);
+            var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptorRegistry.GetAll(KeyDomain.Market));
             foreach (var match in resolver.FindAllMatches(key))
                 yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
         }
@@ -294,7 +292,7 @@ namespace Ecopath.EwE
 
             if (vocSpecies == null || vocLifeStage == null) return;
 
-            GenericVocabularyMatcher m = new();
+            //GenericVocabularyMatcher m = new();
 
             for (int iTaxa = 1; iTaxa <= core.nTaxon; iTaxa++)
             {
@@ -320,12 +318,12 @@ namespace Ecopath.EwE
                                 // #Yes: add life stage to mappings
                                 cEcoPathGroupInput grp = core.get_EcopathGroupInputs(iGroup);
 
-                                var key = new EwEMapping("", KeyDomain.Species, iGroup, 1);
-                                key.SetField(SpeciesFields.SpeciesCode, vocSpecies.VocabularyName + ":" + code);
+                                var key = new EwEMapping("", KeyDomain.Species, iGroup, m_keyFieldDescriptorRegistry, 1);
+                                key.SetField(SpeciesFields.SpeciesCode, vocSpecies.VocabularyName + ":" + code, m_keyFieldDescriptorRegistry);
 
                                 // Try to infer the stage from the group name
                                 string ls = vocLifeStage.FindCode(grp.Name);
-                                key.SetField(SpeciesFields.Lifestage, vocLifeStage.VocabularyName + ":" + ls);
+                                key.SetField(SpeciesFields.Lifestage, vocLifeStage.VocabularyName + ":" + ls, m_keyFieldDescriptorRegistry);
 
                                 this.m_mappings.Add(key);
                             }
@@ -346,8 +344,8 @@ namespace Ecopath.EwE
 
                         if (this.FishedGroups.Contains(taxon.iGroup))
                         {
-                            var key = new EwEMapping("", KeyDomain.Species, taxon.iGroup, taxon.PropB / 100);
-                            key.SetField(SpeciesFields.SpeciesCode, vocSpecies.VocabularyName + ":" + code);
+                            var key = new EwEMapping("", KeyDomain.Species, taxon.iGroup, m_keyFieldDescriptorRegistry, taxon.PropB / 100);
+                            key.SetField(SpeciesFields.SpeciesCode, vocSpecies.VocabularyName + ":" + code, m_keyFieldDescriptorRegistry);
 
                             this.m_mappings.Add(key);
                         }
