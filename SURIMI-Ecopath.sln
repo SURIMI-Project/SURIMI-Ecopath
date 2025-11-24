@@ -18,8 +18,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SURIMI-Ecopath", "SURIMI-Ec
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SURIMI-Ecopath.Tests", "SURIMI-Ecopath.Tests\SURIMI-Ecopath.Tests.csproj", "{4BF989E5-4750-6A1B-DBA0-D344576062D1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eii.ControlledVocabularies", "..\Eii\Eii.ControlledVocabularies\Eii.ControlledVocabularies\Eii.ControlledVocabularies.csproj", "{F6AD4881-8336-E2BF-BCDC-42F6D4DAB3A4}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,10 +36,6 @@ Global
 		{4BF989E5-4750-6A1B-DBA0-D344576062D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4BF989E5-4750-6A1B-DBA0-D344576062D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4BF989E5-4750-6A1B-DBA0-D344576062D1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F6AD4881-8336-E2BF-BCDC-42F6D4DAB3A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F6AD4881-8336-E2BF-BCDC-42F6D4DAB3A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F6AD4881-8336-E2BF-BCDC-42F6D4DAB3A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F6AD4881-8336-E2BF-BCDC-42F6D4DAB3A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
