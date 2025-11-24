@@ -1,6 +1,7 @@
 ﻿using Ecopath.EwE.Wrapper;
 using Ecopath.Models;
 using Eii.ControlledVocabularies.Core;
+using Eii.ControlledVocabularies.Descriptors;
 using Eii.ControlledVocabularies.Utils;
 using EwEBridge.Ecospace;
 using EwECore;
@@ -52,6 +53,8 @@ namespace Ecopath.EwE
         private readonly IEwEConfiguration m_configuration;
 
         private readonly ILogger<EwEController> m_logger;
+        private readonly IKeyFieldDescriptorRegistry m_keyFieldDescriptorRegistry;
+        private readonly IMultiLevelKeyFactory m_multiLevelKeyFactory;
 
         private RunStates m_runstate = RunStates.idle;
 
@@ -77,10 +80,11 @@ namespace Ecopath.EwE
 
         #endregion // Private vars 
 
-        public EwEController(ILogger<EwEController> logger, IEwEConfiguration configuration, IEwECore core)
+        public EwEController(ILogger<EwEController> logger, IEwEConfiguration configuration, IEwECore core, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory)
         {
             m_configuration = configuration;
             m_core = core;
+            m_keyFieldDescriptorRegistry = keyFieldDescriptorRegistry;
 
             RunState = RunStates.idle;
 
@@ -97,6 +101,8 @@ namespace Ecopath.EwE
                 cEcospaceBridgePlugin ppt = (cEcospaceBridgePlugin)pi;
                 ppt.BridgeCallback = BridgeCallback;
             }
+
+            m_multiLevelKeyFactory = multiLevelKeyFactory;
         }
 
         ~EwEController()
@@ -441,7 +447,7 @@ namespace Ecopath.EwE
             foreach (var grid in m_catchIn.DispositionGrids)
             {
                 // Try to parse species code in grid
-                MultiLevelKey key = MultiLevelKey.FromObject(grid.Species, KeyDomain.Species);
+                MultiLevelKey key = m_multiLevelKeyFactory.FromObject(grid.Species, KeyDomain.Species, m_keyFieldDescriptorRegistry);
                 // Resolve mapping key for grid fleet segment
                 foreach (var fleetinfo in m_configuration.ResolveFleets(grid.FleetSegment))
                 {

@@ -1,5 +1,6 @@
 ﻿using Ecopath.EwE.Wrapper;
 using Eii.ControlledVocabularies.Core;
+using Eii.ControlledVocabularies.Descriptors;
 using Eii.ControlledVocabularies.Utils;
 using EwECore;
 using System.Diagnostics;
@@ -8,9 +9,9 @@ namespace Ecopath.EwE
 {
     public class EwEMapping : MultiLevelKey
     {
-        public EwEMapping(string key, KeyDomain domain, int index, float proportion = 1) : base(domain)
+        public EwEMapping(string key, KeyDomain domain, int index, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, float proportion = 1) : base(domain)
         {
-            this.Parse(key);
+            this.Parse(key, keyFieldDescriptorRegistry);
             this.Index = index;
             this.Proportion = proportion;
         }
