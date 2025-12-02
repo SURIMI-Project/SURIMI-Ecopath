@@ -68,11 +68,12 @@ https://buf.build/blog/bsr-generated-sdks-for-csharp
 ## How to create a docker image, run it and push it
 
 ### Create and Push
-Start Docker Desktop and make sure it is running. Then right click the Ecopath project and select "Publish".
+Start Docker Desktop and make sure it is running. 
+To create a new docker image you have to pass the GITHUB_TOKEN and the BSR_TOKEN to restore the solution.
 
-In the Publish window click on "Publish"
-
-
+- Open the `Developer Powershell` window and confirm you are in the `SURIMI-Ecopath` directory.
+- `docker build -f .\SURIMI-Ecopath\Dockerfile --build-arg GITHUB_TOKEN=<github token> --build-arg BSR_TOKEN=<BSR token> -t rikkert242/ecopath:latest .`
+- `docker push rikkert242/ecopath:latest`
 ### Run
 To run it, you can select "Container (docker file)" in the Start menu of Visual Studio.
 
