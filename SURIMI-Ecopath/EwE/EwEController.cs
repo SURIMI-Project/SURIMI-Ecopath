@@ -30,11 +30,19 @@ namespace Ecopath.EwE
     // V MultiStanza: properly encode fish sizes, gear nationalities, and other refinements. The current coding system is not up to par
     // V We now properly fish! Data integration performed in the middle of the Ecospace time step, using catch dispositions received earlier
 
+    // December 2025
+    // p SURIMI discussed a contract to define the vocabularies and entities used, which is being implemented
+    // - The contract should also stipulate:
+    //   - Which fleets are handled by which model
+    //   - Which species are fished by those fleets
+    // - In the end, the contract will constructed on the fly, populated from only a few moving parts:
+    //   - Capabilities reported by each model 
+    //   - User choices to mix-and-match these capabilities
+
     // General things to do:
     // ! devise a mechanism to bridge time step sizes; right now the code assumes that time steps are monthly
     // ! expand entity matching logic
     // ! devise system to order up the same scenario across all participating models
-    // ! user stories in GitHub!!!
 
     /// =======================================================================
     /// <summary>
