@@ -1,7 +1,9 @@
 ﻿using Ecopath.EwE.Wrapper;
+using Eii.ControlledVocabularies.Common;
 using Eii.ControlledVocabularies.Context;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
+using Eii.ControlledVocabularies.Match;
 using Eii.ControlledVocabularies.Registries;
 using Eii.ControlledVocabularies.Resolve;
 using Eii.ControlledVocabularies.Utils;
@@ -289,8 +291,7 @@ namespace Ecopath.EwE
         private void ReadSpeciesMappings(IEwECore core)
         {
             /// Dirty hack to test if the species is in the EwE_functional-group_species.csv
-            /// TODO: remove when the Initialise test message is implemented
-            /// TODO: expand the contract to also
+            /// TODO : remove when the Initialise test message is implemented
             string[] surimuCodes = ["MTS", "NEP", "ARS", "FAM", "LKO", "LKT", "SKM", "GRQ", "IOD", "OLV", "BOY", "EOI", "OCC", "OUL", "OUM", "SQM", "OQT", "HQB", "SQE", "SLM", "MUT", "WHB", "ANK", "MON", "HKE", "POD", "COE", "COE", "CIL", "LDB", "BLL", "LDV", "SRJ", "SBA", "PAC", "BRF", "SFS", "TSU", "GLI", "SPF", "SPC", "BOG", "SYC", "SCK", "SHO", "JDP", "RJC", "JRS", "ANE", "PIL", "SAA", "SPR", "HMM", "JAA", "HOM", "MAC", "MAZ", "SWO", "BFT", "BON", "ALB", "BSK", "RMM", "MOX", "BSH", "TTL", "CDI", "FPA", "DAZ", "LVH", "VCW", "LOW", "DTR", "DTY", "DKH", "CVV", "MVB", "ISY", "UIM", "UYE", "TVA", "PIW", "DRR", "SPW", "DST", "DBO", "FIW"];
 
             // The name of the vocabulary is implied here, but should be read from the species code
@@ -336,8 +337,8 @@ namespace Ecopath.EwE
                                 var key = new EwEMapping("", KeyDomain.Species, iGroup, m_keyFieldDescriptorRegistry, 1);
                                 key.SetField(SpeciesFields.SpeciesCode, vocSpecies.VocabularyName + ":" + code, m_keyFieldDescriptorRegistry);
 
-                                // Try to infer the stage from the group name, allowing for relatively low-confidence fuzzy matching
-                                string ls = vocLifeStage.FindCode(grp.Name, 50);
+                                // Try to infer the stage from the group name
+                                string ls = vocLifeStage.FindCode(grp.Name);
                                 key.SetField(SpeciesFields.Lifestage, vocLifeStage.VocabularyName + ":" + ls, m_keyFieldDescriptorRegistry);
 
                                 this.m_mappings.Add(key);
