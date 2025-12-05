@@ -338,7 +338,7 @@ namespace Ecopath.EwE
                                 key.SetField(SpeciesFields.SpeciesCode, vocSpecies.VocabularyName + ":" + code, m_keyFieldDescriptorRegistry);
 
                                 // Try to infer the stage from the group name
-                                string ls = vocLifeStage.FindCode(grp.Name);
+                                string ls = vocLifeStage.FindCode(grp.Name, 50);
                                 key.SetField(SpeciesFields.Lifestage, vocLifeStage.VocabularyName + ":" + ls, m_keyFieldDescriptorRegistry);
 
                                 this.m_mappings.Add(key);
