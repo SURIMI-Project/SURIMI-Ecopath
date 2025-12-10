@@ -29,10 +29,7 @@ namespace Ecopath.Services
 
             var response = new GetCatchDispositionResponse
             {
-                CatchDispositionSummary = new CatchDispositionSummary
-                {
-                    MeasurementUnit = catchDisposition?.MeasurementUnit ?? string.Empty
-                },
+                CatchDispositionSummary = new CatchDispositionSummary(),
                 SimulationId = request.SimulationId
             };
 
@@ -46,14 +43,14 @@ namespace Ecopath.Services
                             Species = new Species
                             {
                                 SpeciesCode = grid.Species.SpeciesCode ?? string.Empty,
-                                LengthClass = grid.Species.Length ?? string.Empty,
+                                LengthClass = grid.Species.LengthClass ?? string.Empty,
                                 Age = grid.Species.Age ?? string.Empty,
-                                Stage = grid.Species.Stage ?? string.Empty
+                                LifeStage = grid.Species.LifeStage ?? string.Empty
                             },
                             FleetSegment = new FleetSegment
                             {
                                 GearCode = grid.FleetSegment.GearCode ?? string.Empty,
-                                Flag = grid.FleetSegment.Flag ?? string.Empty
+                                CountryCode = grid.FleetSegment.CountryCode ?? string.Empty
                             }
                         };
                         if (grid.DispositionCells != null)
@@ -80,28 +77,27 @@ namespace Ecopath.Services
         public override async Task<UpdateCatchDispositionResponse> UpdateCatchDisposition(UpdateCatchDispositionRequest request, ServerCallContext context)
         {
             await m_checksimulationservice.CheckIfCorrectSimulationAsync("UpdateCatchDisposition", request.SimulationId, context);
-            GrpcValidation.ArgumentNotNullOrEmpty(request.CatchDispositionSummary.MeasurementUnit);
+            GrpcValidation.ArgumentNotNullOrEmpty(request.SimulationId);
 
-            var catchDisposition = new Ecopath.Models.CatchDispositionSummary
+            var catchDisposition = new SURIMI.Datamodel.CatchDispositionSummary
             {
-                MeasurementUnit = request.CatchDispositionSummary.MeasurementUnit,
                 DispositionGrids = request.CatchDispositionSummary.DispositionGrids
-                .Select(grid => new Ecopath.Models.DispositionGrid
+                .Select(grid => new SURIMI.Datamodel.DispositionGrid
                 {
-                    FleetSegment = new Ecopath.Models.FleetSegment
+                    FleetSegment = new SURIMI.Datamodel.FleetSegment
                     {
                         GearCode = grid.FleetSegment.GearCode,
-                        Flag = grid.FleetSegment.Flag ?? string.Empty
+                        CountryCode = grid.FleetSegment.CountryCode ?? string.Empty
                     },
-                    Species = new Ecopath.Models.Species
+                    Species = new SURIMI.Datamodel.Species
                     {
                         SpeciesCode = grid.Species.SpeciesCode,
-                        Length = grid.Species.LengthClass ?? string.Empty,
+                        LengthClass = grid.Species.LengthClass ?? string.Empty,
                         Age = grid.Species.Age ?? string.Empty,
-                        Stage = grid.Species.Stage ?? string.Empty
+                        LifeStage = grid.Species.LifeStage ?? string.Empty
                     },
                     DispositionCells = grid.DispositionCells
-                        .Select(grpcCell => new Models.DispositionCell
+                        .Select(grpcCell => new SURIMI.Datamodel.DispositionCell
                         {
                             GrossCatchBiomass = grpcCell.GrossCatch,
                             LiveDiscardsBiomass = grpcCell.LiveDiscards,
