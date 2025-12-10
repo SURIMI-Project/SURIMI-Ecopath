@@ -1,4 +1,4 @@
-using Ecopath.Models;
+using SURIMI.Datamodel;
 
 namespace Ecopath.EwE
 {
@@ -6,7 +6,7 @@ namespace Ecopath.EwE
     {
         EwEController.RunStates RunState { get; }
         bool IsWaiting { get; }
-        Task<int> StartAsync(int timeoutMs = 60000);
+        Task<int> StartAsync(SurimiConfiguration surimiConfiguration, int timeoutMs = 60000);
         Task<bool> ContinueAsync(int timeoutMs = 60000);
         Task<bool> StopAsync(int timeoutMs = 10000);
         Task<bool> UpdatePricesAsync(List<SpeciesPrice> speciesPrices);

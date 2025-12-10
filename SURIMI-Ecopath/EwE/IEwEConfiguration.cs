@@ -2,6 +2,7 @@
 using Ecopath.Generic;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Utils;
+using SURIMI.Datamodel;
 
 namespace Ecopath.EwE
 {
@@ -17,12 +18,12 @@ namespace Ecopath.EwE
         int StartYear { get; set; }
 
         IEnumerable<EwEMapping> Mappings(KeyDomain domain);
-        bool Load(IEwECore core);
+        bool Load(IEwECore core, SurimiConfiguration surimiConfiguration);
         IEnumerable<EwEMappingMatch> ResolveMarkets(string gearcode, string marketcode);
         IEnumerable<EwEMappingMatch> ResolveGroups(string speciescode);
         IEnumerable<EwEMappingMatch> ResolveGroups(MultiLevelKey key);
-        IEnumerable<EwEMappingMatch> ResolveGroups(Models.Species species);
-        IEnumerable<EwEMappingMatch> ResolveFleets(Models.FleetSegment fleetsegment);
+        IEnumerable<EwEMappingMatch> ResolveGroups(SURIMI.Datamodel.Species species);
+        IEnumerable<EwEMappingMatch> ResolveFleets(SURIMI.Datamodel.FleetSegment fleetsegment);
         EwEMapping? Find(int iIndex, KeyDomain domain);
         bool IsExternalFleet(int iFleet);
     }

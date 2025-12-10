@@ -14,6 +14,7 @@ using Eii.ControlledVocabularies.Vocabularies.LifeStage;
 using Eii.ControlledVocabularies.Vocabularies.Species;
 using EwECore;
 using EwECore.Auxiliary;
+using SURIMI.Datamodel;
 
 namespace Ecopath.EwE
 {
@@ -137,7 +138,7 @@ namespace Ecopath.EwE
 
         #region Persistence
 
-        public bool Load(IEwECore core)
+        public bool Load(IEwECore core, SurimiConfiguration surimiConfiguration)
         {
             m_mappings.Clear();
             m_fishedGroups.Clear();
@@ -204,7 +205,7 @@ namespace Ecopath.EwE
             return ResolveGroups(key);
         }
 
-        public IEnumerable<EwEMappingMatch> ResolveGroups(Ecopath.Models.Species species)
+        public IEnumerable<EwEMappingMatch> ResolveGroups(SURIMI.Datamodel.Species species)
         {
             return ResolveGroups(m_multiLevelKeyFactory.FromObject(species, KeyDomain.Species, m_keyFieldDescriptorRegistry));
         }
@@ -219,7 +220,7 @@ namespace Ecopath.EwE
                 yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
         }
 
-        public IEnumerable<EwEMappingMatch> ResolveFleets(Ecopath.Models.FleetSegment fleetsegment)
+        public IEnumerable<EwEMappingMatch> ResolveFleets(SURIMI.Datamodel.FleetSegment fleetsegment)
         {
             var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptorRegistry.GetAll(KeyDomain.FleetSegment));
             foreach (var match in resolver.FindAllMatches(m_multiLevelKeyFactory.FromObject(fleetsegment, KeyDomain.FleetSegment, m_keyFieldDescriptorRegistry)))
