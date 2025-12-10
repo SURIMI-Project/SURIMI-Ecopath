@@ -26,10 +26,7 @@ public class EcopathEcologyService : EcologyService.EcologyServiceBase
 
         var grpcBiomass = new GetBiomassResponse
         {
-            BiomassSummary = new BiomassSummary
-            {
-                MeasurementUnit = biomass.MeasurementUnit ?? string.Empty
-            },
+            BiomassSummary = new BiomassSummary(),
             SimulationId = request.SimulationId
         };
 
@@ -41,9 +38,9 @@ public class EcopathEcologyService : EcologyService.EcologyServiceBase
                     Species = new Species
                     {
                         SpeciesCode = grid.Species.SpeciesCode ?? string.Empty,
-                        LengthClass = grid.Species.Length ?? string.Empty,
+                        LengthClass = grid.Species.LengthClass ?? string.Empty,
                         Age = grid.Species.Age ?? string.Empty,
-                        Stage = grid.Species.Stage ?? string.Empty
+                        LifeStage = grid.Species.LifeStage ?? string.Empty
                     },
                     BiomassCells = { grid.BiomassCells?.Select(cell => new Grpc.Surimi.BiomassCell
                     {
