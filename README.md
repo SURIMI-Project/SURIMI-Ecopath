@@ -76,4 +76,3 @@ To create a new docker image you have to pass the GITHUB_TOKEN and the BSR_TOKEN
 - `docker push rikkert242/ecopath:latest`
 ### Run
 To run it, you can select "Container (docker file)" in the Start menu of Visual Studio.
-
