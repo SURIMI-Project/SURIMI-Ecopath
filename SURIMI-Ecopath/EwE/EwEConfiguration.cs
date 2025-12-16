@@ -1,9 +1,7 @@
 ﻿using Ecopath.EwE.Wrapper;
-using Eii.ControlledVocabularies.Common;
 using Eii.ControlledVocabularies.Context;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
-using Eii.ControlledVocabularies.Match;
 using Eii.ControlledVocabularies.Registries;
 using Eii.ControlledVocabularies.Resolve;
 using Eii.ControlledVocabularies.Utils;
