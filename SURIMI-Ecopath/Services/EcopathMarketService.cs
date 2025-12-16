@@ -23,7 +23,7 @@ namespace Ecopath.Services
             m_logger.LogInformation($"Updating prices for {request.Prices.Count} species...");
 
             var speciesPrices = request.Prices
-                .Select(p => new Models.SpeciesPrice
+                .Select(p => new SURIMI.Datamodel.SpeciesPrice
                 {
                     // Note that the market does not distinguish species sizes, ages and lengths, and ignores gear specifics other than gearcode.
                     // Although this is by design but may have to be revisited; the limitations seem like an oversight.
@@ -31,7 +31,6 @@ namespace Ecopath.Services
                     GearCode = p.GearCode,
                     Price = p.Price,
                     Currency = p.Currency,
-                    MeasurementUnit = p.MeasurementUnit,
                     MarketCode = p.MarketCode,
                     Timestamp = p.Timestamp.ToDateTime()
                 })
@@ -55,8 +54,7 @@ namespace Ecopath.Services
                 {
                     var grpcSummary = new SalesSummary
                     {
-                        MarketCode = summary.MarketId,
-                        MeasurementUnit = summary.MeasurementUnit,
+                        MarketCode = summary.MarketCode,
                         Currency = summary.Currency,
                     };
 

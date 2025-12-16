@@ -1,5 +1,5 @@
 ﻿using Ecopath.EwE.Wrapper;
-using Ecopath.Models;
+using SURIMI.Datamodel;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
 using Eii.ControlledVocabularies.Utils;
@@ -161,7 +161,7 @@ namespace Ecopath.EwE
         /// Start EwE and wait for Ecospace to get ready for simulations
         /// </summary>
         /// <returns></returns>
-        public async Task<int> StartAsync(int timeoutMs = 60 * 10 * 1000)
+        public async Task<int> StartAsync(SurimiConfiguration surimiConfiguration, int timeoutMs = 60 * 10 * 1000)
         {
             // Check readiness
             if (RunState != RunStates.idle)
@@ -210,7 +210,7 @@ namespace Ecopath.EwE
             m_logger.LogInformation("EwE - Ecospace scenario {0} loaded", m_configuration.EcospaceScenario);
 
             // Now load the configuration
-            m_configuration.Load(m_core);
+            m_configuration.Load(m_core, surimiConfiguration);
             StringBuilder info = new();
             info.AppendLine("EwE FG - species mappings:");
             foreach (var mapping in m_configuration.Mappings(KeyDomain.Species))
@@ -359,7 +359,7 @@ namespace Ecopath.EwE
         public Task<CatchDispositionSummary> GetCatchDispositionSummaryAsync(DateTime start, DateTime end)
         {
             if (m_catchOut == null)
-                m_catchOut = new CatchDispositionSummary() { MeasurementUnit = "kg" };
+                m_catchOut = new CatchDispositionSummary();
             return Task.FromResult(m_catchOut);
         }
 
@@ -529,7 +529,7 @@ namespace Ecopath.EwE
 
                 foreach (EwEMapping key in m_configuration.Mappings(KeyDomain.Species))
                 {
-                    Species? species = key.ToObject<Ecopath.Models.Species>(m_configuration.IncludeVocabularies);
+                    Species? species = key.ToObject<SURIMI.Datamodel.Species>(m_configuration.IncludeVocabularies);
                     if (species != null)
                     {
                         BiomassGrid grid = new()
@@ -567,7 +567,7 @@ namespace Ecopath.EwE
         private void CacheCatchAndSalesData()
         {
             if (m_catchOut == null)
-                m_catchOut = new() { MeasurementUnit = "kg" };
+                m_catchOut = new();
             else
                 m_catchOut.DispositionGrids.Clear();
 
@@ -642,8 +642,8 @@ namespace Ecopath.EwE
 #pragma warning disable CS8601 // Possible null reference assignment.
                             var grid = new DispositionGrid()
                             {
-                                FleetSegment = mlkMarket.ToObject<Ecopath.Models.FleetSegment>(m_configuration.IncludeVocabularies),
-                                Species = mlkGroup.ToObject<Ecopath.Models.Species>(m_configuration.IncludeVocabularies)
+                                FleetSegment = mlkMarket.ToObject<SURIMI.Datamodel.FleetSegment>(m_configuration.IncludeVocabularies),
+                                Species = mlkGroup.ToObject<SURIMI.Datamodel.Species>(m_configuration.IncludeVocabularies)
                             };
 #pragma warning restore CS8601 // Possible null reference assignment.
                             for (int ir = 1; ir <= spaceds.InRow; ir++)
@@ -681,8 +681,7 @@ namespace Ecopath.EwE
 
                     var sales = new SalesSummary()
                     {
-                        MarketId = mlkMarket!.GetField("marketcode")!.ToString(m_configuration.IncludeVocabularies),
-                        MeasurementUnit = "kg",
+                        MarketCode = mlkMarket!.GetField("marketcode")!.ToString(m_configuration.IncludeVocabularies),
                         Currency = "EUR", // No conversion here
                         Sales = new List<Sale>()
                     };
