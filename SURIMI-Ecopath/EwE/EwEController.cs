@@ -9,6 +9,7 @@ using EwEPlugin;
 using EwEUtils.Core;
 using System.Diagnostics;
 using System.Text;
+using Eii.ControlledVocabularies.Common;
 
 namespace Ecopath.EwE
 {
@@ -589,7 +590,10 @@ namespace Ecopath.EwE
             foreach (int iGroup in m_configuration.FishedGroups)
             {
                 EwEMapping? mlkGroup = m_configuration.Find(iGroup, KeyDomain.Species);
-                float sppProp = mlkGroup?.Proportion ?? 0;
+                if (mlkGroup == null)
+                    continue;
+
+                float sppProp = mlkGroup.Proportion;
 
                 for (int iFleet = 1; iFleet <= m_core.nFleets; iFleet++)
                 {
