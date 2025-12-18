@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BSR.Surimi.Surimi-Protocol.Grpc.Csharp" Version="1.76.10001.14+3bec347c520d" />
+    <PackageReference Include="BSR.Surimi.Surimi-Protocol.Grpc.Csharp" Version="1.76.10001.23+db58a72669b7" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="Eii.ControlledVocabularies" Version="1.0.28" />
     <PackageReference Include="Eii.Ecopath.Bridge" Version="1.0.3" />
@@ -35,6 +35,7 @@
     <PackageReference Include="Grpc.StatusProto" Version="2.71.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="SURIMI.Datamodel" Version="3.0.*" />
     <PackageReference Include="System.Drawing.Common" Version="9.0.9" />
   </ItemGroup>
 

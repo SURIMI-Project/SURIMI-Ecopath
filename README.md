@@ -18,23 +18,18 @@ So there are no proto files in the project!
 
 The proto files are also stored in  https://buf.build/surimi/surimi-protocol
 
-## Add BSR to your global NuGet.config
+## NuGet.config
+To authenticate to BSR you need to add the BSR source to your global NuGet.config file.
 
 
-TODO!!!!!
-At the moment the NuGet.config contains a token to access the BSR.
-I don't know why this is needed, but it is.
+The NuGet.config file in the solution describes what package sources to use. It does not hold the secrets! So this file can be added to the Git repo.
 
-For now, I added the NuGet.config to the root of the project, so you can use it. But we have to find a way to remove the clear text token in it.
+To install the (PERSONAL) passwords encrypted on Windows you can use the following CLI command:
 
-Because this file is stored in the Git repo, the token is visible to everyone who has access to the repo.
+- github-Official-EwE: `dotnet nuget add source "https://nuget.pkg.github.com/Official-EwE/index.json" -n "github-Official-EwE" -u "<your-github-username>" -p "<your-PAT>"`
+- BSR: `dotnet nuget add source "https://buf.build/gen/nuget/index.json" -n "BSR" -u "<your-github-username>" -p "<your-BSR-Password>"`
 
-Which means potentially EVERYONE!!!
-
-The NuGet.Config is created from https://buf.build/surimi/surimi-protocol/sdks/main:grpc/csharp
-
-Part of this is configuring an auth token. This token will last a maximum of a year. So when you have forgotten about it, you will have to generate it again.
-
+This changes the mother of all NuGet.config files which is stored in `C:\Users\<user>\AppData\Roaming\NuGet`. The secrets in this file are encrypted.
 
 ## Update the BSR packages and the SURIMI protobuf interface
 
@@ -55,6 +50,8 @@ It's the version of the SDK that is generated from the proto files. In the examp
 
 More info on https://buf.build/docs/bsr/generated-sdks/nuget/#versions
 
+### Build Check
+When you merge a PR to master, the build check Github Action will check if the solution builds.
 
 
 ## Visual package manager doesnt't work
@@ -76,4 +73,4 @@ To create a new docker image you have to pass the GITHUB_TOKEN and the BSR_TOKEN
 - `docker push rikkert242/ecopath:latest`
 ### Run
 To run it, you can select "Container (docker file)" in the Start menu of Visual Studio.
-
+ 
