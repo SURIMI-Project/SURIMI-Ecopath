@@ -1,10 +1,10 @@
 ﻿using Ecopath.EwE.Wrapper;
+using Eii.ControlledVocabularies.Common;
 using Eii.ControlledVocabularies.Context;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
 using Eii.ControlledVocabularies.Registries;
 using Eii.ControlledVocabularies.Resolve;
-using Eii.ControlledVocabularies.Utils;
 using Eii.ControlledVocabularies.Vocabularies;
 using Eii.ControlledVocabularies.Vocabularies.Country;
 using Eii.ControlledVocabularies.Vocabularies.Gear;
@@ -102,7 +102,7 @@ namespace Ecopath.EwE
 
             // Register the different species fields that the application may be interested in
             m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(SpeciesFields.SpeciesCode, KeyDomain.Species, KeyPurpose.Species, FieldKind.Code, true, 10));
-            m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(SpeciesFields.Stage, KeyDomain.Species, KeyPurpose.Lifestage, FieldKind.Label, false, 3));
+            m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(SpeciesFields.Lifestage, KeyDomain.Species, KeyPurpose.Lifestage, FieldKind.Label, false, 3));
             m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(SpeciesFields.Length, KeyDomain.Species, KeyPurpose.Length, FieldKind.Label, false, 3));
             m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(SpeciesFields.Age, KeyDomain.Species, KeyPurpose.Age, FieldKind.Label, false, 3));
 
@@ -299,7 +299,7 @@ namespace Ecopath.EwE
         {
             /// Dirty hack to test if the species is in the EwE_functional-group_species.csv
             /// TODO : remove when the Initialise test message is implemented
-            string[] surimuCodes =["MTS", "NEP", "ARS", "FAM", "LKO", "LKT", "SKM", "GRQ", "IOD", "OLV", "BOY", "EOI", "OCC", "OUL", "OUM", "SQM", "OQT", "HQB", "SQE", "SLM", "MUT", "WHB", "ANK", "MON", "HKE", "POD", "COE", "COE", "CIL", "LDB", "BLL", "LDV", "SRJ", "SBA", "PAC", "BRF", "SFS", "TSU", "GLI", "SPF", "SPC", "BOG", "SYC", "SCK", "SHO", "JDP", "RJC", "JRS", "ANE", "PIL", "SAA", "SPR", "HMM", "JAA", "HOM", "MAC", "MAZ", "SWO", "BFT", "BON", "ALB", "BSK", "RMM", "MOX", "BSH", "TTL", "CDI", "FPA", "DAZ", "LVH", "VCW", "LOW", "DTR", "DTY", "DKH", "CVV", "MVB", "ISY", "UIM", "UYE", "TVA", "PIW", "DRR", "SPW", "DST", "DBO", "FIW"];
+            string[] surimuCodes = []; // ["MTS", "NEP", "ARS", "FAM", "LKO", "LKT", "SKM", "GRQ", "IOD", "OLV", "BOY", "EOI", "OCC", "OUL", "OUM", "SQM", "OQT", "HQB", "SQE", "SLM", "MUT", "WHB", "ANK", "MON", "HKE", "POD", "COE", "COE", "CIL", "LDB", "BLL", "LDV", "SRJ", "SBA", "PAC", "BRF", "SFS", "TSU", "GLI", "SPF", "SPC", "BOG", "SYC", "SCK", "SHO", "JDP", "RJC", "JRS", "ANE", "PIL", "SAA", "SPR", "HMM", "JAA", "HOM", "MAC", "MAZ", "SWO", "BFT", "BON", "ALB", "BSK", "RMM", "MOX", "BSH", "TTL", "CDI", "FPA", "DAZ", "LVH", "VCW", "LOW", "DTR", "DTY", "DKH", "CVV", "MVB", "ISY", "UIM", "UYE", "TVA", "PIW", "DRR", "SPW", "DST", "DBO", "FIW"];
 
             // The name of the vocabulary is implied here, but should be read from the species code
             IControlledVocabulary? vocSpecies = m_vocabularies.Get("asfis");

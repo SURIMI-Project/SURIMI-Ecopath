@@ -9,6 +9,7 @@ using EwEPlugin;
 using EwEUtils.Core;
 using System.Diagnostics;
 using System.Text;
+using Eii.ControlledVocabularies.Common;
 
 namespace Ecopath.EwE
 {
