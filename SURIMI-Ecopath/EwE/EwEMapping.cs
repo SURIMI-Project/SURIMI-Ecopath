@@ -1,7 +1,7 @@
 ﻿using Ecopath.EwE.Wrapper;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
-using Eii.ControlledVocabularies.Utils;
+using Eii.ControlledVocabularies.Common;
 using EwECore;
 using System.Diagnostics;
 

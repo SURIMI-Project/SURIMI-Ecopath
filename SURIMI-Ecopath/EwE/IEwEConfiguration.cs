@@ -1,7 +1,7 @@
 ﻿using Ecopath.EwE.Wrapper;
 using Ecopath.Generic;
 using Eii.ControlledVocabularies.Core;
-using Eii.ControlledVocabularies.Utils;
+using Eii.ControlledVocabularies.Common;
 using SURIMI.Datamodel;
 
 namespace Ecopath.EwE

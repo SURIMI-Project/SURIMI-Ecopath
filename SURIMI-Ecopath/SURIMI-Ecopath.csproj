@@ -27,9 +27,9 @@
   <ItemGroup>
     <PackageReference Include="BSR.Surimi.Surimi-Protocol.Grpc.Csharp" Version="1.76.10001.23+db58a72669b7" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
-    <PackageReference Include="Eii.ControlledVocabularies" Version="1.0.28" />
+    <PackageReference Include="Eii.ControlledVocabularies" Version="1.0.*" />
     <PackageReference Include="Eii.Ecopath.Bridge" Version="1.0.3" />
-    <PackageReference Include="Eii.Ecopath.EwECore" Version="6.7.11" />
+    <PackageReference Include="Eii.Ecopath.EwECore" Version="6.7.*" />
     <PackageReference Include="Google.Api.CommonProtos" Version="2.17.0" />
     <PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
     <PackageReference Include="Grpc.StatusProto" Version="2.71.0" />
