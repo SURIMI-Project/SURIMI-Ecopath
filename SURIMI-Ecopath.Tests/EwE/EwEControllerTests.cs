@@ -1,6 +1,6 @@
 ﻿using Ecopath.EwE;
 using Ecopath.EwE.Wrapper;
-using Ecopath.Models;
+using SURIMI.Datamodel;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
 using EwEPlugin;
@@ -67,7 +67,6 @@ namespace Ecopath.Tests.EwE
                 MarketCode = "MKT",
                 GearCode = "GR",
                 Price = 10,
-                MeasurementUnit = "kg",
                 Currency = "EUR",
                 Timestamp = DateTime.UtcNow
             }
@@ -85,7 +84,7 @@ namespace Ecopath.Tests.EwE
         {
             // Arrange
             var controller = new EwEController(_loggerMock.Object, _configMock.Object, _coreMock.Object, _keyFieldDescriptorRegistryMock.Object, _multiLevelKeyFactoryMock.Object);
-            var summary = new CatchDispositionSummary { MeasurementUnit = "kg" };
+            var summary = new CatchDispositionSummary();
 
             // Act
             var result = await controller.UpdateCatchDispositionSummaryAsync(summary);
@@ -132,7 +131,6 @@ namespace Ecopath.Tests.EwE
 
             // Assert
             summary.Should().NotBeNull();
-            summary.MeasurementUnit.Should().Be("kg"); // Assuming the default unit is kg
         }
     }
 }
