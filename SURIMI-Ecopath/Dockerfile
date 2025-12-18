@@ -22,9 +22,11 @@ WORKDIR /src
 # Copy NuGet configuration
 COPY ["NuGet.config", "."]
 
-# Add authentication for GitHub Packages
+# Add authentication for GitHub Packages using add source with credentials
 RUN if [ ! -z "$GITHUB_TOKEN" ]; then \
-    dotnet nuget update source github-Official-EwE \
+    dotnet nuget remove source github-Official-EwE || true; \
+    dotnet nuget add source https://nuget.pkg.github.com/Official-EwE/index.json \
+    --name github-Official-EwE \
     --username github \
     --password $GITHUB_TOKEN \
     --store-password-in-clear-text \
@@ -33,7 +35,9 @@ RUN if [ ! -z "$GITHUB_TOKEN" ]; then \
 
 # Add authentication for BSR (if token is provided)
 RUN if [ ! -z "$BSR_TOKEN" ]; then \
-    dotnet nuget update source BSR \
+    dotnet nuget remove source BSR || true; \
+    dotnet nuget add source https://buf.build/gen/nuget/index.json \
+    --name BSR \
     --username bsr \
     --password $BSR_TOKEN \
     --store-password-in-clear-text \
