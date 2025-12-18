@@ -1,10 +1,10 @@
 ﻿using Ecopath.EwE.Wrapper;
+using Eii.ControlledVocabularies.Common;
 using Eii.ControlledVocabularies.Context;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
 using Eii.ControlledVocabularies.Registries;
 using Eii.ControlledVocabularies.Resolve;
-using Eii.ControlledVocabularies.Utils;
 using Eii.ControlledVocabularies.Vocabularies;
 using Eii.ControlledVocabularies.Vocabularies.Country;
 using Eii.ControlledVocabularies.Vocabularies.Gear;
@@ -102,7 +102,7 @@ namespace Ecopath.EwE
 
             // Register the different species fields that the application may be interested in
             m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(SpeciesFields.SpeciesCode, KeyDomain.Species, KeyPurpose.Species, FieldKind.Code, true, 10));
-            m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(SpeciesFields.Stage, KeyDomain.Species, KeyPurpose.Lifestage, FieldKind.Label, false, 3));
+            m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(SpeciesFields.Lifestage, KeyDomain.Species, KeyPurpose.Lifestage, FieldKind.Label, false, 3));
             m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(SpeciesFields.Length, KeyDomain.Species, KeyPurpose.Length, FieldKind.Label, false, 3));
             m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(SpeciesFields.Age, KeyDomain.Species, KeyPurpose.Age, FieldKind.Label, false, 3));
 
@@ -275,7 +275,9 @@ namespace Ecopath.EwE
         public int[] ExternalFleets() => m_externalFleets.ToArray();
 
         /// <summary>
-        /// Get all fished groups.
+        /// Get all fished groups in the Ecopath model. Note that some of these groups
+        /// may only be discarded, and some groups may not have known species attached.
+        /// Not all fished groups may be accessible to the SURIMI framework.
         /// </summary>
         public int[] FishedGroups => m_fishedGroups.ToArray();
 
@@ -283,11 +285,17 @@ namespace Ecopath.EwE
 
         #region Smarts 
 
+
         /// <summary>
-        /// Load the species -> FAO code mappings from the model
+        /// Load the species key -> FN group mappings from the model. 
         /// </summary>
         /// <param name="core"></param>
-        private void ReadSpeciesMappings(IEwECore core)
+        /// <remarks>
+        /// The species mappings are intended for all fisheries-related accounting in SURIMI, and
+        /// only applies to fished groups. Species that are not fished, or fished functional groups 
+        /// without taxonomic records / species attached, are not registered here.
+        /// </remarks>
+        private void ReadSpeciesMappings(IEwECore core, bool writeCSV = false)
         {
             /// Dirty hack to test if the species is in the EwE_functional-group_species.csv
             /// TODO : remove when the Initialise test message is implemented
@@ -299,70 +307,73 @@ namespace Ecopath.EwE
 
             if (vocSpecies == null || vocLifeStage == null) return;
 
-            //GenericVocabularyMatcher m = new();
+            StreamWriter? csvWriter = null;
+            if (writeCSV)
+            {
+                string csvFilePath = Path.GetFullPath(@".\EwE_functional-group_species.csv");
+
+                csvWriter = new StreamWriter(csvFilePath);
+                csvWriter.WriteLine("EwE_Group_ID,EwE_Group_Name,Taxon_ID,Common_Name,Genus,Species,FAO_Code,Lifestage_Code");
+                m_logger.LogInformation("Writing species CSV file to {csvFilePath}", csvFilePath);
+            }
 
             for (int iTaxa = 1; iTaxa <= core.nTaxon; iTaxa++)
             {
                 cTaxon taxon = core.get_Taxon(iTaxa);
                 var code = taxon.CodeFAO;
                 if (String.IsNullOrEmpty(code))
-                    code = vocSpecies.FindCode(taxon.Common);
-
-                /// TODO This is a dirty test to skip the species that are not in the EwE_functional-group_species.csv
-                /// It should be replaced by the Initialise test message
-                if (!string.IsNullOrEmpty(code) && !surimuCodes.Contains(code))
                 {
-                    m_logger.LogInformation("Skipping taxon '{taxon}' with code '{code}' not in EwE_functional-group_species.csv", taxon.Common, code);
+                    // Make robust to encoding imperfections
+                    string common = taxon.Common;
+                    if (string.IsNullOrEmpty(common))
+                        common = taxon.Genus + " " + taxon.Species;
+                    code = vocSpecies.FindCode(common);
+                }
+
+                // Skip species that could not be resolved to a code in the vocabulary
+                if (string.IsNullOrEmpty(code))
+                {
+                    m_logger.LogInformation("Skipping taxon '{taxon}'; code not found in vocabulary {vocSpecies.VocabularyName}", taxon.Common, vocSpecies.VocabularyName);
                     continue;
                 }
 
-                if (!string.IsNullOrEmpty(code))
+                 // TODO This is a dirty test to skip the species that are not in the EwE_functional-group_species.csv
+                // It should be replaced by the Initialise test message
+                if (!surimuCodes.Contains(code) && surimuCodes.Length > 0)
                 {
-                    // Taxon refers to a multi-stanza configuration?
-                    if (taxon.iStanza > 0)
+                    m_logger.LogInformation("Skipping taxon '{taxon}'; code '{code}' not in EwE_functional-group_species.csv", taxon.Common, code);
+                    continue;
+                }
+
+                // Taxon refers to a multi-stanza configuration?
+                if (taxon.iStanza > 0)
+                {
+                    // #Yes: iterate over life stages
+                    // Bug workaround - taxon.iStanza is one based, but core accessor is zero based. Ugh
+                    cStanzaGroup stz = core.get_StanzaGroups(taxon.iStanza - 1);
+                    for (int iLS = 1; iLS <= stz.nLifeStages; iLS++)
                     {
-                        // #Yes: iterate over life stages
-                        // Bug workaround - taxon.iStanza is one based, but core accessor is zero based. Ugh
-                        cStanzaGroup stz = core.get_StanzaGroups(taxon.iStanza - 1);
-                        for (int iLS = 1; iLS <= stz.nLifeStages; iLS++)
+                        // Is given life stage fished?
+                        int iGroup = stz.get_iGroups(iLS);
+                        if (this.FishedGroups.Contains(iGroup))
                         {
-                            // Is given life stage fished?
-                            int iGroup = stz.get_iGroups(iLS);
-                            if (this.FishedGroups.Contains(iGroup))
-                            {
-                                // #Yes: add life stage to mappings
-                                cEcoPathGroupInput grp = core.get_EcopathGroupInputs(iGroup);
+                            // #Yes: add life stage to mappings
+                            cEcoPathGroupInput grp = core.get_EcopathGroupInputs(iGroup);
 
-                                var key = new EwEMapping("", KeyDomain.Species, iGroup, m_keyFieldDescriptorRegistry, 1);
-                                key.SetField(SpeciesFields.SpeciesCode, vocSpecies.VocabularyName + ":" + code, m_keyFieldDescriptorRegistry);
-
-                                // Try to infer the stage from the group name
-                                string ls = vocLifeStage.FindCode(grp.Name, 50);
-                                key.SetField(SpeciesFields.Lifestage, vocLifeStage.VocabularyName + ":" + ls, m_keyFieldDescriptorRegistry);
-
-                                this.m_mappings.Add(key);
-                            }
-                            else
-                            {
-                                // Not fished: do not register species for data exchange
-                            }
-                        }
-                    }
-                    else
-                    {
-                        cEcoPathGroupInput grp = core.get_EcopathGroupInputs(taxon.iGroup);
-                        if (grp.iStanza > 0)
-                        {
-                            Console.WriteLine("EwE Config error: regular taxon {0} attached to stanza group {1}", taxon.DBID, taxon.iGroup);
-                            continue;
-                        }
-
-                        if (this.FishedGroups.Contains(taxon.iGroup))
-                        {
-                            var key = new EwEMapping("", KeyDomain.Species, taxon.iGroup, m_keyFieldDescriptorRegistry, taxon.PropB / 100);
+                            var key = new EwEMapping("", KeyDomain.Species, iGroup, m_keyFieldDescriptorRegistry, 1);
                             key.SetField(SpeciesFields.SpeciesCode, vocSpecies.VocabularyName + ":" + code, m_keyFieldDescriptorRegistry);
 
+                            // Try to infer the stage from the group name
+                            string ls = vocLifeStage.FindCode(grp.Name, 50);
+                            key.SetField(SpeciesFields.Lifestage, vocLifeStage.VocabularyName + ":" + ls, m_keyFieldDescriptorRegistry);
+
                             this.m_mappings.Add(key);
+
+                            if (csvWriter != null)
+                            {
+                                //csvWriter.WriteLine("EwE_Group_ID,EwE_Group_Name,Taxon_ID,Common_Name,Genus,Species,FAO_Code,Lifestage_Code");
+                                csvWriter.WriteLine($"{grp.DBID},\"{grp.Name}\",{taxon.DBID},\"{taxon.Name}\",\"{taxon.Genus}\",\"{taxon.Species}\",{code},{ls}");
+                            }
                         }
                         else
                         {
@@ -370,7 +381,40 @@ namespace Ecopath.EwE
                         }
                     }
                 }
+                else
+                {
+                    cEcoPathGroupInput grp = core.get_EcopathGroupInputs(taxon.iGroup);
+                    if (grp.iStanza > 0)
+                    {
+                        Console.WriteLine("EwE Config error: regular taxon {0} attached to stanza group {1}", taxon.DBID, taxon.iGroup);
+                        continue;
+                    }
+
+                    if (this.FishedGroups.Contains(taxon.iGroup))
+                    {
+                        var key = new EwEMapping("", KeyDomain.Species, taxon.iGroup, m_keyFieldDescriptorRegistry, taxon.PropB / 100);
+                        key.SetField(SpeciesFields.SpeciesCode, vocSpecies.VocabularyName + ":" + code, m_keyFieldDescriptorRegistry);
+
+                        this.m_mappings.Add(key);
+
+                        if (csvWriter != null)
+                        {
+                            //csvWriter.WriteLine("EwE_Group_ID,EwE_Group_Name,Taxon_ID,Common_Name,Genus,Species,FAO_Code,Lifestage_Code");
+                            csvWriter.WriteLine($"{grp.DBID},\"{grp.Name}\",{taxon.DBID},\"{taxon.Name}\",\"{taxon.Genus}\",\"{taxon.Species}\",{code},");
+                        }
+                    }
+                    else
+                    {
+                        // Not fished: do not register species for data exchange
+                    }
+                }
             }
+            if (csvWriter != null)
+            {
+                csvWriter.Flush();
+                csvWriter.Close();
+            }
+
         }
 
         private void ReadFleetMappings()
