@@ -38,6 +38,8 @@ public class Program
         builder.Services.AddGrpc(options =>
         {
             options.Interceptors.Add<ExceptionMetadataInterceptor>();
+            options.MaxReceiveMessageSize = 100 * 1024 * 1024; // 100 MB
+            options.MaxSendMessageSize = 100 * 1024 * 1024;    // 100 MB
         });
 
         builder.Services.AddSingleton<CheckSimulationService>();
