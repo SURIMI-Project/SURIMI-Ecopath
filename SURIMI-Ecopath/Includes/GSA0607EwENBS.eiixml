@@ -4744,7 +4744,6 @@ Jo crec que la biomassa está subestimada",,EcoPathGroupInput:17:BiomassAreaInpu
     <Row>,,,,0,0,-9999,0,0,Micromesistius poutassou,1,2,,6,,Micromesistius,43424.53,50,22,7.7,0.062,1,,6,,,poutassou,23,0,33,0</Row>
     <Row>,,,,0,0,-9999,0,0,Lophius budegassa,2,1,,6,,Lophius,43424.53,100,50,28.7,1.925,1,,6,,,budegassa,24,0,68,0</Row>
     <Row>,,,,0,0,-9999,0,0,Lophius piscatorius,3,1,,1,,Lophius,43424.53,200,100,16,12.547,1,,6,,,piscatorius,25,0,72,0</Row>
-    <Row>,,,,0,0,-9999,0,0,Merluccius merluccius,3,5,,6,,Merluccius,43424.53,140,45,19.1,0.64,1,,6,,,merluccius,26,0,64,0</Row>
     <Row>,,,,0,0,-9999,0,0,Trisopterus minutus,3,4,,6,,Trisopterus,43424.53,32,0,7.5,0,1,,6,,,minutus,27,0,31,0</Row>
     <Row>,,,,0,0,-9999,0,0,Conger conger,3,5,,1,,Conger,43424.53,300,125.5,48.4,3.152,1,,6,,,conger,28,0,86,0</Row>
     <Row>,,,,0,0,-9999,0,0,Citharus linguatula,3,5,,1,,Citharus,43424.53,30,15,10.9,0.024,1,,6,,,linguatula,29,0,36,0</Row>
