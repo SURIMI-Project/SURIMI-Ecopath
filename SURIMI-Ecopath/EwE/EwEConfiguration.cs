@@ -175,7 +175,7 @@ namespace Ecopath.EwE
                     m_fishedGroups.Add(iGroup);
 
             this.ReadSpeciesMappings(core);
-            this.ReadFleetMappings();
+            this.ReadFleetMappings(core);
 
             m_mappings.Sort(new EwEMappingComparer());
 
@@ -313,116 +313,134 @@ namespace Ecopath.EwE
                 string csvFilePath = Path.GetFullPath(@".\EwE_functional-group_species.csv");
 
                 csvWriter = new StreamWriter(csvFilePath);
-                csvWriter.WriteLine("EwE_Group_ID,EwE_Group_Name,Taxon_ID,Common_Name,Genus,Species,FAO_Code,Lifestage_Code");
+                csvWriter.WriteLine("EwE_Group_No,EwE_Group_Name,Taxon_No,Common_Name,Genus,Species,FAO_Code,Lifestage_Code,Is_fished");
                 m_logger.LogInformation("Writing species CSV file to {csvFilePath}", csvFilePath);
             }
 
-            for (int iTaxa = 1; iTaxa <= core.nTaxon; iTaxa++)
+            for (int iGroup = 1; iGroup <= core.nGroups; iGroup++)
             {
-                cTaxon taxon = core.get_Taxon(iTaxa);
-                var code = taxon.CodeFAO;
-                if (String.IsNullOrEmpty(code))
+                cEcoPathGroupInput grp = core.get_EcopathGroupInputs(iGroup);
+                if (grp.NTaxon == 0)
                 {
-                    // Make robust to encoding imperfections
-                    string common = taxon.Common;
-                    if (string.IsNullOrEmpty(common))
-                        common = taxon.Genus + " " + taxon.Species;
-                    code = vocSpecies.FindCode(common);
-                }
-
-                // Skip species that could not be resolved to a code in the vocabulary
-                if (string.IsNullOrEmpty(code))
-                {
-                    m_logger.LogInformation("Skipping taxon '{taxon}'; code not found in vocabulary {vocSpecies.VocabularyName}", taxon.Common, vocSpecies.VocabularyName);
-                    continue;
-                }
-
-                 // TODO This is a dirty test to skip the species that are not in the EwE_functional-group_species.csv
-                // It should be replaced by the Initialise test message
-                if (!surimuCodes.Contains(code) && surimuCodes.Length > 0)
-                {
-                    m_logger.LogInformation("Skipping taxon '{taxon}'; code '{code}' not in EwE_functional-group_species.csv", taxon.Common, code);
-                    continue;
-                }
-
-                // Taxon refers to a multi-stanza configuration?
-                if (taxon.iStanza > 0)
-                {
-                    // #Yes: iterate over life stages
-                    // Bug workaround - taxon.iStanza is one based, but core accessor is zero based. Ugh
-                    cStanzaGroup stz = core.get_StanzaGroups(taxon.iStanza - 1);
-                    for (int iLS = 1; iLS <= stz.nLifeStages; iLS++)
+                    if (csvWriter != null)
                     {
-                        // Is given life stage fished?
-                        int iGroup = stz.get_iGroups(iLS);
-                        if (this.FishedGroups.Contains(iGroup))
-                        {
-                            // #Yes: add life stage to mappings
-                            cEcoPathGroupInput grp = core.get_EcopathGroupInputs(iGroup);
-
-                            var key = new EwEMapping("", KeyDomain.Species, iGroup, m_keyFieldDescriptorRegistry, 1);
-                            key.SetField(SpeciesFields.SpeciesCode, vocSpecies.VocabularyName + ":" + code, m_keyFieldDescriptorRegistry);
-
-                            // Try to infer the stage from the group name
-                            string ls = vocLifeStage.FindCode(grp.Name, 50);
-                            key.SetField(SpeciesFields.Lifestage, vocLifeStage.VocabularyName + ":" + ls, m_keyFieldDescriptorRegistry);
-
-                            this.m_mappings.Add(key);
-
-                            if (csvWriter != null)
-                            {
-                                //csvWriter.WriteLine("EwE_Group_ID,EwE_Group_Name,Taxon_ID,Common_Name,Genus,Species,FAO_Code,Lifestage_Code");
-                                csvWriter.WriteLine($"{grp.DBID},\"{grp.Name}\",{taxon.DBID},\"{taxon.Name}\",\"{taxon.Genus}\",\"{taxon.Species}\",{code},{ls}");
-                            }
-                        }
-                        else
-                        {
-                            // Not fished: do not register species for data exchange
-                        }
+                        //csvWriter.WriteLine("EwE_Group_ID,EwE_Group_Name,Taxon_ID,Common_Name,Genus,Species,FAO_Code,Lifestage_Code,Is_fished");
+                        csvWriter.WriteLine($"{grp.DBID},\"{grp.Name}\",,,,,,,{(grp.IsFished ? "yes" : "")}");
                     }
                 }
                 else
                 {
-                    cEcoPathGroupInput grp = core.get_EcopathGroupInputs(taxon.iGroup);
-                    if (grp.iStanza > 0)
+                    for (int iTaxa = 1; iTaxa <= grp.NTaxon; iTaxa++)
                     {
-                        Console.WriteLine("EwE Config error: regular taxon {0} attached to stanza group {1}", taxon.DBID, taxon.iGroup);
-                        continue;
-                    }
+                        cTaxon taxon = core.get_Taxon(grp.get_iTaxon(iTaxa));
+                        string code = taxon.CodeFAO;
+                        string ls = "";
+                        float proportion = 1;
 
-                    if (this.FishedGroups.Contains(taxon.iGroup))
-                    {
-                        var key = new EwEMapping("", KeyDomain.Species, taxon.iGroup, m_keyFieldDescriptorRegistry, taxon.PropB / 100);
-                        key.SetField(SpeciesFields.SpeciesCode, vocSpecies.VocabularyName + ":" + code, m_keyFieldDescriptorRegistry);
+                        EwEMapping? key = null;
 
-                        this.m_mappings.Add(key);
+                        if (String.IsNullOrEmpty(code))
+                        {
+                            // Make robust to encoding imperfections
+                            string common = taxon.Common;
+                            if (string.IsNullOrEmpty(common))
+                                common = taxon.Genus + " " + taxon.Species;
+                            code = vocSpecies.FindCode(common);
+                        }
+
+                        //// Skip species that could not be resolved to a code in the vocabulary
+                        //if (string.IsNullOrEmpty(code))
+                        //{
+                        //    m_logger.LogInformation("Skipping taxon '{taxon}'; code not found in vocabulary {vocSpecies.VocabularyName}", taxon.Common, vocSpecies.VocabularyName);
+                        //    continue;
+                        //}
+
+                        //// TODO This is a dirty test to skip the species that are not in the EwE_functional-group_species.csv
+                        //// It should be replaced by the Initialise test message
+                        //if (!surimuCodes.Contains(code) && surimuCodes.Length > 0)
+                        //{
+                        //    m_logger.LogInformation("Skipping taxon '{taxon}'; code '{code}' not in EwE_functional-group_species.csv", taxon.Common, code);
+                        //    continue;
+                        //}
+
+                        // Taxon refers to a multi-stanza configuration?
+                        if (taxon.iStanza > 0)
+                        {
+                            // #Yes: find life stage code and biomass proportion    
+                            ls = vocLifeStage.FindCode(grp.Name);
+                            proportion = taxon.PropB / 100; 
+                        }
+                        else
+                        {
+                            if (grp.iStanza > 0)
+                            {
+                                Console.WriteLine("EwE Config error: regular taxon {0} attached to stanza group {1}", taxon.DBID, taxon.iGroup);
+                                continue;
+                            }
+                            proportion = 1;
+                        } // if stanza
+
+                        // Can add to mappings?
+                        if (this.FishedGroups.Contains(iGroup) && !string.IsNullOrEmpty(code))
+                        {
+                            // #Yes: add
+                            key = new EwEMapping("", KeyDomain.Species, iGroup, m_keyFieldDescriptorRegistry, proportion);
+                            key.SetField(SpeciesFields.SpeciesCode, vocSpecies.VocabularyName + ":" + code, m_keyFieldDescriptorRegistry);
+                            if (!string.IsNullOrEmpty(ls))
+                                key.SetField(SpeciesFields.Lifestage, vocLifeStage.VocabularyName + ":" + ls, m_keyFieldDescriptorRegistry);
+
+                            this.m_mappings.Add(key);
+                        }
 
                         if (csvWriter != null)
                         {
-                            //csvWriter.WriteLine("EwE_Group_ID,EwE_Group_Name,Taxon_ID,Common_Name,Genus,Species,FAO_Code,Lifestage_Code");
-                            csvWriter.WriteLine($"{grp.DBID},\"{grp.Name}\",{taxon.DBID},\"{taxon.Name}\",\"{taxon.Genus}\",\"{taxon.Species}\",{code},");
-                        }
-                    }
-                    else
-                    {
-                        // Not fished: do not register species for data exchange
-                    }
-                }
-            }
+                            //csvWriter.WriteLine("EwE_Group_ID,EwE_Group_Name,Taxon_ID,Common_Name,Genus,Species,FAO_Code,Lifestage_Code,Is_Fished");
+                            csvWriter.WriteLine($"{grp.Index},\"{grp.Name}\",{taxon.Index},\"{taxon.Name}\",\"{taxon.Genus}\",\"{taxon.Species}\",{code},{ls},{(grp.IsFished ? "yes" : "")}");
+                        } // if csvWriter
+
+                    } // for iTaxa
+                } // if iTaxa
+            } // for iGroup
+
             if (csvWriter != null)
             {
                 csvWriter.Flush();
                 csvWriter.Close();
             }
-
         }
 
-        private void ReadFleetMappings()
+        private void ReadFleetMappings(IEwECore core, bool writeCSV = false)
         {
             // The name of the vocabulary is implied here, but should be read from the fields
             IControlledVocabulary vocGear = m_vocabularies.Get("ISSCFG")!;
             IControlledVocabulary vocCountry = m_vocabularies.Get("ISO-3166")!;
 
+            StreamWriter? csvWriter = null;
+            if (writeCSV)
+            {
+                string csvFilePath = Path.GetFullPath(@".\EwE_functional-group_fisheries.csv");
+
+                csvWriter = new StreamWriter(csvFilePath);
+                csvWriter.WriteLine("EwE_Fleet_No,EwE_Fleet_Name, EwE_Group_No,EwE_Group_Name");
+                m_logger.LogInformation("Writing fisheries CSV file to {csvFilePath}", csvFilePath);
+
+                for (int iFleet = 1; iFleet <= core.nFleets; iFleet++)
+                {
+                    cEcopathFleetInput fleet = (cEcopathFleetInput)core.get_EcopathFleetInputs(iFleet);
+                    for (int iGroup = 1; iGroup <= core.nGroups; iGroup++)
+                    {
+                        if (fleet.get_Landings(iGroup) > 0 || fleet.get_Discards(iGroup) > 0)
+                        {
+                            cEcoPathGroupInput grp = core.get_EcopathGroupInputs(iGroup);
+
+                            //csvWriter.WriteLine("EwE_Group_ID,EwE_Group_Name,EwE_Fleet_ID,EwE_Fleet_Name");
+                            csvWriter.WriteLine($"{iFleet},\"{fleet.Name}\",{grp.Index},\"{grp.Name}\"");
+                        }
+                    }
+                }
+                csvWriter.Flush();
+                csvWriter.Close();
+            }
         }
         #endregion // Smarts
     }
