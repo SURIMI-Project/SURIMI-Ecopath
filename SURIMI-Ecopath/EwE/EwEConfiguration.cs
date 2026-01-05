@@ -348,20 +348,13 @@ namespace Ecopath.EwE
                             code = vocSpecies.FindCode(common);
                         }
 
-                        //// Skip species that could not be resolved to a code in the vocabulary
-                        //if (string.IsNullOrEmpty(code))
-                        //{
-                        //    m_logger.LogInformation("Skipping taxon '{taxon}'; code not found in vocabulary {vocSpecies.VocabularyName}", taxon.Common, vocSpecies.VocabularyName);
-                        //    continue;
-                        //}
-
-                        //// TODO This is a dirty test to skip the species that are not in the EwE_functional-group_species.csv
-                        //// It should be replaced by the Initialise test message
-                        //if (!surimuCodes.Contains(code) && surimuCodes.Length > 0)
-                        //{
-                        //    m_logger.LogInformation("Skipping taxon '{taxon}'; code '{code}' not in EwE_functional-group_species.csv", taxon.Common, code);
-                        //    continue;
-                        //}
+                        // TODO This is a dirty test to skip the species that are not known in POSEIDON yet
+                        // It should be replaced by the Initialise test message
+                        if (!surimuCodes.Contains(code) && surimuCodes.Length > 0)
+                        {
+                            m_logger.LogInformation("Skipping taxon '{taxon}'; code '{code}' not in EwE_functional-group_species.csv", taxon.Common, code);
+                            continue;
+                        }
 
                         // Taxon refers to a multi-stanza configuration?
                         if (taxon.iStanza > 0)
