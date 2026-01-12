@@ -1,6 +1,6 @@
 ﻿using EwECore;
 using EwECore.Auxiliary;
-using EwEPlugin;
+using EwECore.Plugins;
 
 namespace Ecopath.EwE.Wrapper
 {
