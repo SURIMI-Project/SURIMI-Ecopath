@@ -1,15 +1,13 @@
 ﻿using Ecopath.EwE.Wrapper;
-using SURIMI.Datamodel;
+using Eii.ControlledVocabularies.Common;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
-using Eii.ControlledVocabularies.Utils;
 using EwEBridge.Ecospace;
 using EwECore;
-using EwEPlugin;
-using EwEUtils.Core;
+using EwECore.Plugins;
+using SURIMI.Datamodel;
 using System.Diagnostics;
 using System.Text;
-using Eii.ControlledVocabularies.Common;
 
 namespace Ecopath.EwE
 {

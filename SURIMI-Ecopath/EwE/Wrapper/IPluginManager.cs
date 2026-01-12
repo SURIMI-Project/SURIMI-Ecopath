@@ -1,4 +1,5 @@
-﻿using EwEPlugin;
+﻿using EwECore;
+using EwECore.Plugins;
 
 namespace Ecopath.EwE.Wrapper
 {
