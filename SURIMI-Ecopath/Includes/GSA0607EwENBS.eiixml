@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<EwEModel Name="GSA0607EwENBS" DBVersion="6.700018" EwEVersion="6.7.0.19431">
+<EwEModel Name="GSA0607EwENBS" DBVersion="6.7019" EwEVersion="6.7.0.19540">
   <Table Name="Auxillary" Columns="DBID:System.Int64,Remark:System.String,Settings:System.String,ValueID:System.String,VisualStyle:System.String" Num="725">
     <Row>1,"original value= 0,018",,EcoPathGroupInput:13:BiomassAreaInput,v2:bnVsbA==</Row>
     <Row>2,"original value=1,35",,EcoPathGroupInput:13:PBInput,v2:bnVsbA==</Row>
@@ -4744,7 +4744,6 @@ Jo crec que la biomassa está subestimada",,EcoPathGroupInput:17:BiomassAreaInpu
     <Row>,,,,0,0,-9999,0,0,Micromesistius poutassou,1,2,,6,,Micromesistius,43424.53,50,22,7.7,0.062,1,,6,,,poutassou,23,0,33,0</Row>
     <Row>,,,,0,0,-9999,0,0,Lophius budegassa,2,1,,6,,Lophius,43424.53,100,50,28.7,1.925,1,,6,,,budegassa,24,0,68,0</Row>
     <Row>,,,,0,0,-9999,0,0,Lophius piscatorius,3,1,,1,,Lophius,43424.53,200,100,16,12.547,1,,6,,,piscatorius,25,0,72,0</Row>
-    <Row>,,,,0,0,-9999,0,0,Merluccius merluccius,3,5,,6,,Merluccius,43424.53,140,45,19.1,0.64,1,,6,,,merluccius,26,0,64,0</Row>
     <Row>,,,,0,0,-9999,0,0,Trisopterus minutus,3,4,,6,,Trisopterus,43424.53,32,0,7.5,0,1,,6,,,minutus,27,0,31,0</Row>
     <Row>,,,,0,0,-9999,0,0,Conger conger,3,5,,1,,Conger,43424.53,300,125.5,48.4,3.152,1,,6,,,conger,28,0,86,0</Row>
     <Row>,,,,0,0,-9999,0,0,Citharus linguatula,3,5,,1,,Citharus,43424.53,30,15,10.9,0.024,1,,6,,,linguatula,29,0,36,0</Row>
@@ -17015,7 +17014,7 @@ Jo crec que la biomassa está subestimada",,EcoPathGroupInput:17:BiomassAreaInpu
     <Row>12,41,0,2,1,5,0.3</Row>
     <Row>12,56,0,2,1,4,0.3</Row>
   </Table>
-  <Table Name="UpdateLog" Columns="Date:System.String,EwEVersion:System.String,Remark:System.String,Version:System.Single" Num="296">
+  <Table Name="UpdateLog" Columns="Date:System.String,EwEVersion:System.String,Remark:System.String,Version:System.Single" Num="300">
     <Row>30/09/2023,6.7.0.18472,Added effort attraction model,6.700014</Row>
     <Row>14/06/2012,,Release,6.120013</Row>
     <Row>27/11/2013,6.4.9975.0,Added Ecospace effort multiplier and distribution flags,6.400001</Row>
@@ -17090,5 +17089,6 @@ Jo crec que la biomassa está subestimada",,EcoPathGroupInput:17:BiomassAreaInpu
     <Row>13/06/2025,6.7.0.19431,Changed cVisualStyle serialization format,6.700016</Row>
     <Row>13/06/2025,6.7.0.19431,Added Energy content,6.700017</Row>
     <Row>13/06/2025,6.7.0.19431,Added mediation function units,6.700018</Row>
+    <Row>16/12/2025,6.7.0.19540,Simplified version numbering,6.7019</Row>
   </Table>
 </EwEModel>
