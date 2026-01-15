@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BSR.Surimi.Surimi-Protocol.Grpc.Csharp" Version="1.76.10001.23+db58a72669b7" />
+    <PackageReference Include="BSR.Surimi.Surimi-Protocol.Grpc.Csharp" Version="1.76.10001.33+68ecd1cb6729" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="Eii.ControlledVocabularies" Version="1.0.*" />
     <PackageReference Include="Eii.Ecopath.Bridge" Version="1.0.*" />
