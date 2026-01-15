@@ -5,6 +5,7 @@ using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
 using Eii.ControlledVocabularies.Registries;
 using Eii.ControlledVocabularies.Resolve;
+using Eii.ControlledVocabularies.Utils;
 using Eii.ControlledVocabularies.Vocabularies;
 using Eii.ControlledVocabularies.Vocabularies.Country;
 using Eii.ControlledVocabularies.Vocabularies.Gear;
@@ -299,7 +300,7 @@ namespace Ecopath.EwE
         {
             /// Dirty hack to test if the species is in the EwE_functional-group_species.csv
             /// TODO : remove when the Initialise test message is implemented
-            string[] surimuCodes = ["MTS", "NEP", "ARS", "FAM", "LKO", "LKT", "SKM", "GRQ", "IOD", "OLV", "BOY", "EOI", "OCC", "OUL", "OUM", "SQM", "OQT", "HQB", "SQE", "SLM", "MUT", "WHB", "ANK", "MON", "HKE", "POD", "COE", "COE", "CIL", "LDB", "BLL", "LDV", "SRJ", "SBA", "PAC", "BRF", "SFS", "TSU", "GLI", "SPF", "SPC", "BOG", "SYC", "SCK", "SHO", "JDP", "RJC", "JRS", "ANE", "PIL", "SAA", /*"SPR",*/ "HMM", "JAA", "HOM", "MAC", "MAZ", "SWO", "BFT", "BON", "ALB", /*"BSK", "RMM", "MOX", */"BSH", /*"TTL", "CDI", "FPA", "DAZ", "LVH", "VCW", "LOW", "DTR", "DTY", "DKH", "CVV", "MVB", "ISY", "UIM", "UYE", "TVA", "PIW", "DRR", "SPW", "DST", "DBO", "FIW"*/];
+            string[] surimuCodes = []; // ["MTS", "NEP", "ARS", "FAM", "LKO", "LKT", "SKM", "GRQ", "IOD", "OLV", "BOY", "EOI", "OCC", "OUL", "OUM", "SQM", "OQT", "HQB", "SQE", "SLM", "MUT", "WHB", "ANK", "MON", "HKE", "POD", "COE", "COE", "CIL", "LDB", "BLL", "LDV", "SRJ", "SBA", "PAC", "BRF", "SFS", "TSU", "GLI", "SPF", "SPC", "BOG", "SYC", "SCK", "SHO", "JDP", "RJC", "JRS", "ANE", "PIL", "SAA", /*"SPR",*/ "HMM", "JAA", "HOM", "MAC", "MAZ", "SWO", "BFT", "BON", "ALB", /*"BSK", "RMM", "MOX", */"BSH", /*"TTL", "CDI", "FPA", "DAZ", "LVH", "VCW", "LOW", "DTR", "DTY", "DKH", "CVV", "MVB", "ISY", "UIM", "UYE", "TVA", "PIW", "DRR", "SPW", "DST", "DBO", "FIW"*/];
 
             // The name of the vocabulary is implied here, but should be read from the species code
             IControlledVocabulary? vocSpecies = m_vocabularies.Get("asfis");
@@ -342,10 +343,17 @@ namespace Ecopath.EwE
                         if (String.IsNullOrEmpty(code))
                         {
                             // Make robust to encoding imperfections
-                            string common = taxon.Common;
+                            string common = FieldPolicy.ForValue(taxon.Common, FieldKind.Label);
                             if (string.IsNullOrEmpty(common))
-                                common = taxon.Genus + " " + taxon.Species;
+                                common = taxon.Genus + ' '  + taxon.Species;
                             code = vocSpecies.FindCode(common);
+
+                            // Last resort: try spp.    
+                            if (string.IsNullOrEmpty(code))
+                            {
+                                common = common.Substring(0, Math.Max(0, common.LastIndexOf(' '))) + " spp.";
+                                code = vocSpecies.FindCode(common);
+                            }
                         }
 
                         // TODO This is a dirty test to skip the species that are not known in POSEIDON yet
