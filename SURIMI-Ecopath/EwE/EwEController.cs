@@ -249,9 +249,9 @@ namespace Ecopath.EwE
                 // Lovely one-based indexing in EwE
                 IEcospaceResultsWriter writer = parmsSpace.ResultWriter(i + 1);
                 // Some decision to be made here about what writers to enable
-                bool bEnable = (writer is cEcospaceASCMapBiomassWriter) | (writer is cEcospaceASCMapCatchWriter) | (writer is cEcospaceRegionAvgResultsWriter);
+                bool bEnable = (writer is cEcospaceASCMapBiomassWriter) || (writer is cEcospaceASCMapCatchWriter) || (writer is cEcospaceRegionAvgResultsWriter);
                 // There you go
-                writer.Enabled = bEnable & m_configuration.WriteOutput;
+                writer.Enabled = bEnable && m_configuration.WriteOutput;
             }
 
             // Start running Ecospace up to the point where intended simulations begin
