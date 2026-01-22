@@ -129,6 +129,8 @@ namespace Ecopath.EwE
         public int SpinupYears { get; set; } = 0;
         public int StartYear { get; set; } = 0;
         public int MaxRunYears { get; set; } = 400;
+        public string OutputPath { get; set; } = @".\";
+        public bool WriteOutput { get; set; } = false;
 
         /// <summary>
         /// Get/set whether MultiLevelKeys sent out to SURIMI should include vocabularies (e.g., "stage=dwc.lifestage:juvenile")
@@ -155,7 +157,7 @@ namespace Ecopath.EwE
             m_mappings.Add(new EwEMapping("gearcode=TB; flag=FRA", KeyDomain.FleetSegment, 5, m_keyFieldDescriptorRegistry));
             m_mappings.Add(new EwEMapping("gearcode=TM; flag=FRA", KeyDomain.FleetSegment, 6, m_keyFieldDescriptorRegistry));
             m_mappings.Add(new EwEMapping("gearcode=PS; flag=FRA", KeyDomain.FleetSegment, 7, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:Artisanal; flag=FRA", KeyDomain.FleetSegment, 8 , m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:Artisanal; flag=FRA", KeyDomain.FleetSegment, 8, m_keyFieldDescriptorRegistry));
             m_mappings.Add(new EwEMapping("gearcode=EwE:Recreational; flag=FRA", KeyDomain.FleetSegment, 9, m_keyFieldDescriptorRegistry));
 
             // Register fleet segments as gear + market code pairs to match fleet > market deliveries
@@ -345,7 +347,7 @@ namespace Ecopath.EwE
                             // Make robust to encoding imperfections
                             string common = FieldPolicy.ForValue(taxon.Common, FieldKind.Label);
                             if (string.IsNullOrEmpty(common))
-                                common = taxon.Genus + ' '  + taxon.Species;
+                                common = taxon.Genus + ' ' + taxon.Species;
                             code = vocSpecies.FindCode(common);
 
                             // Last resort: try spp.    
@@ -369,7 +371,7 @@ namespace Ecopath.EwE
                         {
                             // #Yes: find life stage code and biomass proportion    
                             ls = vocLifeStage.FindCode(grp.Name);
-                            proportion = taxon.PropB / 100; 
+                            proportion = taxon.PropB / 100;
                         }
                         else
                         {
