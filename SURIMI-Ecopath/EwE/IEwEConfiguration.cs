@@ -26,5 +26,8 @@ namespace Ecopath.EwE
         IEnumerable<EwEMappingMatch> ResolveFleets(SURIMI.Datamodel.FleetSegment fleetsegment);
         EwEMapping? Find(int iIndex, KeyDomain domain);
         bool IsExternalFleet(int iFleet);
+
+        string OutputPath { get; set; }
+        bool WriteOutput { get; set; }
     }
 }
