@@ -4,6 +4,7 @@ using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
 using EwEBridge.Ecospace;
 using EwECore;
+using EwECore.Common;
 using EwECore.Plugins;
 using SURIMI.Datamodel;
 using System.Diagnostics;
@@ -194,11 +195,11 @@ namespace Ecopath.EwE
             }
 
             // Configure Ecosim
-            cEcoSimModelParameters parms = m_core.EcosimModelParameters;
-            parms.NumberYears = m_configuration.MaxRunYears; // No of years apply to both Sim and Space
+            cEcoSimModelParameters parmsSim = m_core.EcosimModelParameters;
+            parmsSim.NumberYears = m_configuration.MaxRunYears; // No of years apply to both Sim and Space
 
             // Run Ecosim
-            m_logger.LogInformation("EwE - Going to run Ecosim for {0} years", parms.NumberYears);
+            m_logger.LogInformation("EwE - Going to run Ecosim for {0} years", parmsSim.NumberYears);
             if (!m_core.RunEcosim())
                 throw new Exception("EwE - Ecosim failed to run");
             m_logger.LogInformation("EwE - Ecosim run successfully");
@@ -228,9 +229,30 @@ namespace Ecopath.EwE
 
             // Configure Ecospace
             cEcospaceDataStructures ds = m_core.EcospaceDataStructures;
+            cEcospaceModelParameters parmsSpace = m_core.EcospaceModelParameters;
+
             ds.SpinUpYears = m_configuration.SpinupYears;
             ds.UseSpinUp = (m_configuration.SpinupYears > 0);
             m_logger.LogInformation("EwE - Ecospace spin-up for {0} years", ds.UseSpinUp ? m_configuration.SpinupYears.ToString() : "off");
+
+            // Configure output writers
+            string outputPath = m_configuration.OutputPath;
+            // This propagates to all writers when they need it. Set on cCore
+            m_core.OutputPath = outputPath;
+            // The first time step to write output to is Ecospace-only. And why? No idea, but that's how EwE rolls
+            parmsSpace.FirstOutputTimeStep = m_core.AbsoluteTimeToEcospaceTimestep(new DateTime(m_configuration.StartYear, 1, 1));
+            // Filtering for monthy/annual output is also Ecospace-only
+            parmsSpace.UseAnnualOuput = false; // We want all time steps
+            // Now enable the right writers
+            for (int i = 0; i < parmsSpace.nResultWriters - 1; i++)
+            {
+                // Lovely one-based indexing in EwE
+                IEcospaceResultsWriter writer = parmsSpace.ResultWriter(i + 1);
+                // Some decision to be made here about what writers to enable
+                bool bEnable = (writer is cEcospaceASCMapBiomassWriter) | (writer is cEcospaceASCMapCatchWriter) | (writer is cEcospaceRegionAvgResultsWriter);
+                // There you go
+                writer.Enabled = bEnable & m_configuration.WriteOutput;
+            }
 
             // Start running Ecospace up to the point where intended simulations begin
             var tcs = new TaskCompletionSource();
@@ -902,6 +924,5 @@ namespace Ecopath.EwE
         }
 
         #endregion // Internal - EwE interactions
-
     }
 }

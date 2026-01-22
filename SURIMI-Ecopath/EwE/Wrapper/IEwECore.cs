@@ -25,7 +25,6 @@ namespace Ecopath.EwE.Wrapper
         void CloseModel();
         void StopEcospace();
         void RunEcospace(ref cCore.EcoSpaceInterfaceDelegate? dgt);
-        DateTime EcospaceTimestepToAbsoluteTime(int iTime);
         void Dispose();
         cEcospaceModelParameters EcospaceModelParameters { get; }
         public cAuxiliaryData AuxillaryData(string strValueId);
@@ -34,7 +33,21 @@ namespace Ecopath.EwE.Wrapper
         cStanzaGroup get_StanzaGroups(int v);
         cCoreInputOutputBase? get_EcopathFleetInputs(int index);
 
+
+        /// <summary>
+        /// Get/set the output path for simulation results.     
+        /// </summary>
+        string OutputPath { get; set; }
+
         public int nGroups { get; }
         int nTaxon { get; }
+
+        // --- Utility methods ---
+
+        DateTime EcosimTimestepToAbsoluteTime(int iTimestep);
+        int AbsoluteTimeToEcosimTimestep(DateTime dt);
+
+        DateTime EcospaceTimestepToAbsoluteTime(int iTimestep);
+        int AbsoluteTimeToEcospaceTimestep(DateTime dt);
     }
 }

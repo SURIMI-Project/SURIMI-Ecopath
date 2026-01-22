@@ -40,8 +40,6 @@ namespace Ecopath.EwE.Wrapper
 
         public void Dispose() => m_core.Dispose();
 
-        public DateTime EcospaceTimestepToAbsoluteTime(int iTime) => m_core.EcospaceTimestepToAbsoluteTime(iTime);
-
         public bool LoadEcosimScenario(int scenario) => m_core.LoadEcosimScenario(scenario);
 
         public bool LoadEcospaceScenario(int scenario) => m_core.LoadEcospaceScenario(scenario);
@@ -68,10 +66,19 @@ namespace Ecopath.EwE.Wrapper
 
         public cCoreInputOutputBase? get_EcopathFleetInputs(int index) => m_core.get_EcopathFleetInputs(index);
 
+ 
         public int nGroups => m_core.nGroups;
 
         public int nTaxon => m_core.nTaxon;
 
         IPluginManager IEwECore.PluginManager { get => m_pluginManager; }
+
+        public string OutputPath { get => m_core.OutputPath; set => m_core.OutputPath = value; }
+
+        public DateTime EcosimTimestepToAbsoluteTime(int iTime) => m_core.EcosimTimestepToAbsoluteTime(iTime);
+        public int AbsoluteTimeToEcosimTimestep(DateTime dt) => m_core.AbsoluteTimeToEcosimTimestep(dt);
+
+        public DateTime EcospaceTimestepToAbsoluteTime(int iTime) => m_core.EcospaceTimestepToAbsoluteTime(iTime);
+        public int AbsoluteTimeToEcospaceTimestep(DateTime dt) => m_core.AbsoluteTimeToEcospaceTimestep(dt);
     }
 }
