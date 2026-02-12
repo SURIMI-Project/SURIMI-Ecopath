@@ -1,6 +1,8 @@
 using Ecopath.EwE;
 using Ecopath.EwE.Wrapper;
 using Ecopath.Services;
+using Eii.BlobStore;
+using Eii.BlobStore.Minio;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
 using Eii.ControlledVocabularies.ForeignKeys;
@@ -11,6 +13,8 @@ using Eii.ControlledVocabularies.Vocabularies.Gear;
 using Eii.ControlledVocabularies.Vocabularies.LifeStage;
 using Eii.ControlledVocabularies.Vocabularies.Species;
 using EwEUtils.Logging;
+using Minio;
+using Minio.DataModel.Args;
 
 namespace Ecopath;
 
@@ -31,6 +35,36 @@ public class Program
         // Create a logger for the Program class
         var logger = LoggingContext.LoggerFactory.CreateLogger<Program>();
         logger.LogInformation("Ecopath starting up.......................");
+
+        builder.Services.AddSingleton<IBlobStore>(sp =>
+        {
+
+            // if AWS_ACCESS_KEY_ID is set, use MinIO
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID")))
+            {
+                var minio = new MinioClient()
+                    .WithEndpoint(Environment.GetEnvironmentVariable("AWS_S3_ENDPOINT"), 443)
+                    .WithCredentials(Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID"), Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY"))
+                    .WithSSL(true) // set to true if your endpoint uses HTTPS
+                    .Build();
+
+                // Ensure bucket exists (idempotent)
+                var bucket = Environment.GetEnvironmentVariable("AWS_BUCKET_NAME")!;
+                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                var exists = minio.BucketExistsAsync(new BucketExistsArgs().WithBucket(bucket), cts.Token).GetAwaiter().GetResult();
+                if (!exists)
+                {
+                    minio.MakeBucketAsync(new MakeBucketArgs().WithBucket(bucket), cts.Token).GetAwaiter().GetResult();
+                }
+
+                logger.LogInformation("Environment variable AWS_ACCESS_KEY_ID found. Using MinioBlobStore");
+                return new MinioBlobStore(minio, bucket, inputBasePrefix: "surimi-ecopath/config", outputBasePrefix: "surimi-ecopath", localInputRoot: "Includes", localOutputRoot: "Output");
+            }
+
+            // Default local Filesystem
+            logger.LogInformation("Using LocalBlobStore");
+            return new LocalBlobStore( inputRoot: "Includes", outputRoot: "Output");
+        });
 
         builder.AddServiceDefaults();
 

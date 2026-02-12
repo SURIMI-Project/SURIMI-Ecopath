@@ -27,7 +27,8 @@ public class EcopathEcologyService : EcologyService.EcologyServiceBase
         var grpcBiomass = new GetBiomassResponse
         {
             BiomassSummary = new BiomassSummary(),
-            SimulationId = request.SimulationId
+            SimulationId = request.SimulationId,
+            DateTime = request.DateTime
         };
 
         if (biomass.BiomassGrids != null)
