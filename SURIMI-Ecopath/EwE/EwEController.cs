@@ -1,4 +1,5 @@
 ﻿using Ecopath.EwE.Wrapper;
+using Eii.BlobStore;
 using Eii.ControlledVocabularies.Common;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
@@ -55,6 +56,7 @@ namespace Ecopath.EwE
         private readonly ILogger<EwEController> m_logger;
         private readonly IKeyFieldDescriptorRegistry m_keyFieldDescriptorRegistry;
         private readonly IMultiLevelKeyFactory m_multiLevelKeyFactory;
+        private readonly IBlobStore _blobStore;
 
         private RunStates m_runstate = RunStates.idle;
 
@@ -80,7 +82,7 @@ namespace Ecopath.EwE
 
         #endregion // Private vars 
 
-        public EwEController(ILogger<EwEController> logger, IEwEConfiguration configuration, IEwECore core, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory)
+        public EwEController(ILogger<EwEController> logger, IEwEConfiguration configuration, IEwECore core, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory, IBlobStore blobStore)
         {
             m_configuration = configuration;
             m_core = core;
@@ -103,6 +105,7 @@ namespace Ecopath.EwE
             }
 
             m_multiLevelKeyFactory = multiLevelKeyFactory;
+            _blobStore = blobStore;
         }
 
         ~EwEController()
@@ -171,11 +174,15 @@ namespace Ecopath.EwE
             RunState = RunStates.starting;
 
             // Load model
-            if (!File.Exists(m_configuration.ModelName))
-                throw new FileNotFoundException("EwE model file '{0}' cannot be found", m_configuration.ModelName); 
-            if (!m_core.LoadModel(m_configuration.ModelName))
-                throw new Exception($"EwE could not load model '{m_configuration.ModelName}'");
-            m_logger.LogInformation("EwE - Ecopath loaded file '{0}', model '{1}'", m_configuration.ModelName, m_core.EcopathDataStructures.ModelName);
+            if (!await _blobStore.ExistsAsync(m_configuration.ModelName, PathType.Input))
+                throw new FileNotFoundException($"EwE model file '{m_configuration.ModelName}' cannot be found");
+
+            // If connected to a remote blob store, copy the model file locally to the Includes folder
+            var localModelFile = await _blobStore.CopyToLocalFileOrIgnoreAsync(m_configuration.ModelName, PathType.Input);
+
+            if (!m_core.LoadModel(localModelFile))
+                throw new Exception($"EwE could not load model '{localModelFile}'");
+            m_logger.LogInformation("EwE - Ecopath loaded file '{localModelFile}', model '{modelName}'", localModelFile, m_core.EcopathDataStructures.ModelName);
 
             // Check Ecopath balancing
             bool bIsBalanced = false;
@@ -191,7 +198,7 @@ namespace Ecopath.EwE
             {
                 if (!m_core.LoadTimeSeries(m_configuration.EcosimTimeSeries))
                     throw new Exception($"EwE - Ecosim time series {m_configuration.EcosimTimeSeries} not loaded");
-                m_logger.LogInformation("EwE - Ecosim time series {0} loaded", m_configuration.EcosimTimeSeries);
+                m_logger.LogInformation("EwE - Ecosim time series {EcosimTimeSeries} loaded", m_configuration.EcosimTimeSeries);
             }
 
             // Configure Ecosim
