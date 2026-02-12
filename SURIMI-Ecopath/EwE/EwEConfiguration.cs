@@ -78,7 +78,7 @@ namespace Ecopath.EwE
             m_multiLevelKeyFactory = multiLevelKeyFactory;
             m_logger = logger;
 
-            ModelName = @"Includes/GSA0607EwENBS.eiixml";
+            ModelName = @"GSA0607EwENBS.eiixml";
             EcosimScenario = 1;
             EcosimTimeSeries = 0;
             EcospaceScenario = 1;
@@ -177,7 +177,12 @@ namespace Ecopath.EwE
                 if (core.get_EcopathGroupInputs(iGroup).IsFished)
                     m_fishedGroups.Add(iGroup);
 
-            this.ReadSpeciesMappings(core);
+            if(surimiConfiguration.Items == null || surimiConfiguration.Items.Species == null || surimiConfiguration.Items.Species.Count == 0)
+            {
+                throw new Exception("No species mappings found in configuration contract; species will not be resolved to functional groups");
+            }
+
+            this.ReadSpeciesMappings(core, surimiConfiguration.Items.Species);
             this.ReadFleetMappings(core);
 
             m_mappings.Sort(new EwEMappingComparer());
@@ -298,12 +303,8 @@ namespace Ecopath.EwE
         /// only applies to fished groups. Species that are not fished, or fished functional groups 
         /// without taxonomic records / species attached, are not registered here.
         /// </remarks>
-        private void ReadSpeciesMappings(IEwECore core, bool writeCSV = false)
+        private void ReadSpeciesMappings(IEwECore core, List<Species> speciesList, bool writeCSV = false)
         {
-            /// Dirty hack to test if the species is in the EwE_functional-group_species.csv
-            /// TODO : remove when the Initialise test message is implemented
-            string[] surimuCodes = []; // ["MTS", "NEP", "ARS", "FAM", "LKO", "LKT", "SKM", "GRQ", "IOD", "OLV", "BOY", "EOI", "OCC", "OUL", "OUM", "SQM", "OQT", "HQB", "SQE", "SLM", "MUT", "WHB", "ANK", "MON", "HKE", "POD", "COE", "COE", "CIL", "LDB", "BLL", "LDV", "SRJ", "SBA", "PAC", "BRF", "SFS", "TSU", "GLI", "SPF", "SPC", "BOG", "SYC", "SCK", "SHO", "JDP", "RJC", "JRS", "ANE", "PIL", "SAA", /*"SPR",*/ "HMM", "JAA", "HOM", "MAC", "MAZ", "SWO", "BFT", "BON", "ALB", /*"BSK", "RMM", "MOX", */"BSH", /*"TTL", "CDI", "FPA", "DAZ", "LVH", "VCW", "LOW", "DTR", "DTY", "DKH", "CVV", "MVB", "ISY", "UIM", "UYE", "TVA", "PIW", "DRR", "SPW", "DST", "DBO", "FIW"*/];
-
             // The name of the vocabulary is implied here, but should be read from the species code
             IControlledVocabulary? vocSpecies = m_vocabularies.Get("asfis");
             IControlledVocabulary? vocLifeStage = m_vocabularies.Get("surimi.lifestage");
@@ -358,9 +359,7 @@ namespace Ecopath.EwE
                             }
                         }
 
-                        // TODO This is a dirty test to skip the species that are not known in POSEIDON yet
-                        // It should be replaced by the Initialise test message
-                        if (!surimuCodes.Contains(code) && surimuCodes.Length > 0)
+                        if (!speciesList.Any(s => s.SpeciesCode == code))
                         {
                             m_logger.LogInformation("Skipping taxon '{taxon}'; code '{code}' not in EwE_functional-group_species.csv", taxon.Common, code);
                             continue;
