@@ -30,7 +30,9 @@ namespace Ecopath.Services
             var response = new GetCatchDispositionResponse
             {
                 CatchDispositionSummary = new CatchDispositionSummary(),
-                SimulationId = request.SimulationId
+                SimulationId = request.SimulationId,
+                StartDateTime = request.StartDateTime,
+                EndDateTime = request.EndDateTime
             };
 
             if (catchDisposition?.DispositionGrids != null)

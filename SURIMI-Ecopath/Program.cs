@@ -38,7 +38,6 @@ public class Program
 
         builder.Services.AddSingleton<IBlobStore>(sp =>
         {
-
             // if AWS_ACCESS_KEY_ID is set, use MinIO
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID")))
             {
