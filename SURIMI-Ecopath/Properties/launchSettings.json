@@ -11,7 +11,15 @@
     "https": {
       "commandName": "Project",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "VAULT_ADDR": "https://vault.dive.edito.eu",
+        "VAULT_TOKEN": "hvs.CAESIMV5bohxF07ApBj29lMLK7HwkH-DoB8dxV2JOHpTonKEGh4KHGh2cy5Ca3hHdmRuNTlKT3hBcHhRTU5zUlVqM0E",
+        "VAULT_TOP_DIR": "rikkert",
+        "VAULT_RELATIVE_PATH": "s3-credentials",
+        "VAULT_MOUNT": "secret-kv",
+        "AWS_S3_ENDPOINT": "minio.dive.edito.eu",
+        "AWS_DEFAULT_REGION": "waw3-1",
+        "AWS_BUCKET_NAME": "oidc-rikkert"
       },
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:7243;http://localhost:7890"

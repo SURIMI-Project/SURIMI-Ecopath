@@ -51,6 +51,9 @@ COPY . .
 WORKDIR "/src/SURIMI-Ecopath"
 RUN dotnet build "./SURIMI-Ecopath.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
+# Remove Includes directory after build
+RUN rm -rf /src/SURIMI-Ecopath/Includes
+
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Debug
@@ -60,6 +63,4 @@ RUN dotnet publish "./SURIMI-Ecopath.csproj" -c $BUILD_CONFIGURATION -o /app/pub
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-# Also copy includes produced during build
-COPY --from=build /app/build/Includes /app/Includes/
 ENTRYPOINT ["dotnet", "SURIMI-Ecopath.dll"]
