@@ -4,10 +4,10 @@ namespace Ecopath.Services
 {
     public class CheckSimulationService
     {
-        private readonly ILogger<EcopathEcologyService> m_logger;
+        private readonly ILogger<EcologyProviderService> m_logger;
         private static string m_simulationId = string.Empty;
 
-        public CheckSimulationService(ILogger<EcopathEcologyService> logger)
+        public CheckSimulationService(ILogger<EcologyProviderService> logger)
         {
             m_logger = logger;
         }
