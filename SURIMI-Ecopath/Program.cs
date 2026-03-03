@@ -95,10 +95,13 @@ public class Program
         app.MapDefaultEndpoints();
 
         // Configure the HTTP request pipeline.
-        app.MapGrpcService<EcopathEcologyService>();
+        app.MapGrpcService<EcologyProviderService>();
         app.MapGrpcService<EcopathWorkflowService>();
-        app.MapGrpcService<EcopathFisheryService>();
-        app.MapGrpcService<EcopathMarketService>();
+        app.MapGrpcService<CatchProviderService>();
+        app.MapGrpcService<CatchConsumerService>();
+        app.MapGrpcService<SalesProviderService>();
+        app.MapGrpcService<SpeciePriceConsumerService>();
+
 
         app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
 
