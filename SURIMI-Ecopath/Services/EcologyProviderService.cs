@@ -4,13 +4,13 @@ using Grpc.Surimi;
 
 namespace Ecopath.Services;
 
-public class EcopathEcologyService : EcologyService.EcologyServiceBase
+public class EcologyProviderService : Grpc.Surimi.EcologyProviderService.EcologyProviderServiceBase
 {
-    private readonly ILogger<EcopathEcologyService> m_logger;
+    private readonly ILogger<EcologyProviderService> m_logger;
     private readonly CheckSimulationService m_checksimulationservice;
     private readonly IEwEController m_ewecontroller;
 
-    public EcopathEcologyService(ILogger<EcopathEcologyService> logger, CheckSimulationService service, IEwEController controller)
+    public EcologyProviderService(ILogger<EcologyProviderService> logger, CheckSimulationService service, IEwEController controller)
     {
         m_logger = logger;
         m_checksimulationservice = service;
