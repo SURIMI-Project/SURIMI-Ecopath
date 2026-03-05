@@ -1,4 +1,4 @@
-﻿using Ecopath.EwE.Wrapper;
+﻿    using Ecopath.EwE.Wrapper;
 using Eii.BlobStore;
 using Eii.ControlledVocabularies.Common;
 using Eii.ControlledVocabularies.Core;
@@ -667,13 +667,13 @@ namespace Ecopath.EwE
                                     }
 
                         // Finally prepare data for the framework
-                        if (bHasData && mlkMarket != null && mlkGroup != null)
+                        if (bHasData && mlkFleet != null && mlkGroup != null)
                         {
                             // Prepare disposition grid
 #pragma warning disable CS8601 // Possible null reference assignment.
                             var grid = new DispositionGrid()
                             {
-                                FleetSegment = mlkMarket.ToObject<SURIMI.Datamodel.FleetSegment>(m_configuration.IncludeVocabularies),
+                                FleetSegment = mlkFleet.ToObject<SURIMI.Datamodel.FleetSegment>(m_configuration.IncludeVocabularies),
                                 Species = mlkGroup.ToObject<SURIMI.Datamodel.Species>(m_configuration.IncludeVocabularies)
                             };
 #pragma warning restore CS8601 // Possible null reference assignment.
