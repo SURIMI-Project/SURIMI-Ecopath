@@ -4,13 +4,13 @@ using Grpc.Surimi;
 
 namespace Ecopath.Services
 {
-    public class SpeciePriceConsumerService : Grpc.Surimi.SpeciesPriceConsumerService.SpeciesPriceConsumerServiceBase
+    public class SpeciesPriceConsumerService : Grpc.Surimi.SpeciesPriceConsumerService.SpeciesPriceConsumerServiceBase
     {
-        private readonly ILogger<SpeciePriceConsumerService> m_logger;
+        private readonly ILogger<SpeciesPriceConsumerService> m_logger;
         private readonly CheckSimulationService m_checksimulationservice;
         private readonly IEwEController m_controller;
 
-        public SpeciePriceConsumerService(ILogger<SpeciePriceConsumerService> logger, CheckSimulationService service, IEwEController controller)
+        public SpeciesPriceConsumerService(ILogger<SpeciesPriceConsumerService> logger, CheckSimulationService service, IEwEController controller)
         {
             m_logger = logger;
             m_checksimulationservice = service;
