@@ -936,6 +936,33 @@ namespace Ecopath.EwE
             return Task.FromResult(true);
         }
 
+        public Task<bool> UpdateRegulationsAsync(RegulationsSummary regulations)
+        {
+            // TODO
+            return Task.FromResult(true);
+        }
+
+        public Task<FishingActivitySummary> GetFishingActivityAsync()
+        {
+            var summary = new FishingActivitySummary()
+            {
+                FishingActivities = new List<FishingActivity>()
+                {
+                    new FishingActivity()
+                    {
+                        FleetSegment = new FleetSegment() { GearCode = "OTB", CountryCode = "FRA" },
+                        FishingActivityRatio = 0.5f
+                    },
+                    new FishingActivity()
+                    {
+                        FleetSegment = new FleetSegment() { GearCode = "ART", CountryCode = "ESP" },
+                        FishingActivityRatio = 0.9f
+                    }
+                }
+            };
+            return Task.FromResult(summary);
+        }
+
         #endregion // Internal - EwE interactions
     }
 }
