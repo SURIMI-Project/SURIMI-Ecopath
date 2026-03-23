@@ -44,7 +44,6 @@ RUN if [ ! -z "$BSR_TOKEN" ]; then \
     --configfile NuGet.config; \
     fi
 
-COPY ["SURIMI.ServiceDefaults/SURIMI.ServiceDefaults.csproj", "SURIMI.ServiceDefaults/"]
 COPY ["SURIMI-Ecopath/SURIMI-Ecopath.csproj", "SURIMI-Ecopath/"]
 RUN dotnet nuget locals all --clear     # Clear local NuGet cache to ensure we get the latest packages, especially important when using tokens for private feeds
 RUN dotnet restore "./SURIMI-Ecopath/SURIMI-Ecopath.csproj"
