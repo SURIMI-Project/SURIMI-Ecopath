@@ -1,6 +1,7 @@
 ﻿using Ecopath.EwE;
 using Grpc.Core;
 using Grpc.Surimi;
+using SURIMI.Common.gRPC;
 
 namespace Ecopath.Services
 {
