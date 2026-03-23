@@ -15,6 +15,8 @@ using Eii.ControlledVocabularies.Vocabularies.Species;
 using EwEUtils.Logging;
 using Minio;
 using Minio.DataModel.Args;
+using SURIMI.Common.gRPC;
+using SURIMI.Common.gRPC.Services;
 
 namespace Ecopath;
 
@@ -71,6 +73,7 @@ public class Program
         builder.Services.AddGrpc(options =>
         {
             options.Interceptors.Add<ExceptionMetadataInterceptor>();
+            options.Interceptors.Add<VersionMetadataInterceptor>();
             options.MaxReceiveMessageSize = 100 * 1024 * 1024; // 100 MB
             options.MaxSendMessageSize = 100 * 1024 * 1024;    // 100 MB
         });
@@ -89,6 +92,7 @@ public class Program
         builder.Services.AddSingleton<FieldInferenceOrchestrator>();
         builder.Services.AddSingleton<IKeyFieldDescriptorIndexer, KeyFieldDescriptorIndexer>();
         builder.Services.AddSingleton<IMultiLevelKeyFactory, MultiLevelKeyFactory>();
+        builder.Services.AddSingleton<ProtocolVersionService>();
 
         var app = builder.Build();
 
