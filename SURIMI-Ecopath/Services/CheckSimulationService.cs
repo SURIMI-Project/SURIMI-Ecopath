@@ -1,4 +1,5 @@
 ﻿using Grpc.Core;
+using SURIMI.Common.gRPC;
 
 namespace Ecopath.Services
 {

@@ -3,14 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35919.96
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SURIMI.ServiceDefaults", "SURIMI.ServiceDefaults\SURIMI.ServiceDefaults.csproj", "{C3E0D297-7EA5-49FF-B8BD-D5A2D0BB2643}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6E13B947-F77A-41C6-8D2A-0ED04AB3A2B3}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
 		.gitmodules = .gitmodules
-		build-docker.ps1 = build-docker.ps1
 		NuGet.config = NuGet.config
 		README.md = README.md
 	EndProjectSection
@@ -25,10 +22,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C3E0D297-7EA5-49FF-B8BD-D5A2D0BB2643}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C3E0D297-7EA5-49FF-B8BD-D5A2D0BB2643}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C3E0D297-7EA5-49FF-B8BD-D5A2D0BB2643}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C3E0D297-7EA5-49FF-B8BD-D5A2D0BB2643}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B9332A06-D241-41C0-1B65-6EED39B96CAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B9332A06-D241-41C0-1B65-6EED39B96CAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B9332A06-D241-41C0-1B65-6EED39B96CAA}.Release|Any CPU.ActiveCfg = Release|Any CPU

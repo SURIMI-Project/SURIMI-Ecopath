@@ -1,7 +1,8 @@
 using Ecopath.EwE;
 using Grpc.Core;
 using Grpc.Surimi;
-using SURIMI.Datamodel;
+using SURIMI.Common.gRPC;
+using SURIMI.Common.gRPC.Services;
 
 namespace Ecopath.Services;
 
@@ -10,12 +11,14 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
     private readonly ILogger<EcopathWorkflowService> m_logger;
     private readonly CheckSimulationService m_checksimulationservice;
     private readonly IEwEController m_controller;
+    private readonly string _version;
 
-    public EcopathWorkflowService(ILogger<EcopathWorkflowService> logger, CheckSimulationService service, IEwEController controller)
+    public EcopathWorkflowService(ILogger<EcopathWorkflowService> logger, CheckSimulationService service, IEwEController controller, ProtocolVersionService protocolVersionService)
     {
         m_logger = logger;
         m_checksimulationservice = service;
         m_controller = controller;
+        _version = protocolVersionService.LoadVersion();
     }
 
     public override async Task<InitialiseResponse> Initialise(InitialiseRequest request, ServerCallContext context)
@@ -94,6 +97,11 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
         var res = await m_controller.ContinueAsync();
 
         return new SimulateStepResponse() { SimulationId = request.SimulationId };
+    }
+
+    public override Task<GetProtocolVersionResponse> GetProtocolVersion(GetProtocolVersionRequest request, ServerCallContext context)
+    {
+        return Task.FromResult(new GetProtocolVersionResponse() { ProtocolVersion = _version });
     }
 
     /// <summary>
