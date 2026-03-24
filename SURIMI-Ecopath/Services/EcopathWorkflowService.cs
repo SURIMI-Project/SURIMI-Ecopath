@@ -23,7 +23,7 @@ public class EcopathWorkflowService : WorkflowService.WorkflowServiceBase
 
     public override async Task<InitialiseResponse> Initialise(InitialiseRequest request, ServerCallContext context)
     {
-        GrpcValidation.ArgumentNotNullOrEmpty(request.ScenarioId);
+        GrpcValidation.ArgumentNotNullOrEmpty(request.ScenarioId, "ScenarioId");
         await m_checksimulationservice.ReserveSimulationAsync(request.SimulationId, context);
 
 
