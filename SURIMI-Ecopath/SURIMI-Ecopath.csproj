@@ -41,13 +41,25 @@
     <PackageReference Include="VaultSharp" Version="1.17.5.1" />
   </ItemGroup>
 
-	<ItemGroup>
-	  <None Update="Includes\Anchovy Bay Spatial.eiixml">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Includes\GSA0607EwENBS.eiixml">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	</ItemGroup>
-
+    <ItemGroup>
+        <None Update="Includes\Anchovy Bay Spatial.eiixml">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\GSA0607EwENBS.eiixml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+    
+    <!-- Custom target to copy Includes directory from build output to publish directory. So the csv files from the controlledVocabularies package are also present-->
+    <Target Name="CopyIncludesToPublish" AfterTargets="Publish">
+        <ItemGroup>
+            <IncludesFromOutput Include="$(OutputPath)Includes\**\*.*" />
+        </ItemGroup>
+        <Message Importance="high" Text="Copying Includes directory with @(IncludesFromOutput->Count()) files to publish directory" />
+        <Copy SourceFiles="@(IncludesFromOutput)"
+              DestinationFiles="@(IncludesFromOutput->'$(PublishDir)Includes\%(RecursiveDir)%(Filename)%(Extension)')"
+              SkipUnchangedFiles="true" />
+        <Message Importance="high" Text="Finished copying Includes to $(PublishDir)Includes\" />
+    </Target>
+    
 </Project>

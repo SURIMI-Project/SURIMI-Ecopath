@@ -138,11 +138,18 @@ public class Program
             var vaultClient = new VaultSharp.VaultClient(new VaultSharp.VaultClientSettings(vaultAddr, new VaultSharp.V1.AuthMethods.Token.TokenAuthMethodInfo(vaultToken)));
             // Assuming secrets are stored under "secret/data/surimi"
             var secretPath = $"{vaultTopDir}/{vaultRelativePath}";
-            var secret = vaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync(secretPath, mountPoint: vaultMount).Result;
-            foreach (var kv in secret.Data.Data)
+            try
             {
-                Environment.SetEnvironmentVariable(kv.Key, kv.Value.ToString());
-                Console.WriteLine($"Loaded secret '{kv.Key}' from Vault into environment variables.");
+                var secret = vaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync(secretPath, mountPoint: vaultMount).Result;
+                foreach (var kv in secret.Data.Data)
+                {
+                    Environment.SetEnvironmentVariable(kv.Key, kv.Value.ToString());
+                    Console.WriteLine($"Loaded secret '{kv.Key}' from Vault into environment variables.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading secrets from Vault: {ex.Message}");
             }
         }
     }
