@@ -161,17 +161,17 @@ namespace Ecopath.EwE
             m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; countrycode=FRA", KeyDomain.FleetSegment, 10, m_keyFieldDescriptorRegistry));
 
             // Register fleet segments as gear + market code pairs to match fleet > market deliveries
-            m_mappings.Add(new EwEMapping("gearcode=OTB; marketcode=ESP", KeyDomain.Market, 1, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=ESP", KeyDomain.Market, 2, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=LLS; marketcode=ESP", KeyDomain.Market, 3, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:ART; marketcode=ESP", KeyDomain.Market, 4, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; marketcode=ESP", KeyDomain.Market, 5, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=OTB; marketcode=ESALC", KeyDomain.Market, 1, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=ESALC", KeyDomain.Market, 2, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=LLS; marketcode=ESALC", KeyDomain.Market, 3, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:ART; marketcode=ESALC", KeyDomain.Market, 4, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; marketcode=ESALC", KeyDomain.Market, 5, m_keyFieldDescriptorRegistry));
 
-            m_mappings.Add(new EwEMapping("gearcode=OTB; marketcode=FRA", KeyDomain.Market, 6, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=TM; marketcode=FRA", KeyDomain.Market, 7, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=FRA", KeyDomain.Market, 8, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:ART; marketcode=FRA", KeyDomain.Market, 9, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; marketcode=FRA", KeyDomain.Market, 10, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=OTB; marketcode=ESBRX", KeyDomain.Market, 6, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=TM; marketcode=ESBRX", KeyDomain.Market, 7, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=ESBRX", KeyDomain.Market, 8, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:ART; marketcode=ESBRX", KeyDomain.Market, 9, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; marketcode=ESBRX", KeyDomain.Market, 10, m_keyFieldDescriptorRegistry));
 
             for (int iGroup = 1; iGroup <= core.nGroups; iGroup++)
                 if (core.get_EcopathGroupInputs(iGroup).IsFished)
