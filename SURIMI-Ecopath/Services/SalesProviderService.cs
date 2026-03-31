@@ -24,7 +24,7 @@ namespace Ecopath.Services
 
             var salesSummaries = await m_controller.GetSalesSummariesAsync(request.StartDateTime.ToDateTime(), request.EndDateTime.ToDateTime());
 
-            var response = new GetSalesResponse() { SimulationId = request.SimulationId };
+            var response = new GetSalesResponse() { SimulationId = request.SimulationId, StartDateTime = request.StartDateTime, EndDateTime = request.EndDateTime };
             response.SalesSummaries.AddRange(
                 salesSummaries.Select(summary =>
                 {
@@ -55,7 +55,7 @@ namespace Ecopath.Services
                     }
 
                     return grpcSummary;
-                })
+                }).Where(m => m.Sales.Count != 0)   // Filter out empty summaries, as they are not useful and only add noise to the response
             );
 
             return response;

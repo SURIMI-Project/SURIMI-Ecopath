@@ -65,7 +65,7 @@ namespace Ecopath.Services
                                     DeadDiscards = cell.DeadDiscardsBiomass,
                                     Latitude = cell.Latitude,
                                     Longitude = cell.Longitude
-                                })
+                                }).Where(cell => cell.GrossCatch != 0 || cell.LiveDiscards != 0 || cell.DeadDiscards != 0) // Filter out empty cells, as they are not useful and only add noise to the response
                             );
                         }
                         return dispositionGrid;
