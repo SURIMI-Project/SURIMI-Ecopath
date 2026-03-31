@@ -30,7 +30,16 @@ public class Program
         LoggingContext.LoggerFactory = LoggerFactory.Create(logBuilder =>
         {
             logBuilder.AddConfiguration(builder.Configuration.GetSection("Logging"));   // so you can add a 'Logging' section to the appsettings.json to configure logging
-            logBuilder.AddConsole();
+            logBuilder.AddConsole(options =>
+            {
+                options.FormatterName = "systemd";
+            });
+            logBuilder.AddSimpleConsole(options =>
+            {
+                options.IncludeScopes = false;
+                options.SingleLine = true;
+                options.TimestampFormat = "HH:mm:ss ";
+            });
             logBuilder.AddDebug();
         });
 
