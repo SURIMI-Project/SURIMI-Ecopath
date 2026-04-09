@@ -27,8 +27,8 @@
   <ItemGroup>
     <PackageReference Include="BSR.Surimi.Surimi-Protocol.Grpc.Csharp" Version="1.78.10101.51+a7c1d9807315" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
+    <PackageReference Include="Eii.BlobStore.S3" Version="1.0.0" />
     <PackageReference Include="Eii.ControlledVocabularies" Version="1.0.*" />
-    <PackageReference Include="Eii.BlobStore.Minio" Version="1.0.*" />
     <PackageReference Include="Eii.Ecopath.Bridge" Version="1.0.*" />
     <PackageReference Include="Eii.Ecopath.EwECore" Version="6.7.*" />
     <PackageReference Include="Google.Api.CommonProtos" Version="2.17.0" />
@@ -55,10 +55,8 @@
         <ItemGroup>
             <IncludesFromOutput Include="$(OutputPath)Includes\**\*.*" />
         </ItemGroup>
-        <Message Importance="high" Text="Copying Includes directory with @(IncludesFromOutput->Count()) files to publish directory" />
-        <Copy SourceFiles="@(IncludesFromOutput)"
-              DestinationFiles="@(IncludesFromOutput->'$(PublishDir)Includes\%(RecursiveDir)%(Filename)%(Extension)')"
-              SkipUnchangedFiles="true" />
+        <Message Importance="high" Text="Copying Includes directory with @(IncludesFromOutput-&gt;Count()) files to publish directory" />
+        <Copy SourceFiles="@(IncludesFromOutput)" DestinationFiles="@(IncludesFromOutput->'$(PublishDir)Includes\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
         <Message Importance="high" Text="Finished copying Includes to $(PublishDir)Includes\" />
     </Target>
     
