@@ -50,7 +50,7 @@ public class Program
             // if AWS_ACCESS_KEY_ID is set, use MinIO
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID")))
             {
-                logger.LogInformation("Environment variable AWS_ACCESS_KEY_ID found. Using MinioBlobStore");
+                logger.LogInformation("Environment variable AWS_ACCESS_KEY_ID found. Using S3BlobStore");
                 return new S3BlobStore(
                     Environment.GetEnvironmentVariable("AWS_S3_ENDPOINT"),
                     Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID"),
