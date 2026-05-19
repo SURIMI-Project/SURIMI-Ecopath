@@ -63,4 +63,10 @@ RUN dotnet publish "./SURIMI-Ecopath.csproj" -c $BUILD_CONFIGURATION -o /app/pub
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+
+# Create empty Includes directory with proper permissions for the non-root user
+USER root
+RUN rm -rf /app/Includes && mkdir -p /app/Includes && chown $APP_UID:$APP_UID /app/Includes && chmod 755 /app/Includes
+USER $APP_UID
+
 ENTRYPOINT ["dotnet", "SURIMI-Ecopath.dll"]
