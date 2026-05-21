@@ -1,0 +1,34 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -f ./SURIMI-Ecopath/Dockerfile \
+            -t ghcr.io/official-ewe/surimiecopath:latest \
+            --build-arg GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} \
+            --build-arg BSR_TOKEN=${{ secrets.BSR_TOKEN }} \
+            .
+
+      - name: Push Docker image
+        run: |
+          docker push ghcr.io/official-ewe/surimiecopath:latest
