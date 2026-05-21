@@ -334,7 +334,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
 
         var salesSummaries = await m_controller.GetSalesSummariesAsync(request.StartDateTime.ToDateTime(), request.EndDateTime.ToDateTime());
 
-        var response = new GetSalesResponse() { SimulationId = request.SimulationId, StartDateTime = request.StartDateTime, EndDateTime = request.EndDateTime };
+        var response = new GetSalesResponse() { SimulationId = request.SimulationId, StartDateTime = request.StartDateTime, EndDateTime = request.EndDateTime, SalesSummary = new SalesSummary() };
         response.SalesSummary.MarketSales.AddRange(
             salesSummaries.Select(summary =>
             {
