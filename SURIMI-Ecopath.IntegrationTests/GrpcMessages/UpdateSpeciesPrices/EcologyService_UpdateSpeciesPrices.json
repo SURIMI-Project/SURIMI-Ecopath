@@ -1,0 +1,32 @@
+{
+    "simulation_id": "123e4567-e89b-12d3-a456-426614174000",
+    "date_time": "2013-01-01T00:00:00.000Z",
+    "species_price_summary": {
+        "species_prices": [
+            {
+                "species": {
+                    "species_code": "BOG",
+                    "length_class": "",
+                    "age": "",
+                    "life_stage": ""
+                },
+                "gear_code": "",
+                "market_code": "ESSCR",
+                "price": 13777517.712172166,
+                "currency": "EUR"
+            },
+            {
+                "species": {
+                    "species_code": "PIL",
+                    "length_class": "",
+                    "age": "",
+                    "life_stage": ""
+                },
+                "gear_code": "",
+                "market_code": "ESSCR",
+                "price": 42277357.87747139,
+                "currency": "EUR"
+            }
+        ]
+    }
+}
