@@ -152,7 +152,7 @@ namespace Ecopath.EwE
             m_mappings.Add(new EwEMapping("gearcode=PS; countrycode=ESP", KeyDomain.FleetSegment, 2, m_keyFieldDescriptorRegistry));
             m_mappings.Add(new EwEMapping("gearcode=LLS; countrycode=ESP", KeyDomain.FleetSegment, 3, m_keyFieldDescriptorRegistry));
             m_mappings.Add(new EwEMapping("gearcode=EwE:ART; countrycode=ESP", KeyDomain.FleetSegment, 4, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:RECT countrycode=ESP", KeyDomain.FleetSegment, 5, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; countrycode=ESP", KeyDomain.FleetSegment, 5, m_keyFieldDescriptorRegistry));
 
             m_mappings.Add(new EwEMapping("gearcode=OTB; countrycode=FRA", KeyDomain.FleetSegment, 6, m_keyFieldDescriptorRegistry));
             m_mappings.Add(new EwEMapping("gearcode=TM; countrycode=FRA", KeyDomain.FleetSegment, 7, m_keyFieldDescriptorRegistry));
