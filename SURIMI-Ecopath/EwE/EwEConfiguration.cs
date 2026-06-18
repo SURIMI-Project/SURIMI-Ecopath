@@ -36,7 +36,7 @@ namespace Ecopath.EwE
         /// </remarks>
         private readonly List<EwEMapping> m_mappings = new();
         private readonly IKeyFieldDescriptorRegistry m_keyFieldDescriptorRegistry;
-        private readonly VocabularyRegistry m_vocabularies = new();
+        private readonly IVocabularyRegistry m_vocabularies;
         private readonly ASFISSpeciesCodeVocabulary m_asfisVocabulary;
         private readonly ISSCFGGearCodeVocabulary m_iSSCFGGearCodeVocabulary;
         private readonly ISO3166CountryCodeVocabulary m_iSO3166CountryCodeVocabulary;
@@ -68,7 +68,7 @@ namespace Ecopath.EwE
             }
         }
 
-        public EwEConfiguration(ASFISSpeciesCodeVocabulary asfisVocabulary, ISSCFGGearCodeVocabulary iSSCFGGearCodeVocabulary, ISO3166CountryCodeVocabulary iSO3166CountryCodeVocabulary, SURIMILifestageVocabulary sURIMILifestageVocabulary, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory, ILogger<EwEConfiguration> logger)
+        public EwEConfiguration(ASFISSpeciesCodeVocabulary asfisVocabulary, ISSCFGGearCodeVocabulary iSSCFGGearCodeVocabulary, ISO3166CountryCodeVocabulary iSO3166CountryCodeVocabulary, SURIMILifestageVocabulary sURIMILifestageVocabulary, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory, ILogger<EwEConfiguration> logger, IVocabularyRegistry vocabularies)
         {
             m_asfisVocabulary = asfisVocabulary;
             m_iSSCFGGearCodeVocabulary = iSSCFGGearCodeVocabulary;
@@ -77,6 +77,8 @@ namespace Ecopath.EwE
             m_keyFieldDescriptorRegistry = keyFieldDescriptorRegistry;
             m_multiLevelKeyFactory = multiLevelKeyFactory;
             m_logger = logger;
+            m_vocabularies = vocabularies;
+
 
             ModelName = @"GSA0607EwENBS.eiixml";
             EcosimScenario = 1;
