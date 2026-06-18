@@ -164,7 +164,7 @@ namespace Ecopath.EwE
         /// Start EwE and wait for Ecospace to get ready for simulations
         /// </summary>
         /// <returns></returns>
-        public async Task<int> StartAsync(SurimiConfiguration surimiConfiguration, int timeoutMs = 60 * 10 * 1000)
+        public async Task<int> StartAsync(SurimiConfiguration surimiConfiguration, string scenarioName, int timeoutMs = 60 * 10 * 1000)
         {
             // Check readiness
             if (RunState != RunStates.idle)
