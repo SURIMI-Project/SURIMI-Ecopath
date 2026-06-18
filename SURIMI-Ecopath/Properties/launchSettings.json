@@ -13,7 +13,7 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "VAULT_ADDR": "https://vault.dive.edito.eu",
-        "VAULT_TOKEN": "hvs.CAESIDQ2Gadjlo16vHLjLp8pqhKrv_QOGnMwU3UJfyJoQGR5Gh4KHGh2cy5FQ3ZYU0g3YllaWVB0MmVhanVXZE5zRGo",
+        "VAULT_TOKEN": "hvs.CAESIClj7VtoSs4P08EbjXXe-hX8ujcd-c_6BooevGM8E4-vGh4KHGh2cy5xaWVVUDBINTl5UFZEVWlKVGtyNHZZZ3M",
         "VAULT_TOP_DIR": "rikkert",
         "VAULT_RELATIVE_PATH": "s3-credentials",
         "VAULT_MOUNT": "secret-kv",

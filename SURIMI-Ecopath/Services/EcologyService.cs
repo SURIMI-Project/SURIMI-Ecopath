@@ -32,7 +32,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
         {
             var surimiConfiguration = GetSurimiConfiguration(request.Simulation);
 
-            var result = await m_controller.StartAsync(surimiConfiguration);
+            var result = await m_controller.StartAsync(surimiConfiguration, request.ScenarioName);
             if (result != 1)
             {
                 throw new RpcException(new Status(StatusCode.Internal, "Failed to initialise Ecopath"));
