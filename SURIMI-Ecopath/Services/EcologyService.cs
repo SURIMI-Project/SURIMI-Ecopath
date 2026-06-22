@@ -30,9 +30,9 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
         m_logger.LogInformation($"Initializing simulation {request.SimulationId}, scenario {request.ScenarioName}...");
         try
         {
-            var surimiConfiguration = GetSurimiConfiguration(request.Simulation);
+            var contract = GetSurimiContract(request.Simulation);
 
-            var result = await m_controller.StartAsync(surimiConfiguration, request.ScenarioName);
+            var result = await m_controller.StartAsync(contract, request.ScenarioName);
             if (result != 1)
             {
                 throw new RpcException(new Status(StatusCode.Internal, "Failed to initialise Ecopath"));
@@ -41,6 +41,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
         }
         catch (Exception ex)
         {
+            m_checksimulationservice.ReleaseSimulation(request.SimulationId);
             m_logger.LogInformation("In Initialise. EwE - exception ...{Message}", ex.Message);
             throw;
         }
@@ -401,13 +402,13 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
     }
 
     /// <summary>
-    /// Mapping method from gRPC Surimi Simulation to SURIMI Datamodel SurimiConfiguration
+    /// Mapping method from gRPC Surimi Simulation to SURIMI Datamodel SurimiContract.
     /// </summary>
     /// <param name="simulation"></param>
     /// <returns></returns>
-    private SURIMI.Datamodel.SurimiConfiguration GetSurimiConfiguration(Grpc.Surimi.Simulation simulation)
+    private SURIMI.Datamodel.SurimiContract GetSurimiContract(Grpc.Surimi.Simulation simulation)
     {
-        return new SURIMI.Datamodel.SurimiConfiguration
+        return new SURIMI.Datamodel.SurimiContract
         {
             Simulation = new SURIMI.Datamodel.Simulation()
             {
