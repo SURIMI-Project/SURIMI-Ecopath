@@ -1,5 +1,4 @@
-﻿    using Ecopath.EwE.Wrapper;
-using Eii.BlobStore;
+﻿using Ecopath.EwE.Wrapper;
 using Eii.ControlledVocabularies.Common;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
@@ -51,12 +50,12 @@ namespace Ecopath.EwE
         /// <summary>The Ecospace run thread, if any.</summary>
         private Thread? m_thread;
         /// <summary>EwE configuration that defines how EwE entities relate to common concepts (species, fishing, markets, etc).</summary>
-        private readonly IEwEConfiguration m_configuration;
+        private IEwEConfiguration? m_configuration;
 
+        private readonly IEwEConfigurationService m_configurationService;
         private readonly ILogger<EwEController> m_logger;
         private readonly IKeyFieldDescriptorRegistry m_keyFieldDescriptorRegistry;
         private readonly IMultiLevelKeyFactory m_multiLevelKeyFactory;
-        private readonly IBlobStore _blobStore;
 
         private RunStates m_runstate = RunStates.idle;
 
@@ -82,11 +81,12 @@ namespace Ecopath.EwE
 
         #endregion // Private vars 
 
-        public EwEController(ILogger<EwEController> logger, IEwEConfiguration configuration, IEwECore core, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory, IBlobStore blobStore)
+        public EwEController(ILogger<EwEController> logger, IEwEConfigurationService configurationService, IEwECore core, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory)
         {
-            m_configuration = configuration;
             m_core = core;
             m_keyFieldDescriptorRegistry = keyFieldDescriptorRegistry;
+            m_multiLevelKeyFactory = multiLevelKeyFactory;
+            m_configurationService = configurationService;
 
             RunState = RunStates.idle;
 
@@ -103,15 +103,11 @@ namespace Ecopath.EwE
                 cEcospaceBridgePlugin ppt = (cEcospaceBridgePlugin)pi;
                 ppt.BridgeCallback = BridgeCallback;
             }
-
-            m_multiLevelKeyFactory = multiLevelKeyFactory;
-            _blobStore = blobStore;
         }
 
         ~EwEController()
         {
             ForceStop();
-
             m_core.CloseModel();
             m_core.Dispose();
         }
@@ -164,7 +160,7 @@ namespace Ecopath.EwE
         /// Start EwE and wait for Ecospace to get ready for simulations
         /// </summary>
         /// <returns></returns>
-        public async Task<int> StartAsync(SurimiConfiguration surimiConfiguration, string scenarioName, int timeoutMs = 60 * 10 * 1000)
+        public async Task<int> StartAsync(SurimiContract surimiContract, string scenarioName, int timeoutMs = 60 * 10 * 1000)
         {
             // Check readiness
             if (RunState != RunStates.idle)
@@ -173,16 +169,12 @@ namespace Ecopath.EwE
             // Commence configuration
             RunState = RunStates.starting;
 
-            // Load model
-            if (!await _blobStore.ExistsAsync(m_configuration.ModelName, PathType.Input))
-                throw new FileNotFoundException($"EwE model file '{m_configuration.ModelName}' cannot be found");
+            m_configuration = await m_configurationService.CreateConfigurationAsync(scenarioName);
 
-            // If connected to a remote blob store, copy the model file locally to the Includes folder
-            var localModelFile = await _blobStore.CopyToLocalFileOrIgnoreAsync(m_configuration.ModelName, PathType.Input);
 
-            if (!m_core.LoadModel(localModelFile))
-                throw new Exception($"EwE could not load model '{localModelFile}'");
-            m_logger.LogInformation("EwE - Ecopath loaded file '{localModelFile}', model '{modelName}'", localModelFile, m_core.EcopathDataStructures.ModelName);
+            if (!m_core.LoadModel(m_configuration.LocalModelFile))
+                throw new Exception($"EwE could not load model '{m_configuration.LocalModelFile}'");
+            m_logger.LogInformation("EwE - Ecopath loaded file '{localModelFile}', model '{modelName}'", m_configuration.LocalModelFile, m_core.EcopathDataStructures.ModelName);
 
             // Check Ecopath balancing
             bool bIsBalanced = false;
@@ -217,22 +209,23 @@ namespace Ecopath.EwE
             m_logger.LogInformation("EwE - Ecospace scenario {0} loaded", m_configuration.EcospaceScenario);
 
             // Now load the configuration
-            m_configuration.Load(m_core, surimiConfiguration);
+            m_configurationService.Load(m_core, m_configuration, surimiContract);
+
             StringBuilder info = new();
             info.AppendLine("EwE FG - species mappings:");
-            foreach (var mapping in m_configuration.Mappings(KeyDomain.Species))
+            foreach (var mapping in m_configurationService.Mappings(KeyDomain.Species))
                 info.AppendLine(string.Format(" - {0}", GetMappingInfoString(mapping,m_core)));
             info.AppendLine("EwE fleet - fleetsegment mappings:");
-            foreach (var mapping in m_configuration.Mappings(KeyDomain.FleetSegment))
+            foreach (var mapping in m_configurationService.Mappings(KeyDomain.FleetSegment))
                 info.AppendLine(string.Format(" - {0}", GetMappingInfoString(mapping,m_core)));
             info.AppendLine("EwE fleet - market mappings:");
-            foreach (var mapping in m_configuration.Mappings(KeyDomain.Market))
+            foreach (var mapping in m_configurationService.Mappings(KeyDomain.Market))
                 info.AppendLine(string.Format(" - {0}", GetMappingInfoString(mapping, m_core)));
             m_logger.LogInformation(info.ToString());
 
             // Build species proportion accounting
             foreach (int iGroup in m_configuration.FishedGroups)
-                m_groupSpeciesProportions[iGroup] = GroupSpeciesProportionsFactory.Create(m_core, iGroup, m_configuration.Mappings(KeyDomain.Species));
+                m_groupSpeciesProportions[iGroup] = GroupSpeciesProportionsFactory.Create(m_core, iGroup, m_configurationService.Mappings(KeyDomain.Species));
 
             // Configure Ecospace
             cEcospaceDataStructures ds = m_core.EcospaceDataStructures;
@@ -351,6 +344,7 @@ namespace Ecopath.EwE
             // Timeout hit: force kill
             OnRunStateChanged -= Handler;
             ForceStop();
+            m_configuration = null; // Delete configuration
             return false;
         }
 
@@ -413,9 +407,9 @@ namespace Ecopath.EwE
                     break;
             }
             if (item == null)
-                return string.Format("INVALID {0} => {1}", mapping.Index, base.ToString());
+                return string.Format("INVALID {0} => {1}", mapping.Index, mapping.ToString());
 
-            return string.Format("EwE index {0}:\"{1}\" @{2} => {3}", mapping.Index, item.Name, mapping.Proportion, base.ToString());
+            return string.Format("EwE index {0}:\"{1}\" @{2} => {3}", mapping.Index, item.Name, mapping.Proportion, mapping.ToString());
         }
 
         private void Clear()
@@ -437,10 +431,10 @@ namespace Ecopath.EwE
             foreach (var price in m_pricesIn)
             {
                 float pr = (float)price.Price;
-                foreach (var marketinfo in  m_configuration.ResolveMarkets(price.GearCode, price.MarketCode))
+                foreach (var marketinfo in  m_configurationService.ResolveMarkets(price.GearCode, price.MarketCode))
                 {
                     int iFleet = marketinfo.EwEMapping.Index;
-                    foreach (var groupinfo in m_configuration.ResolveGroups(price.SpeciesCode))
+                    foreach (var groupinfo in m_configurationService.ResolveGroups(price.SpeciesCode))
                     {
                         int iGroup = groupinfo.EwEMapping.Index;
 
@@ -477,10 +471,10 @@ namespace Ecopath.EwE
                 // Try to parse species code in grid
                 MultiLevelKey key = m_multiLevelKeyFactory.FromObject(grid.Species, KeyDomain.Species, m_keyFieldDescriptorRegistry);
                 // Resolve mapping key for grid fleet segment
-                foreach (var fleetinfo in m_configuration.ResolveFleets(grid.FleetSegment))
+                foreach (var fleetinfo in m_configurationService.ResolveFleets(grid.FleetSegment))
                 {
                     int iFleet = fleetinfo.EwEMapping.Index;
-                    foreach (var groupinfo in m_configuration.ResolveGroups(key))
+                    foreach (var groupinfo in m_configurationService.ResolveGroups(key))
                     {
                         int iGroup = groupinfo.EwEMapping.Index;
                         // Validate group and fleet codes
@@ -494,40 +488,43 @@ namespace Ecopath.EwE
                                 int ir = (int)Math.Floor(bm.LatToRow((float)cell.Latitude));
                                 int ic = (int)Math.Floor(bm.LonToCol((float)cell.Longitude));
 
-                                if (1 <= ir & ir <= ds.InRow & 1 <= ic & ic <= ds.InCol)
+                                if (1 <= ir && ir <= ds.InRow && 1 <= ic && ic <= ds.InCol)
+                                {
                                     if (ds.Depth[ir, ic] > 0)
                                     {
                                         // Stop this Ecospace fleet from fishing in this cell - should in fact not fish anywhere anymore for this time step!
                                         ds.EffortSpace[iFleet, ir, ic] = 0;
                                         ds.PAreaFished[iFleet][ir, ic] = 0;
 
-                                        float @catch = KgToDensity(cell.GrossCatchBiomass - cell.LiveDiscardsBiomass, ir, ic) * scalar;
+                                        float catchAmount = KgToDensity(cell.GrossCatchBiomass - cell.LiveDiscardsBiomass, ir, ic) * scalar;
                                         float deaddisc = KgToDensity(cell.DeadDiscardsBiomass, ir, ic) * scalar;
                                         float available = ds.Bcell[ir, ic, iGroup];
 
-                                        Debug.Assert(@catch >= 0, "Cannot fish negatively. Would be nice, but sorry, no.");
+                                        Debug.Assert(catchAmount >= 0, "Cannot fish negatively. Would be nice, but sorry, no.");
                                         Debug.Assert(ds.Depth[ir, ic] > 0, "Not a modelled cell?!");
 
-                                        if (@catch > available)
+                                        if (catchAmount > available)
                                         {
                                             // WHoah!! External fishing is catching more than is available in this cell
                                             throw new Exception(string.Format("EwE controller cannot integrate Catch Disposition {0} kg ({1} t/km2), into cell {2}x{3} ({4}x{5}), only {6} t/km2 available in Ecospace",
-                                                (cell.GrossCatchBiomass - cell.LiveDiscardsBiomass), @catch, cell.Longitude, cell.Latitude, ic, ir, available));
+                                                (cell.GrossCatchBiomass - cell.LiveDiscardsBiomass), catchAmount, cell.Longitude, cell.Latitude, ic, ir, available));
                                         }
 
                                         // Leave some tiny biomass in the cell; fisheries cannot catch it all (and Ecospace does not like divisions by zero)
-                                        @catch = (float)Math.Max(1E-10, available - @catch);
+                                        float remaining = (float)Math.Max(1E-10f, available - catchAmount);
+                                        catchAmount = available - remaining;    // clamp against 1E-10 floor
 
-                                        m_groupSpeciesProportions[iGroup].ApplyFishingMortality(ir, ic, groupinfo.EwEMapping, @catch, (double)ds.Bcell[ir, ic, iGroup]);
+                                        m_groupSpeciesProportions[iGroup].ApplyFishingMortality(ir, ic, groupinfo.EwEMapping, catchAmount, (double)ds.Bcell[ir, ic, iGroup]);
 
-                                        ds.Bcell[ir, ic, iGroup] -= @catch;
+                                        ds.Bcell[ir, ic, iGroup] = remaining;
 
-                                        ds.CatchMap[ir, ic, iGroup] += @catch;
-                                        ds.CatchFleetMap[ir, ic, iFleet] += @catch;
-                                        ds.Landings[iFleet, iGroup] += @catch;
+                                        ds.CatchMap[ir, ic, iGroup] += catchAmount;
+                                        ds.CatchFleetMap[ir, ic, iFleet] += catchAmount;
+                                        ds.Landings[iFleet, iGroup] += catchAmount;
                                         ds.DiscardsMap[ir, ic, iFleet] += deaddisc;
-                                        ds.ResultsByFleetGroup[(int)eSpaceResultsFleetsGroups.CatchBio, iFleet, iGroup, iTime] += @catch;
+                                        ds.ResultsByFleetGroup[(int)eSpaceResultsFleetsGroups.CatchBio, iFleet, iGroup, iTime] += catchAmount;
                                     }
+                                }
                             }
                         }
                     }
@@ -555,7 +552,7 @@ namespace Ecopath.EwE
                 cEcospaceDataStructures ds = m_core.EcospaceDataStructures;
                 cEcospaceBasemap bm = m_core.EcospaceBasemap;
 
-                foreach (EwEMapping key in m_configuration.Mappings(KeyDomain.Species))
+                foreach (EwEMapping key in m_configurationService.Mappings(KeyDomain.Species))
                 {
                     Species? species = key.ToObject<SURIMI.Datamodel.Species>(m_configuration.IncludeVocabularies);
                     if (species != null)
@@ -612,11 +609,10 @@ namespace Ecopath.EwE
 
             // Tally absolute sales over all catch dispositions
             Dictionary<(int Group, int Fleet), (double Volume, double Value)> TotalSales = new();
-            HashSet<int> markets = new();
 
             foreach (int iGroup in m_configuration.FishedGroups)
             {
-                EwEMapping? mlkGroup = m_configuration.Find(iGroup, KeyDomain.Species);
+                EwEMapping? mlkGroup = m_configurationService.Find(iGroup, KeyDomain.Species);
                 if (mlkGroup == null)
                     continue;
 
@@ -625,11 +621,11 @@ namespace Ecopath.EwE
                 for (int iFleet = 1; iFleet <= m_core.nFleets; iFleet++)
                 {
                     // Only report fleets fished by EwE
-                    if (!m_configuration.IsExternalFleet(iFleet))
+                    if (!m_configuration.ExternalFleets.Contains(iFleet))
                     {
                         // Tally up the catch dispositions for all the markets this gear code caters to
-                        MultiLevelKey? mlkFleet = m_configuration.Find(iFleet, KeyDomain.FleetSegment);
-                        MultiLevelKey? mlkMarket = m_configuration.Find(iFleet, KeyDomain.Market);
+                        MultiLevelKey? mlkFleet = m_configurationService.Find(iFleet, KeyDomain.FleetSegment);
+                        MultiLevelKey? mlkMarket = m_configurationService.Find(iFleet, KeyDomain.Market);
 
                         double[,] catches = new double[spaceds.InRow + 1, spaceds.InCol + 1];
                         double[,] deaddisc = new double[spaceds.InRow + 1, spaceds.InCol + 1];
@@ -647,7 +643,7 @@ namespace Ecopath.EwE
                                         double cellDeadDiscAbs = DensityToKg(spaceds.DiscardMortGroupFleetMap[iFleet, iGroup][ir, ic], ir, ic) * sppProp * spaceds.TimeStep;
 
                                         // Tally sales. I'm sure this can be done more elegantly but hey
-                                        (int Group, int Fleet) salekey = new();
+                                        (int Group, int Fleet) salekey = (iGroup, iFleet);
                                         (double Volume, double Value) saleTot = new(0, 0);
                                         if (TotalSales.ContainsKey(salekey))
                                             saleTot = TotalSales[salekey];
@@ -655,6 +651,7 @@ namespace Ecopath.EwE
                                             TotalSales[salekey] = saleTot;
                                         saleTot.Volume += (cellCatchesAbs - cellDeadDiscAbs);
                                         saleTot.Value += (cellCatchesAbs - cellDeadDiscAbs) * ecopathds.Market[iFleet, iGroup];
+                                        TotalSales[salekey] = saleTot;
 
                                         // Prepare catch deposition. Note that EwE catches do NOT include live discards
                                         // ToDo_JS: Decide on the below. What is the framework expecting? 
@@ -702,10 +699,10 @@ namespace Ecopath.EwE
             for (int iFleet = 1; iFleet <= m_core.nFleets; iFleet++)
             {
                 // Only report fleets fished by EwE
-                if (!m_configuration.IsExternalFleet(iFleet))
+                if (!m_configuration.ExternalFleets.Contains(iFleet))
                 {
-                    MultiLevelKey? mlkFleet = m_configuration.Find(iFleet, KeyDomain.FleetSegment);
-                    MultiLevelKey? mlkMarket = m_configuration.Find(iFleet, KeyDomain.Market);
+                    MultiLevelKey? mlkFleet = m_configurationService.Find(iFleet, KeyDomain.FleetSegment);
+                    MultiLevelKey? mlkMarket = m_configurationService.Find(iFleet, KeyDomain.Market);
 
                     if (mlkFleet == null || mlkMarket == null)
                         continue;
@@ -718,7 +715,7 @@ namespace Ecopath.EwE
                     };
                     foreach ((int Group, int Fleet) saleKey in TotalSales.Keys.Where(k => k.Fleet == iFleet))
                     {
-                        MultiLevelKey? mlkSpecies = m_configuration.Find(saleKey.Group, KeyDomain.Species);
+                        MultiLevelKey? mlkSpecies = m_configurationService.Find(saleKey.Group, KeyDomain.Species);
                         if (mlkSpecies == null)
                             continue;
 
@@ -898,6 +895,8 @@ namespace Ecopath.EwE
 
         private bool MustPauseNext(int iTime)
         {
+            if(m_configuration == null) throw new InvalidOperationException("Configuration is not set.");
+
             // Do not halt while in spin-up
             cEcospaceDataStructures ds = m_core.EcospaceDataStructures;
             if (m_iSpinUpStep + 1 < m_nSpinUpSteps) return false;

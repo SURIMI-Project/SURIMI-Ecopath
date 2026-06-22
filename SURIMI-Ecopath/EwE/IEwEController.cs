@@ -6,7 +6,7 @@ namespace Ecopath.EwE
     {
         EwEController.RunStates RunState { get; }
         bool IsWaiting { get; }
-        Task<int> StartAsync(SurimiConfiguration surimiConfiguration, string scenarioName, int timeoutMs = 60000);
+        Task<int> StartAsync(SurimiContract surimiContract, string scenarioName, int timeoutMs = 60000);
         Task<bool> ContinueAsync(int timeoutMs = 60000);
         Task<bool> StopAsync(int timeoutMs = 10000);
         Task<bool> UpdatePricesAsync(List<SpeciesPrice> speciesPrices);

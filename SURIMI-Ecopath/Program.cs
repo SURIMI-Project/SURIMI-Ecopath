@@ -55,7 +55,7 @@ public class Program
                     Environment.GetEnvironmentVariable("AWS_S3_ENDPOINT"),
                     Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID"),
                     Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY"),
-                    Environment.GetEnvironmentVariable("AWS_BUCKET_NAME"), inputBasePrefix: "surimi-ecopath/config", outputBasePrefix: "surimi-ecopath", localInputRoot: "Includes", localOutputRoot: "Output");
+                    Environment.GetEnvironmentVariable("AWS_BUCKET_NAME"), inputBasePrefix: "surimi-ecopath", outputBasePrefix: "surimi-ecopath", localInputRoot: "Includes", localOutputRoot: "Output");
             }
 
             // Default local Filesystem
@@ -76,7 +76,7 @@ public class Program
 
         builder.Services.AddSingleton<CheckSimulationService>();
         builder.Services.AddSingleton<IEwECore, EwE.Wrapper.EwECore>();
-        builder.Services.AddSingleton<IEwEConfiguration, EwEConfiguration>();
+//        builder.Services.AddSingleton<IEwEConfiguration, EwEConfiguration>();
         builder.Services.AddSingleton<IEwEController, EwEController>();
         builder.Services.AddSingleton<ASFISSpeciesCodeVocabulary>();
         builder.Services.AddSingleton<ISSCFGGearCodeVocabulary>();
@@ -89,6 +89,7 @@ public class Program
         builder.Services.AddSingleton<IKeyFieldDescriptorIndexer, KeyFieldDescriptorIndexer>();
         builder.Services.AddSingleton<IMultiLevelKeyFactory, MultiLevelKeyFactory>();
         builder.Services.AddSingleton<ProtocolVersionService>();
+        builder.Services.AddSingleton<IEwEConfigurationService, EwEConfigurationService>();
 
         var app = builder.Build();
 
