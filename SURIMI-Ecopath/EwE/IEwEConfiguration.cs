@@ -1,33 +1,26 @@
-﻿using Ecopath.EwE.Wrapper;
-using Ecopath.Generic;
-using Eii.ControlledVocabularies.Core;
-using Eii.ControlledVocabularies.Common;
-using SURIMI.Datamodel;
-
-namespace Ecopath.EwE
+﻿namespace Ecopath.EwE
 {
-    public interface IEwEConfiguration : IMEMConfiguration
+    public interface IEwEConfiguration
     {
+        string ModelName { get; }
+        string LocalModelFile { get; }
         int EcosimScenario { get; set; }
         int EcosimTimeSeries { get; set; }
         int MaxRunYears { get; set; }
         int EcospaceScenario { get; set; }
-        int[] FishedGroups { get; }
         int SpinupYears { get; set; }
         bool IncludeVocabularies { get; set; }
         int StartYear { get; set; }
-
-        IEnumerable<EwEMapping> Mappings(KeyDomain domain);
-        bool Load(IEwECore core, SurimiConfiguration surimiConfiguration);
-        IEnumerable<EwEMappingMatch> ResolveMarkets(string gearcode, string marketcode);
-        IEnumerable<EwEMappingMatch> ResolveGroups(string speciescode);
-        IEnumerable<EwEMappingMatch> ResolveGroups(MultiLevelKey key);
-        IEnumerable<EwEMappingMatch> ResolveGroups(SURIMI.Datamodel.Species species);
-        IEnumerable<EwEMappingMatch> ResolveFleets(SURIMI.Datamodel.FleetSegment fleetsegment);
-        EwEMapping? Find(int iIndex, KeyDomain domain);
-        bool IsExternalFleet(int iFleet);
-
         string OutputPath { get; set; }
         bool WriteOutput { get; set; }
+        
+        /// <summary>
+        /// All fished groups in the Ecopath model.
+        /// </summary>
+        public List<int> FishedGroups { get; }
+        /// <summary>
+        /// Indicates whether fishing by a given gear fleet is managed outside the EwE software.
+        /// </summary>
+        public List<int> ExternalFleets { get; }
     }
 }
