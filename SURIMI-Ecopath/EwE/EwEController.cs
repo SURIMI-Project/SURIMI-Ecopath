@@ -590,7 +590,7 @@ namespace Ecopath.EwE
         /// Prepare a snapshot of catch data for export. Only include internal gears, e.g., of catches produced by EwE.
         /// </summary>
         private void CacheCatchAndSalesData()
-        {
+        { 
             if (m_catchOut == null)
                 m_catchOut = new();
             else
@@ -612,7 +612,7 @@ namespace Ecopath.EwE
 
             foreach (int iGroup in m_configuration.FishedGroups)
             {
-                EwEMapping? mlkGroup = m_configurationService.Find(iGroup, KeyDomain.Species);
+                EwEMapping? mlkGroup = m_configurationService.FindMapping(iGroup, KeyDomain.Species);
                 if (mlkGroup == null)
                     continue;
 
@@ -624,8 +624,8 @@ namespace Ecopath.EwE
                     if (!m_configuration.ExternalFleets.Contains(iFleet))
                     {
                         // Tally up the catch dispositions for all the markets this gear code caters to
-                        MultiLevelKey? mlkFleet = m_configurationService.Find(iFleet, KeyDomain.FleetSegment);
-                        MultiLevelKey? mlkMarket = m_configurationService.Find(iFleet, KeyDomain.Market);
+                        MultiLevelKey? mlkFleet = m_configurationService.FindMapping(iFleet, KeyDomain.FleetSegment);
+                        MultiLevelKey? mlkMarket = m_configurationService.FindMapping(iFleet, KeyDomain.Market);
 
                         double[,] catches = new double[spaceds.InRow + 1, spaceds.InCol + 1];
                         double[,] deaddisc = new double[spaceds.InRow + 1, spaceds.InCol + 1];
@@ -701,21 +701,21 @@ namespace Ecopath.EwE
                 // Only report fleets fished by EwE
                 if (!m_configuration.ExternalFleets.Contains(iFleet))
                 {
-                    MultiLevelKey? mlkFleet = m_configurationService.Find(iFleet, KeyDomain.FleetSegment);
-                    MultiLevelKey? mlkMarket = m_configurationService.Find(iFleet, KeyDomain.Market);
+                    MultiLevelKey? mlkFleet = m_configurationService.FindMapping(iFleet, KeyDomain.FleetSegment);
+                    MultiLevelKey? mlkMarket = m_configurationService.FindMapping(iFleet, KeyDomain.Market);
 
                     if (mlkFleet == null || mlkMarket == null)
                         continue;
 
                     var sales = new SalesSummary()
                     {
-                        MarketCode = mlkMarket!.GetField("marketcode")!.ToString(m_configuration.IncludeVocabularies),
+                        MarketCode = mlkMarket.GetField("marketcode").ToString(m_configuration.IncludeVocabularies),
                         Currency = "EUR", // No conversion here
                         Sales = new List<Sale>()
                     };
                     foreach ((int Group, int Fleet) saleKey in TotalSales.Keys.Where(k => k.Fleet == iFleet))
                     {
-                        MultiLevelKey? mlkSpecies = m_configurationService.Find(saleKey.Group, KeyDomain.Species);
+                        MultiLevelKey? mlkSpecies = m_configurationService.FindMapping(saleKey.Group, KeyDomain.Species);
                         if (mlkSpecies == null)
                             continue;
 
