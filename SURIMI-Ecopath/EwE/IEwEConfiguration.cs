@@ -13,13 +13,14 @@
         int StartYear { get; set; }
         string OutputPath { get; set; }
         bool WriteOutput { get; set; }
-        
+
         /// <summary>
-        /// All fished groups in the Ecopath model.
+        /// A list if indexes of groups that are fished (IsFished == false) in cCore.
         /// </summary>
         public List<int> FishedGroups { get; }
+
         /// <summary>
-        /// Indicates whether fishing by a given gear fleet is managed outside the EwE software.
+        /// A list of indexes of fleets (in cCore. 1 based) that are not handled by Ecopath.
         /// </summary>
         public List<int> ExternalFleets { get; }
     }
