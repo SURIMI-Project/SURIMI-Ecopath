@@ -1,4 +1,5 @@
-﻿using Ecopath.EwE.Wrapper;
+﻿using Ecopath.EwE;
+using Ecopath.EwE.Wrapper;
 using Eii.BlobStore;
 using Eii.ControlledVocabularies.Common;
 using Eii.ControlledVocabularies.Context;
@@ -16,7 +17,7 @@ using EwECore;
 using EwECore.Auxiliary;
 using SURIMI.Datamodel;
 
-namespace Ecopath.EwE
+namespace Ecopath.Services
 {
 
     public partial class EwEConfigurationService : IEwEConfigurationService
@@ -149,13 +150,12 @@ namespace Ecopath.EwE
             m_mappings.Add(new EwEMapping("gearcode=PS; countrycode=ESP", KeyDomain.FleetSegment, 2, m_keyFieldDescriptorRegistry));
             m_mappings.Add(new EwEMapping("gearcode=LLS; countrycode=ESP", KeyDomain.FleetSegment, 3, m_keyFieldDescriptorRegistry));
             m_mappings.Add(new EwEMapping("gearcode=EwE:ART; countrycode=ESP", KeyDomain.FleetSegment, 4, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; countrycode=ESP", KeyDomain.FleetSegment, 5, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; countrycode=ESP", KeyDomain.FleetSegment, 9, m_keyFieldDescriptorRegistry));
 
-            m_mappings.Add(new EwEMapping("gearcode=OTB; countrycode=FRA", KeyDomain.FleetSegment, 6, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=TM; countrycode=FRA", KeyDomain.FleetSegment, 7, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=PS; countrycode=FRA", KeyDomain.FleetSegment, 8, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:ART; countrycode=FRA", KeyDomain.FleetSegment, 9, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; countrycode=FRA", KeyDomain.FleetSegment, 10, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=OTB; countrycode=FRA", KeyDomain.FleetSegment, 5, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=TM; countrycode=FRA", KeyDomain.FleetSegment, 6, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=PS; countrycode=FRA", KeyDomain.FleetSegment, 7, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:ART; countrycode=FRA", KeyDomain.FleetSegment, 8, m_keyFieldDescriptorRegistry));
 
             // Register fleet segments as gear + market code pairs to match fleet > market deliveries
             m_mappings.Add(new EwEMapping("gearcode=OTB; marketcode=ESALC", KeyDomain.Market, 1, m_keyFieldDescriptorRegistry));
@@ -168,7 +168,6 @@ namespace Ecopath.EwE
             m_mappings.Add(new EwEMapping("gearcode=TM; marketcode=ESBRX", KeyDomain.Market, 7, m_keyFieldDescriptorRegistry));
             m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=ESBRX", KeyDomain.Market, 8, m_keyFieldDescriptorRegistry));
             m_mappings.Add(new EwEMapping("gearcode=EwE:ART; marketcode=ESBRX", KeyDomain.Market, 9, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; marketcode=ESBRX", KeyDomain.Market, 10, m_keyFieldDescriptorRegistry));
 
             for (int iGroup = 1; iGroup <= core.nGroups; iGroup++)
                 if (core.get_EcopathGroupInputs(iGroup).IsFished)
@@ -238,7 +237,8 @@ namespace Ecopath.EwE
                 yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
         }
 
-        public EwEMapping? Find(int iIndex, KeyDomain domain)
+        /// <inheritdoc />
+        public EwEMapping? FindMapping(int iIndex, KeyDomain domain)
         {
             return m_mappings.FirstOrDefault(m => m.Index == iIndex && m.Domain == domain);
         }
@@ -247,11 +247,7 @@ namespace Ecopath.EwE
 
         #region Mappings
 
-        /// <summary>
-        /// Get all item mappings for a specific domain
-        /// </summary>
-        /// <param name="domain"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public IEnumerable<EwEMapping> Mappings(KeyDomain domain)
         {
             foreach (var kvp in m_mappings.Where(n => n.Domain == domain))
