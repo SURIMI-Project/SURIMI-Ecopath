@@ -1,4 +1,5 @@
 ﻿using Ecopath.EwE.Wrapper;
+using Ecopath.Services;
 using Eii.ControlledVocabularies.Common;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
@@ -73,6 +74,8 @@ namespace Ecopath.EwE
         // --- Internal tracking
         private int m_nSpinUpSteps = 0;
         private int m_iSpinUpStep = 0;
+
+        private double m_minimumSaleQuantity = 1.0; // Minimum sale quantity in kg to be reported to the market. 
 
         /// <summary>
         /// To track species group proportions affected by external fishing
@@ -590,7 +593,7 @@ namespace Ecopath.EwE
         /// Prepare a snapshot of catch data for export. Only include internal gears, e.g., of catches produced by EwE.
         /// </summary>
         private void CacheCatchAndSalesData()
-        {
+        { 
             if (m_catchOut == null)
                 m_catchOut = new();
             else
@@ -612,7 +615,7 @@ namespace Ecopath.EwE
 
             foreach (int iGroup in m_configuration.FishedGroups)
             {
-                EwEMapping? mlkGroup = m_configurationService.Find(iGroup, KeyDomain.Species);
+                EwEMapping? mlkGroup = m_configurationService.FindMapping(iGroup, KeyDomain.Species);
                 if (mlkGroup == null)
                     continue;
 
@@ -624,8 +627,8 @@ namespace Ecopath.EwE
                     if (!m_configuration.ExternalFleets.Contains(iFleet))
                     {
                         // Tally up the catch dispositions for all the markets this gear code caters to
-                        MultiLevelKey? mlkFleet = m_configurationService.Find(iFleet, KeyDomain.FleetSegment);
-                        MultiLevelKey? mlkMarket = m_configurationService.Find(iFleet, KeyDomain.Market);
+                        MultiLevelKey? mlkFleet = m_configurationService.FindMapping(iFleet, KeyDomain.FleetSegment);
+                        MultiLevelKey? mlkMarket = m_configurationService.FindMapping(iFleet, KeyDomain.Market);
 
                         double[,] catches = new double[spaceds.InRow + 1, spaceds.InCol + 1];
                         double[,] deaddisc = new double[spaceds.InRow + 1, spaceds.InCol + 1];
@@ -701,34 +704,42 @@ namespace Ecopath.EwE
                 // Only report fleets fished by EwE
                 if (!m_configuration.ExternalFleets.Contains(iFleet))
                 {
-                    MultiLevelKey? mlkFleet = m_configurationService.Find(iFleet, KeyDomain.FleetSegment);
-                    MultiLevelKey? mlkMarket = m_configurationService.Find(iFleet, KeyDomain.Market);
+                    MultiLevelKey? mlkFleet = m_configurationService.FindMapping(iFleet, KeyDomain.FleetSegment);
+                    MultiLevelKey? mlkMarket = m_configurationService.FindMapping(iFleet, KeyDomain.Market);
 
                     if (mlkFleet == null || mlkMarket == null)
                         continue;
 
                     var sales = new SalesSummary()
                     {
-                        MarketCode = mlkMarket!.GetField("marketcode")!.ToString(m_configuration.IncludeVocabularies),
+                        MarketCode = mlkMarket.GetField("marketcode").ToString(m_configuration.IncludeVocabularies),
                         Currency = "EUR", // No conversion here
                         Sales = new List<Sale>()
                     };
                     foreach ((int Group, int Fleet) saleKey in TotalSales.Keys.Where(k => k.Fleet == iFleet))
                     {
-                        MultiLevelKey? mlkSpecies = m_configurationService.Find(saleKey.Group, KeyDomain.Species);
+                        MultiLevelKey? mlkSpecies = m_configurationService.FindMapping(saleKey.Group, KeyDomain.Species);
                         if (mlkSpecies == null)
                             continue;
 
                         if (TotalSales.TryGetValue(saleKey, out var saleTot))
                         {
-                            Sale s = new Sale()
+                            // Only report sales with a volume of at least the minimum sale quantity
+                            if (saleTot.Volume >= m_minimumSaleQuantity)
                             {
-                                GearCode = mlkFleet.GetField(FishingFields.GearCode)!.ToString(m_configuration.IncludeVocabularies),
-                                SpeciesCode = mlkSpecies.GetField(SpeciesFields.SpeciesCode)!.ToString(m_configuration.IncludeVocabularies),
-                                Quantity = saleTot.Volume,
-                                Value = saleTot.Value
-                            };
-                            sales.Sales.Add(s);
+                                Sale s = new Sale()
+                                {
+                                    GearCode = mlkFleet.GetField(FishingFields.GearCode)!.ToString(m_configuration.IncludeVocabularies),
+                                    SpeciesCode = mlkSpecies.GetField(SpeciesFields.SpeciesCode)!.ToString(m_configuration.IncludeVocabularies),
+                                    Quantity = saleTot.Volume,
+                                    Value = saleTot.Value
+                                };
+                                sales.Sales.Add(s);
+                            }
+                            else
+                            {
+                                m_logger.LogWarning("Total sale volume for species {SpeciesCode} in fleet {Fleet} less than {MinimumSaleQuantity} kg. It is {Volume} kgso the sale is not sent. ", mlkSpecies.GetField(SpeciesFields.SpeciesCode)!.ToString(m_configuration.IncludeVocabularies), iFleet, m_minimumSaleQuantity, saleTot.Volume);
+                            }
                         }
                     }
                     m_salesOut.Add(sales);

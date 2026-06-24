@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 using Eii.BlobStore;
+using Ecopath.Services;
 
 namespace Ecopath.Tests.EwE
 {
