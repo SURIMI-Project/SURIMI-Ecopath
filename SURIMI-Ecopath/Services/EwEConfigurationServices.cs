@@ -42,6 +42,7 @@ namespace Ecopath.Services
         private readonly IMultiLevelKeyFactory m_multiLevelKeyFactory;
         private readonly ILogger<EwEConfiguration> m_logger;
         private readonly IBlobStore m_blobStore;
+        private readonly ISurimiContractToEwEService m_surimiContractToEwEService;
 
         private class EwEMappingComparer : IComparer<EwEMapping>
         {
@@ -60,7 +61,7 @@ namespace Ecopath.Services
             }
         }
 
-        public EwEConfigurationService(ASFISSpeciesCodeVocabulary asfisVocabulary, ISSCFGGearCodeVocabulary iSSCFGGearCodeVocabulary, ISO3166CountryCodeVocabulary iSO3166CountryCodeVocabulary, SURIMILifestageVocabulary sURIMILifestageVocabulary, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory, ILogger<EwEConfiguration> logger, IVocabularyRegistry vocabularies, IBlobStore blobStore)
+        public EwEConfigurationService(ASFISSpeciesCodeVocabulary asfisVocabulary, ISSCFGGearCodeVocabulary iSSCFGGearCodeVocabulary, ISO3166CountryCodeVocabulary iSO3166CountryCodeVocabulary, SURIMILifestageVocabulary sURIMILifestageVocabulary, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory, ILogger<EwEConfiguration> logger, IVocabularyRegistry vocabularies, IBlobStore blobStore, ISurimiContractToEwEService surimiContractToEwEService)
         {
             m_asfisVocabulary = asfisVocabulary;
             m_iSSCFGGearCodeVocabulary = iSSCFGGearCodeVocabulary;
@@ -71,6 +72,7 @@ namespace Ecopath.Services
             m_logger = logger;
             m_vocabularies = vocabularies;
             m_blobStore = blobStore;
+            m_surimiContractToEwEService = surimiContractToEwEService;
         }
 
         public async Task<IEwEConfiguration> CreateConfigurationAsync(string scenarioName)
@@ -139,23 +141,28 @@ namespace Ecopath.Services
 
         #region Persistence
 
-        public bool Load(IEwECore core, IEwEConfiguration configuration, SurimiContract surimiContract)
+        public async Task<bool> LoadAsync(IEwECore core, IEwEConfiguration configuration, SurimiContract surimiContract)
         {
             m_mappings.Clear();
 
             string cfgtext = GetConfigBucket(core).Remark;
 
-            // Register fleet segments as gear + countrycode pairs to match fleet + countrycode fishing
-            m_mappings.Add(new EwEMapping("gearcode=OTB; countrycode=ESP", KeyDomain.FleetSegment, 1, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=PS; countrycode=ESP", KeyDomain.FleetSegment, 2, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=LLS; countrycode=ESP", KeyDomain.FleetSegment, 3, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:ART; countrycode=ESP", KeyDomain.FleetSegment, 4, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; countrycode=ESP", KeyDomain.FleetSegment, 9, m_keyFieldDescriptorRegistry));
+            // Load fleet segment mappings from the semantics file
+            await m_surimiContractToEwEService.ConvertSurimiContractToEwEAsync(m_mappings, core, surimiContract);
 
-            m_mappings.Add(new EwEMapping("gearcode=OTB; countrycode=FRA", KeyDomain.FleetSegment, 5, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=TM; countrycode=FRA", KeyDomain.FleetSegment, 6, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=PS; countrycode=FRA", KeyDomain.FleetSegment, 7, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:ART; countrycode=FRA", KeyDomain.FleetSegment, 8, m_keyFieldDescriptorRegistry));
+
+            // Register fleet segments as gear + countrycode pairs to match fleet + countrycode fishing
+            //m_mappings.Add(new EwEMapping("gearcode=OTB; countrycode=ESP", KeyDomain.FleetSegment, 1, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=PS; countrycode=ESP", KeyDomain.FleetSegment, 2, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=LLS; countrycode=ESP", KeyDomain.FleetSegment, 3, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=EwE:ART; countrycode=ESP", KeyDomain.FleetSegment, 4, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; countrycode=ESP", KeyDomain.FleetSegment, 9, m_keyFieldDescriptorRegistry));
+
+            //m_mappings.Add(new EwEMapping("gearcode=OTB; countrycode=FRA", KeyDomain.FleetSegment, 5, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=TM; countrycode=FRA", KeyDomain.FleetSegment, 6, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=PS; countrycode=FRA", KeyDomain.FleetSegment, 7, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=EwE:ART; countrycode=FRA", KeyDomain.FleetSegment, 8, m_keyFieldDescriptorRegistry));
+
 
             // Register fleet segments as gear + market code pairs to match fleet > market deliveries
             m_mappings.Add(new EwEMapping("gearcode=OTB; marketcode=ESALC", KeyDomain.Market, 1, m_keyFieldDescriptorRegistry));

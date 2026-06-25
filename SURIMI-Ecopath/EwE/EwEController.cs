@@ -212,7 +212,7 @@ namespace Ecopath.EwE
             m_logger.LogInformation("EwE - Ecospace scenario {0} loaded", m_configuration.EcospaceScenario);
 
             // Now load the configuration
-            m_configurationService.Load(m_core, m_configuration, surimiContract);
+            await m_configurationService.LoadAsync(m_core, m_configuration, surimiContract);
 
             StringBuilder info = new();
             info.AppendLine("EwE FG - species mappings:");
