@@ -415,15 +415,9 @@ namespace Ecopath.EwE
             return string.Format("EwE index {0}:\"{1}\" @{2} => {3}", mapping.Index, item.Name, mapping.Proportion, mapping.ToString());
         }
 
-        private void Clear()
-        {
-            m_pricesIn = null;
-            m_catchIn = null;
-
-            m_catchOut = null;
-            m_biomassOut = null;
-        }
-
+        /// <summary>
+        /// This method integrates the prices received from the Market model into the EwE model. It maps to a Market price per fleet and group.
+        /// </summary>
         private void IntegratePrices()
         {
             if (m_pricesIn == null) return;
@@ -735,10 +729,6 @@ namespace Ecopath.EwE
                                     Value = saleTot.Value
                                 };
                                 sales.Sales.Add(s);
-                            }
-                            else
-                            {
-                                m_logger.LogWarning("Total sale volume for species {SpeciesCode} in fleet {Fleet} less than {MinimumSaleQuantity} kg. It is {Volume} kgso the sale is not sent. ", mlkSpecies.GetField(SpeciesFields.SpeciesCode)!.ToString(m_configuration.IncludeVocabularies), iFleet, m_minimumSaleQuantity, saleTot.Volume);
                             }
                         }
                     }
