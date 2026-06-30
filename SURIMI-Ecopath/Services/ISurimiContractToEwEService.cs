@@ -6,6 +6,6 @@ namespace Ecopath.Services
 {
     public interface ISurimiContractToEwEService
     {
-        Task AddSurimiContractFleetToMappingsAsync(List<EwEMapping> mappings, IEwECore core, SurimiContract surimiContract);
+        Task ConvertSurimiContractToEwEAsync(List<EwEMapping> mappings, IEwECore core, SurimiContract surimiContract);
     }
 }
