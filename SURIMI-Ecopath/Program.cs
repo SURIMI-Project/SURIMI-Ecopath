@@ -74,10 +74,10 @@ public class Program
             options.MaxReceiveMessageSize = 100 * 1024 * 1024; // 100 MB
             options.MaxSendMessageSize = 100 * 1024 * 1024;    // 100 MB
         });
+        builder.Services.AddGrpcReflection();
 
         builder.Services.AddSingleton<CheckSimulationService>();
         builder.Services.AddSingleton<IEwECore, EwE.Wrapper.EwECore>();
-//        builder.Services.AddSingleton<IEwEConfiguration, EwEConfiguration>();
         builder.Services.AddSingleton<IEwEController, EwEController>();
         builder.Services.AddSingleton<ASFISSpeciesCodeVocabulary>();
         builder.Services.AddSingleton<ISSCFGGearCodeVocabulary>();
@@ -100,6 +100,7 @@ public class Program
 
         // Configure the HTTP request pipeline.
         app.MapGrpcService<EcologyService>();
+        app.MapGrpcReflectionService();
 
         app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
 
