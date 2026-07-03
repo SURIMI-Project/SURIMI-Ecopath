@@ -50,6 +50,9 @@
         <None Update="Includes\GSA0607EwENBS.eiixml">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <None Update="Includes\western-med\EwE_SURIMI.semantics">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
     
     <!-- Custom target to copy Includes directory from build output to publish directory. So the csv files from the controlledVocabularies package are also present-->
