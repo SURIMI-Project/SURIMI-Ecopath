@@ -84,12 +84,13 @@ namespace Ecopath.EwE
 
         #endregion // Private vars 
 
-        public EwEController(ILogger<EwEController> logger, IEwEConfigurationService configurationService, IEwECore core, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory)
+        public EwEController(ILogger<EwEController> logger, IEwEConfigurationService configurationService, IEwECore core, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory, IVocabulariesRegisterService vocabulariesRegisterService)
         {
             m_core = core;
             m_keyFieldDescriptorRegistry = keyFieldDescriptorRegistry;
             m_multiLevelKeyFactory = multiLevelKeyFactory;
             m_configurationService = configurationService;
+            vocabulariesRegisterService.RegisterVocabularies();
 
             RunState = RunStates.idle;
 
@@ -428,7 +429,7 @@ namespace Ecopath.EwE
             foreach (var price in m_pricesIn)
             {
                 float pr = (float)price.Price;
-                foreach (var marketinfo in  m_configurationService.ResolveMarkets(price.GearCode, price.MarketCode))
+                foreach (var marketinfo in  m_configurationService.ResolveMarkets(price.CategoryCode, price.MarketCode))
                 {
                     int iFleet = marketinfo.EwEMapping.Index;
                     foreach (var groupinfo in m_configurationService.ResolveGroups(price.SpeciesCode))
@@ -444,8 +445,8 @@ namespace Ecopath.EwE
                         else
                         {
                             // ToDo_JS: decide how to respond to a potential EwE misconfiguration.
-                            m_logger.LogWarning("EwE - !! Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.MarketCode, price.SpeciesCode);
-                            //throw new Exception("Price record gear '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.GearCode, price.marketCode, price.SpeciesCode);
+                            m_logger.LogWarning("EwE - !! Price record category '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.CategoryCode, price.MarketCode, price.SpeciesCode);
+                            //throw new Exception("Price record category '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.CategoryCode, price.MarketCode, price.SpeciesCode);
                         }
                     }
                 }
@@ -725,6 +726,7 @@ namespace Ecopath.EwE
                                 {
                                     GearCode = mlkFleet.GetField(FishingFields.GearCode)!.ToString(m_configuration.IncludeVocabularies),
                                     SpeciesCode = mlkSpecies.GetField(SpeciesFields.SpeciesCode)!.ToString(m_configuration.IncludeVocabularies),
+                                    CategoryCode = "",
                                     Quantity = saleTot.Volume,
                                     Value = saleTot.Value
                                 };
