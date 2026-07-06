@@ -383,7 +383,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
                 // Note that the market does not distinguish species sizes, ages and lengths, and ignores gear specifics other than gearcode.
                 // Although this is by design but may have to be revisited; the limitations seem like an oversight.
                 SpeciesCode = p.Species.SpeciesCode,
-                GearCode = p.GearCode,
+                CategoryCode = p.CategoryCode,
                 Price = p.Price,
                 Currency = p.Currency,
                 MarketCode = p.MarketCode,

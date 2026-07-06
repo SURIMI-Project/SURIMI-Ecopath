@@ -69,7 +69,7 @@ namespace Ecopath.Tests.EwE
             {
                 SpeciesCode = "SPC",
                 MarketCode = "MKT",
-                GearCode = "GR",
+                CategoryCode = "",
                 Price = 10,
                 Currency = "EUR",
                 Timestamp = DateTime.UtcNow
