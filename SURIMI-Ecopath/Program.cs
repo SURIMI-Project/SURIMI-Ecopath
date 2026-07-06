@@ -56,7 +56,7 @@ public class Program
                     Environment.GetEnvironmentVariable("AWS_S3_ENDPOINT"),
                     Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID"),
                     Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY"),
-                    Environment.GetEnvironmentVariable("AWS_BUCKET_NAME"), inputBasePrefix: "surimi-ecopath", outputBasePrefix: "surimi-ecopath", localInputRoot: "Includes", localOutputRoot: "Output");
+                    Environment.GetEnvironmentVariable("AWS_BUCKET_NAME"), inputBasePrefix: "ecopath", outputBasePrefix: "ecopath", localInputRoot: "Includes", localOutputRoot: "Output");
             }
 
             // Default local Filesystem
@@ -92,6 +92,7 @@ public class Program
         builder.Services.AddSingleton<ProtocolVersionService>();
         builder.Services.AddSingleton<IEwEConfigurationService, EwEConfigurationService>();
         builder.Services.AddSingleton<ISemanticRegistry, SemanticRegistry>();
+        builder.Services.AddTransient<IVocabulariesRegisterService, VocabulariesRegisterService>();
 
         var app = builder.Build();
 
