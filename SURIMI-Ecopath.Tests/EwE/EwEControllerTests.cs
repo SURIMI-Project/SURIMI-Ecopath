@@ -11,6 +11,7 @@ using Moq;
 using Xunit;
 using Eii.BlobStore;
 using Ecopath.Services;
+using Eii.SemanticRegistry;
 
 namespace Ecopath.Tests.EwE
 {
@@ -22,7 +23,9 @@ namespace Ecopath.Tests.EwE
         private readonly Mock<IPluginManager> _pluginManagerMock = new();
         private readonly Mock<IKeyFieldDescriptorRegistry> _keyFieldDescriptorRegistryMock = new Mock<IKeyFieldDescriptorRegistry>();
         private readonly Mock<IMultiLevelKeyFactory> _multiLevelKeyFactoryMock = new Mock<IMultiLevelKeyFactory>();
+        private readonly Mock<ISemanticRegistry> _semanticRegistryMock = new();
         private readonly Mock<IBlobStore> _blobStoreMock = new();
+        private readonly Mock<IVocabulariesRegisterService> _vocabulariesRegisterServiceMock = new Mock<IVocabulariesRegisterService>();
 
         public EwEControllerTests()
         {
@@ -39,7 +42,7 @@ namespace Ecopath.Tests.EwE
 
 
             // Act
-            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, _keyFieldDescriptorRegistryMock.Object, _multiLevelKeyFactoryMock.Object);
+            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, _keyFieldDescriptorRegistryMock.Object, _multiLevelKeyFactoryMock.Object, _vocabulariesRegisterServiceMock.Object);
 
             // Assert
             controller.RunState.Should().Be(EwEController.RunStates.idle);
@@ -49,7 +52,7 @@ namespace Ecopath.Tests.EwE
         public void IsWaiting_ReturnsTrue_WhenRunStateIsWaiting()
         {
             // Arrange
-            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, _keyFieldDescriptorRegistryMock.Object, _multiLevelKeyFactoryMock.Object);
+            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, _keyFieldDescriptorRegistryMock.Object, _multiLevelKeyFactoryMock.Object, _vocabulariesRegisterServiceMock.Object);
             typeof(EwEController)
                 .GetProperty("RunState")!
                 .SetValue(controller, EwEController.RunStates.waiting);
@@ -62,7 +65,7 @@ namespace Ecopath.Tests.EwE
         public async Task UpdatePricesAsync_SetsPricesIn_ReturnsTrue()
         {
             // Arrange
-            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, _keyFieldDescriptorRegistryMock.Object, _multiLevelKeyFactoryMock.Object);
+            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, _keyFieldDescriptorRegistryMock.Object, _multiLevelKeyFactoryMock.Object, _vocabulariesRegisterServiceMock.Object);
             var prices = new List<SpeciesPrice>
         {
             new SpeciesPrice
@@ -87,7 +90,7 @@ namespace Ecopath.Tests.EwE
         public async Task UpdateCatchDispositionSummaryAsync_SetsCatchIn_ReturnsTrue()
         {
             // Arrange
-            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, _keyFieldDescriptorRegistryMock.Object, _multiLevelKeyFactoryMock.Object);
+            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, _keyFieldDescriptorRegistryMock.Object, _multiLevelKeyFactoryMock.Object, _vocabulariesRegisterServiceMock.Object);
             var summary = new CatchDispositionSummary();
 
             // Act
@@ -101,7 +104,7 @@ namespace Ecopath.Tests.EwE
         public async Task GetBiomassAsync_ReturnsBiomass()
         {
             // Arrange
-            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, _keyFieldDescriptorRegistryMock.Object, _multiLevelKeyFactoryMock.Object);
+            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, _keyFieldDescriptorRegistryMock.Object, _multiLevelKeyFactoryMock.Object, _vocabulariesRegisterServiceMock.Object);
 
             // Act
             var biomass = await controller.GetBiomassAsync();
@@ -115,7 +118,7 @@ namespace Ecopath.Tests.EwE
         public async Task GetSalesSummariesAsync_ReturnsSalesSummaries()
         {
             // Arrange
-            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, _keyFieldDescriptorRegistryMock.Object, _multiLevelKeyFactoryMock.Object);
+            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, _keyFieldDescriptorRegistryMock.Object, _multiLevelKeyFactoryMock.Object, _vocabulariesRegisterServiceMock.Object);
 
             // Act
             var sales = await controller.GetSalesSummariesAsync(DateTime.UtcNow, DateTime.UtcNow);
@@ -128,7 +131,7 @@ namespace Ecopath.Tests.EwE
         public async Task GetCatchDispositionSummaryAsync_ReturnsCatchDispositionSummary()
         {
             // Arrange
-            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, _keyFieldDescriptorRegistryMock.Object, _multiLevelKeyFactoryMock.Object);
+            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, _keyFieldDescriptorRegistryMock.Object, _multiLevelKeyFactoryMock.Object, _vocabulariesRegisterServiceMock.Object);
 
             // Act
             var summary = await controller.GetCatchDispositionSummaryAsync(DateTime.UtcNow, DateTime.UtcNow);
