@@ -72,7 +72,7 @@ namespace Ecopath.Services
 
             // Load model
             var modelName = $"{scenarioName}.eiixml";
-            if (!await m_blobStore.ExistsAsync(modelName, PathType.Input))    //This used to be @"GSA0607EwENBS.eiixml"
+            if (!await m_blobStore.ExistsAsync(modelName, PathType.Input))
                 throw new FileNotFoundException($"EwE model file '{modelName}' cannot be found");
 
             // If connected to a remote blob store, copy the model file locally to the Includes folder
