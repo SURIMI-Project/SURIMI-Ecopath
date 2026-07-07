@@ -359,9 +359,11 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
                         FleetSegment = new FleetSegment()
                         {
                             GearCode = sale.GearCode,
+                            CountryCode = summary.MarketCode == "ES" ? "ESP" : "FRA"    // TODO This is a hack to get the country code for the fleet segment. 
                         },
                         Quantity = sale.Quantity,
                         Value = sale.Value,
+                        CategoryCode = "Fresh - Whole"  // TODO. THis is true for the northwestern_med scenario
                     }));
                 }
 
