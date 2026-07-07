@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
@@ -15,31 +16,31 @@ ENV OTEL_SERVICE_NAME=Ecopath
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Debug
-ARG GITHUB_TOKEN
-ARG BSR_TOKEN
 WORKDIR /src
 
 # Copy NuGet configuration
 COPY ["NuGet.config", "."]
 
-# Add authentication for GitHub Packages using add source with credentials
-RUN if [ ! -z "$GITHUB_TOKEN" ]; then \
+# Add authentication for GitHub Packages using BuildKit secret (pass via: --secret id=GITHUB_TOKEN,env=GITHUB_TOKEN)
+RUN --mount=type=secret,id=GITHUB_TOKEN \
+    if [ -f /run/secrets/GITHUB_TOKEN ]; then \
     dotnet nuget remove source github-Official-EwE || true; \
     dotnet nuget add source https://nuget.pkg.github.com/Official-EwE/index.json \
     --name github-Official-EwE \
     --username github \
-    --password $GITHUB_TOKEN \
+    --password "$(cat /run/secrets/GITHUB_TOKEN)" \
     --store-password-in-clear-text \
     --configfile NuGet.config; \
     fi
 
-# Add authentication for BSR (if token is provided)
-RUN if [ ! -z "$BSR_TOKEN" ]; then \
+# Add authentication for BSR (pass via: --secret id=BSR_TOKEN,env=BSR_TOKEN)
+RUN --mount=type=secret,id=BSR_TOKEN \
+    if [ -f /run/secrets/BSR_TOKEN ]; then \
     dotnet nuget remove source BSR || true; \
     dotnet nuget add source https://buf.build/gen/nuget/index.json \
     --name BSR \
     --username bsr \
-    --password $BSR_TOKEN \
+    --password "$(cat /run/secrets/BSR_TOKEN)" \
     --store-password-in-clear-text \
     --configfile NuGet.config; \
     fi
