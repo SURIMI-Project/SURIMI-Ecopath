@@ -42,7 +42,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
         catch (Exception ex)
         {
             m_checksimulationservice.ReleaseSimulation(request.SimulationId);
-            m_logger.LogInformation("In Initialise. EwE - exception ...{Message}", ex.Message);
+            m_logger.LogError(ex, "In Initialise. EwE - exception ...{Message}", ex.Message);
             throw;
         }
     }
@@ -488,6 +488,12 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
                         MarketCode = c.MarketCode,
                     })
                     .ToList(),
+                Price_Categories = simulation.Items.PriceCategories
+                    .Select(c => new SURIMI.Datamodel.PriceCategory
+                    {
+                        CategoryCode = c.CategoryCode,
+                    })
+                    .ToList()
             }
         };
     }
