@@ -29,10 +29,8 @@ namespace Ecopath.Tests.EwE
 
         public EwEControllerTests()
         {
-            // Setup default behavior for mocks if necessary
-            _coreMock.SetupGet(c => c.PluginManager).Returns(_pluginManagerMock.Object);
-            _pluginManagerMock.Setup(pm => pm.LoadPlugins()).Returns(1); // or whatever value you expect
-            _pluginManagerMock.Setup(pm => pm.GetPlugins(It.IsAny<Type>(), It.IsAny<cPluginAssembly>())).Returns(new List<IPlugin>());
+            // No plugin/bridge setup here — Initialize() is now called in StartAsync, not in the constructor.
+            // Tests that exercise StartAsync should set up _coreMock.Initialize(), PluginManager, LoadPlugins(), and GetPlugins().
         }
 
         [Fact]
@@ -46,6 +44,22 @@ namespace Ecopath.Tests.EwE
 
             // Assert
             controller.RunState.Should().Be(EwEController.RunStates.idle);
+            // Initialize() must NOT be called at construction — cCore is created lazily in StartAsync
+            _coreMock.Verify(c => c.Initialize(), Times.Never);
+        }
+
+        [Fact]
+        public void StopAsync_TeardownsCore_AndReturnsTrue()
+        {
+            // Arrange
+            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, _keyFieldDescriptorRegistryMock.Object, _multiLevelKeyFactoryMock.Object, _vocabulariesRegisterServiceMock.Object);
+
+            // Act
+            var result = controller.StopAsync().Result;
+
+            // Assert
+            result.Should().BeTrue();
+            _coreMock.Verify(c => c.Teardown(), Times.Once);
         }
 
         [Fact]
