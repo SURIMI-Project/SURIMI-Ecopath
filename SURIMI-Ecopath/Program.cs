@@ -76,7 +76,7 @@ public class Program
         });
         builder.Services.AddGrpcReflection();
 
-        builder.Services.AddSingleton<CheckSimulationService>();
+        builder.Services.AddSingleton<ICheckSimulationService, CheckSimulationService>();
         builder.Services.AddSingleton<IEwECore, EwE.Wrapper.EwECore>();
         builder.Services.AddSingleton<IEwEController, EwEController>();
         builder.Services.AddSingleton<ASFISSpeciesCodeVocabulary>();
