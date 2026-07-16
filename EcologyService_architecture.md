@@ -1,77 +1,109 @@
-# EcologyService — Architecture
+# Ecopath — Architecture
 
 ## Overview
 
-`EcologyService` is the gRPC transport layer of **SURIMI-Ecopath**, a .NET 10 microservice that wraps the EwE (Ecopath with Ecosim/Ecospace) marine ecosystem modelling engine. It is one of several ecological-model components in the **SURIMI** (Simulation of Unregulated and Regulated Marine Interactions) Management Strategy Evaluation framework. All communication with other SURIMI components — such as POSEIDON (the fishing-fleet model) and the SURIMI Orchestrator — takes place over **gRPC**, using a shared protocol contract maintained externally in the `SURIMI-protocol` Buf repository.
+**Ecopath** is the ecology model in the **SURIMI** multi-model simulation framework. It wraps the
+[EwE (Ecopath with Ecosim / Ecospace)](https://ecopath.org) engine and exposes its functionality as
+a gRPC service so that the **SURIMI Controller** can orchestrate it alongside other domain models.
+All inter-model communication happens exclusively over gRPC; the Ecopath model never communicates
+directly with other domain models.
+
+The service is written in **C# (.NET 10)** and developed in **Microsoft Visual Studio Professional
+2026**. It is hosted as an ASP.NET Core application and is designed to run in a Linux container.
+
+### Licence
+
+No licence file was found in this repository. Contact the repository owner
+([Official-EwE](https://github.com/Official-EwE)) for licencing information.
 
 ---
 
 ## Responsibilities
 
-- Expose the EwE Ecopath/Ecosim/Ecospace engine as a gRPC service to the SURIMI framework.
-- Enforce single-simulation reservation: only one simulation may run at a time in a process instance.
-- Translate between gRPC Protobuf message types and the internal `SURIMI.Datamodel` and EwE domain objects.
-- Delegate all EwE business logic (start, step, stop, data retrieval) to `EwEController`.
-- Write the chosen host address back to the gRPC caller as response metadata upon simulation reservation.
-- Report protocol version to callers via `GetProtocolVersion`.
+- Load an EwE model file (`.eiixml`) from blob storage and initialise the Ecopath/Ecosim/Ecospace
+  simulation chain.
+- Run Ecospace time-step by time-step, synchronised with the SURIMI controller's clock.
+- Accept external catch dispositions (fishing pressure computed by POSEIDON/other agents) and inject
+  them into the EwE time step before EwE's own fishing occurs.
+- Accept species prices from the market model and integrate them into the EwE market layer.
+- Accept environmental variables and regulations (stubs; not yet fully wired).
+- Return spatially explicit biomass, catch disposition, and sales snapshots to the controller after
+  each time step.
+- Guard access with a single-simulation reservation so only one active simulation can run at a time
+  per pod.
+
+### Build outputs
+
+| Binary | Description |
+|---|---|
+| `SURIMI-Ecopath.dll` | The main ASP.NET Core gRPC host; started as `dotnet SURIMI-Ecopath.dll` inside the Docker container. |
 
 ---
 
 ## Interfaces
 
-### gRPC messages consumed (requests)
+The gRPC contract is defined in the external
+[SURIMI-protocol](https://github.com/Official-EwE/SURIMI-protocol) repository (hosted on the
+[Buf Schema Registry](https://buf.build/surimi/surimi-protocol)) and consumed as the NuGet package
+`BSR.Surimi.Surimi-Protocol.Grpc.Csharp`. There are **no `.proto` files** in this repository.
 
-| RPC | Description |
-|-----|-------------|
-| `InitialiseSimulation` | Starts a new simulation run; carries the full `SurimiContract` (scenario geometry, species, fleet segments, markets, standards). |
-| `FinaliseSimulation` | Gracefully ends the active simulation. |
-| `CancelSimulation` | Aborts the active simulation. |
-| `SimulateStep` | Advances the model by one time step. |
-| `UpdateCatchDisposition` | Injects externally computed catch (gross catch, live/dead discards per cell) into EwE for the current time step. |
-| `UpdateEnvironmentVariables` | Provides spatial environmental forcing fields (e.g. temperature, salinity) per cell. |
-| `UpdateRegulations` | Delivers Total Allowable Catch (TAC) rules per fleet/species combination. |
-| `UpdateSpeciesPrices` | Pushes market prices per species, category, market, and currency. |
-| `GetBiomass` | Requests spatial biomass grids (kg per cell) for all mapped species. |
-| `GetCatchDisposition` | Requests spatial catch summaries over a time window. |
-| `GetFishingActivity` | Requests fishing activity ratios per fleet segment. |
-| `GetSales` | Requests market sales (quantity and value) over a time window. |
-| `GetProtocolVersion` | Requests the currently implemented SURIMI protocol version. |
+### Lifecycle messages (call order matters)
 
-### gRPC messages produced (responses)
+| Direction | Message | Description |
+|---|---|---|
+| ← received | `InitialiseSimulation` | Reserves the pod, loads the model, runs Ecopath/Ecosim, starts Ecospace, and waits at the first simulation step. |
+| ← received | `FinaliseSimulation` | Releases the reservation and stops the Ecospace thread cleanly. |
+| ← received | `CancelSimulation` | Emergency stop; releases the reservation and forces Ecospace to stop. |
 
-Each RPC returns a corresponding `*Response` message that echoes the `SimulationId`, optional timestamps, and the requested data payload (biomass grids, catch disposition summaries, sales, etc.).
+### Simulation-step messages
+
+| Direction | Message | Description |
+|---|---|---|
+| ← received | `SimulateStep` | Advances Ecospace by one time step. |
+| ← received | `UpdateCatchDisposition` | Delivers externally computed catch (gross catch, live/dead discards per species/fleet/cell) to be injected in the current step. |
+| ← received | `UpdateSpeciesPrices` | Delivers species market prices for the current step. |
+| ← received | `UpdateEnvironmentVariables` | Delivers environmental forcing data (stub). |
+| ← received | `UpdateRegulations` | Delivers TAC regulations (stub). |
+| → sent | `GetBiomass` | Returns spatially gridded biomass per species after the last completed step. |
+| → sent | `GetCatchDisposition` | Returns spatially gridded catch (gross, live discards, dead discards) per species/fleet for the last step. |
+| → sent | `GetSales` | Returns sales (quantity + value) per market for the last step. |
+| → sent | `GetFishingActivity` | Returns fishing activity ratios per fleet segment (stub). |
+| → sent | `GetProtocolVersion` | Returns the gRPC protocol version string. |
 
 ---
 
 ## Model theory
 
-### Ecopath with Ecosim and Ecospace (EwE)
-EwE is a widely used marine ecosystem modelling framework. It consists of three tightly coupled modules:
-- **Ecopath** — a static, mass-balance snapshot of the ecosystem, defining biomass, production, consumption, and diet for all functional groups and fleets.
-- **Ecosim** — a time-dynamic module that simulates changes in biomass over time using foraging arena theory.
-- **Ecospace** — a spatially explicit extension of Ecosim that distributes biomass and fishing effort across a raster grid.
+**Ecopath** is a static mass-balance food-web model that describes the biomass flows between
+functional groups (species aggregates) in a marine ecosystem. **Ecosim** extends Ecopath into time,
+simulating how the ecosystem evolves under fishing pressure and environmental forcing. **Ecospace**
+adds a spatial dimension to Ecosim, distributing biomass over a regular grid and computing spatially
+explicit movements and fishing.
 
-### Management Strategy Evaluation (MSE)
-SURIMI-Ecopath participates in an MSE loop in which:
-1. A fishing-fleet model (POSEIDON) allocates fishing effort and computes catch dispositions.
-2. EcologyService ingests those catch dispositions and advances the ecosystem state by one time step.
-3. Resulting biomass, catch, and sales data are read back by the orchestrator and fed into the next MSE iteration.
+The SURIMI integration relies on the **Ecospace pause/resume** mechanism: Ecospace halts at the
+beginning of each time step, reports its state, receives externally computed catch dispositions from
+the SURIMI controller (generated by agent-based fisheries models such as POSEIDON), injects those
+dispositions back during the `EffortDistrPost` callback, and then runs the remainder of the time
+step. This allows external agents to fish first; EwE fishes on the remainder. Time steps are assumed
+to be monthly.
 
-### Functional-group to species mapping
-EwE operates on functional groups, not individual species. `GroupSpeciesProportions` distributes external species-level fishing across EwE groups, and maps EwE group-level output back to species-level biomass for SURIMI.
-
-### One-based indexing
-EwE data structures use one-based indexing for groups, fleets, rows, and columns throughout the codebase.
-
-### Spatial cell centroids
-Spatial outputs use cell centroids: `RowToLat(ir + 0.5)` and `ColToLon(ic + 0.5)` to convert grid indices to geographic coordinates.
-
-### Unit conversion
-Biomass values cross a unit boundary between SURIMI DTOs (kg) and EwE arrays (t/km²). `DensityToKg` and `KgToDensity` are the canonical conversion helpers.
+**Species-to-functional-group proportions** (`GroupSpeciesProportions`) are tracked per spatial cell
+so that species-level external fishing can be distributed over EwE functional groups and
+species-level biomass can be reconstructed from group-level EwE state.
 
 ---
 
 ## Service architecture
+
+`Program.cs` wires the ASP.NET Core gRPC host, registers all services as singletons, and selects
+the blob store implementation (S3 or local filesystem). `EcologyService` is the sole gRPC endpoint
+class and acts purely as a transport adapter: it validates input, forwards calls to `EwEController`,
+and maps between gRPC/SURIMI data model types. `EwEController` owns the EwE runtime lifecycle and
+the pause/resume handshake, running Ecospace on a dedicated background thread and synchronising with
+the ASP.NET thread via `TaskCompletionSource` events. `CheckSimulationService` enforces the
+single-reservation contract and writes the pod host address back as gRPC response metadata. The
+`IEwECore` and `IPluginManager` wrappers decouple the controller from concrete EwE runtime objects
+to enable unit testing.
 
 ### High-Level Architecture
 
@@ -79,7 +111,7 @@ The service follows a strict two-layer design: `EcologyService` handles only tra
 
 ```mermaid
 flowchart TD
-    A["gRPC Client\n(POSEIDON / Orchestrator)"] -->|"gRPC requests"| B["EcologyService\n(transport layer)"]
+    A["gRPC Client\n(Controller)"] -->|"gRPC requests"| B["EcologyService\n(transport layer)"]
     B -->|"reserve / check / release"| C["CheckSimulationService\n(single-simulation guard)"]
     B -->|"domain calls"| D["EwEController\n(EwE runtime lifecycle)"]
     D -->|"load model"| E["IBlobStore\n(S3 or Local)"]
@@ -107,7 +139,7 @@ stateDiagram-v2
 
 The pause/resume handshake works as follows:
 - Ecospace pauses at the **beginning** of each time step (`waiting` state).
-- The orchestrator calls `UpdateCatchDisposition` and then `SimulateStep`.
+- The controller calls `UpdateCatchDisposition` and then `SimulateStep`.
 - `ContinueAsync` releases the pause; EwE integrates prices at `BeginTimeStep`, injects external catch at `EffortDistrPost`, and caches biomass/catch/sales at `EndTimeStep`.
 - The controller transitions back to `waiting` for the next step.
 
@@ -115,7 +147,7 @@ The pause/resume handshake works as follows:
 
 ```mermaid
 sequenceDiagram
-    participant O as Orchestrator
+    participant O as Controller
     participant ES as EcologyService
     participant CSS as CheckSimulationService
     participant EWE as EwEController
@@ -226,7 +258,7 @@ When `AWS_ACCESS_KEY_ID` is absent, a `LocalBlobStore` rooted at `Includes/` and
 
 ## Kubernetes
 
-SURIMI-Ecopath is designed to run as a pod in the **EDITO Datalab** Kubernetes cluster. Each pod instance handles at most one active simulation at a time (enforced by `CheckSimulationService`). The `CheckSimulationService` writes the pod's own host address back as gRPC response metadata (`host` header) at `InitialiseSimulation`, so the SURIMI Orchestrator can pin all subsequent calls for that simulation to the same pod (session affinity).
+SURIMI-Ecopath is designed to run as a pod in the **EDITO Datalab** Kubernetes cluster. Each pod instance handles at most one active simulation at a time (enforced by `CheckSimulationService`). The `CheckSimulationService` writes the pod's own host address back as gRPC response metadata (`host` header) at `InitialiseSimulation`, so the SURIMI Controller can pin all subsequent calls for that simulation to the same pod (session affinity).
 
 The service listens on port **7890** (configured via `ASPNETCORE_HTTP_PORTS`).
 
@@ -333,6 +365,17 @@ SURIMI-Ecopath/
     └── workflows/
         └── build-check.yml           # CI build check on PRs to master
 ```
+
+---
+
+## Source control
+
+Git is used for source control, hosted on **GitHub** at
+[Official-EwE/SURIMI-Ecopath](https://github.com/Official-EwE/SURIMI-Ecopath). The default
+integration branch is `master`. There are no Git submodules. The gRPC contract lives in a
+**separate repository** ([SURIMI-protocol](https://github.com/Official-EwE/SURIMI-protocol)) and is
+consumed as a versioned NuGet package from the Buf Schema Registry, so proto-file changes do not
+require commits here — only a package version bump in the `.csproj`.
 
 ---
 
