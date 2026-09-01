@@ -10,7 +10,6 @@ using EwECore.Common;
 using EwECore.Plugins;
 using SURIMI.Datamodel;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Ecopath.EwE
@@ -1019,44 +1018,5 @@ namespace Ecopath.EwE
         }
     }
 
-
-    ///// <summary>
-    ///// Set a price for a functional group per market.
-    ///// </summary>
-    ///// <param name="iGroup"></param>
-    ///// <param name="price"></param>
-    ///// <remarks>
-    ///// This will set the mean price for a given species and fleet across all markets.
-    ///// </remarks>
-    //void UpdatePrice(int iGroup, float price)
-    //{
-    //    cEcopathDataStructures ds = m_core.EcopathDataStructures;
-    //    string[] markets = m_marketBasePrices.Keys.ToArray();
-
-    //    for (int iFleet = 1; iFleet < ds.NumFleet; iFleet++)
-    //    {
-    //        float totPrice = 0;
-    //        int nEntries = 0;
-
-    //        foreach (string market in markets)
-    //        {
-    //            float[,] basePrices = m_marketBasePrices[market];
-    //            float baseprice = basePrices[0, iGroup];
-    //            if (baseprice > 0)
-    //            {
-    //                totPrice += price * basePrices[iFleet, iGroup] / baseprice;
-    //                nEntries += 1;
-    //            }
-    //        }
-
-    //        // Group has a base price, e.g., is it commercial?
-    //        if (totPrice > 0)
-    //        {
-    //            ds.Market[iFleet, iGroup] = totPrice / nEntries;
-    //        }
-    //    }
-    //}
-
         #endregion // Internal - EwE interactions
-}
 }
