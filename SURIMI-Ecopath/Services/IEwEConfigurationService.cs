@@ -6,15 +6,15 @@ using SURIMI.Datamodel;
 
 namespace Ecopath.Services
 {
-    public interface IEwEConfigurationService 
+    public interface IEwEConfigurationService
     {
         Task<IEwEConfiguration> CreateConfigurationAsync(string scenarioName);
         Task<bool> LoadAsync(IEwECore core, IEwEConfiguration configuration, SurimiContract surimiContract);
-        IEnumerable<EwEMappingMatch> ResolveMarkets(string gearcode, string marketcode);
-        IEnumerable<EwEMappingMatch> ResolveGroups(string speciescode);
-        IEnumerable<EwEMappingMatch> ResolveGroups(MultiLevelKey key);
-        IEnumerable<EwEMappingMatch> ResolveGroups(SURIMI.Datamodel.Species species);
-        IEnumerable<EwEMappingMatch> ResolveFleets(SURIMI.Datamodel.FleetSegment fleetsegment);
+        IEnumerable<EwEMappingMatch> ResolveEwEFleetsFromMarket(string marketcode);
+        IEnumerable<EwEMappingMatch> ResolveEwEGroupsFromSpecies(string speciescode);
+        IEnumerable<EwEMappingMatch> ResolveEwEGroups(MultiLevelKey key);
+        IEnumerable<EwEMappingMatch> ResolveEwEGroupsFromSpecies(SURIMI.Datamodel.Species species);
+        IEnumerable<EwEMappingMatch> ResolveEwEFleets(SURIMI.Datamodel.FleetSegment fleetsegment);
 
         /// <summary>
         /// Finds the mapping for a given index (in cCore, 1 based) and domain (KeyDomain.Species, KeyDomain.FleetSegment, KeyDomain.Market, etc.).

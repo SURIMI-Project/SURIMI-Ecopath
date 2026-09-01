@@ -148,8 +148,8 @@ namespace Ecopath.Services
             string cfgtext = GetConfigBucket(core).Remark;
 
             // Load fleet segment mappings from the semantics file
-            await m_surimiContractToEwEService.ConvertSurimiContractToEwEAsync(m_mappings, core, surimiContract);
 
+            await m_surimiContractToEwEService.ConvertSurimiContractToEwEAsync(m_mappings, core, surimiContract);
 
             // Register fleet segments as gear + countrycode pairs to match fleet + countrycode fishing
             //m_mappings.Add(new EwEMapping("gearcode=OTB; countrycode=ESP", KeyDomain.FleetSegment, 1, m_keyFieldDescriptorRegistry));
@@ -180,7 +180,7 @@ namespace Ecopath.Services
                 if (core.get_EcopathGroupInputs(iGroup).IsFished)
                     configuration.FishedGroups.Add(iGroup);
 
-            if(surimiContract.Items == null || surimiContract.Items.Species == null || surimiContract.Items.Species.Count == 0)
+            if (surimiContract.Items == null || surimiContract.Items.Species == null || surimiContract.Items.Species.Count == 0)
             {
                 throw new Exception("No species mappings found in configuration contract; species will not be resolved to functional groups");
             }
@@ -208,18 +208,24 @@ namespace Ecopath.Services
 
         #region Consulting the registry
 
-        public IEnumerable<EwEMappingMatch> ResolveGroups(string speciescode)
+        public IEnumerable<EwEMappingMatch> ResolveEwEGroupsFromSpecies(string speciescode)
         {
             MultiLevelKey key = m_multiLevelKeyFactory.FromPairs([(SpeciesFields.SpeciesCode, speciescode)], KeyDomain.Species, m_keyFieldDescriptorRegistry);
-            return ResolveGroups(key);
+            return ResolveEwEGroups(key);
         }
 
-        public IEnumerable<EwEMappingMatch> ResolveGroups(SURIMI.Datamodel.Species species)
+        public IEnumerable<EwEMappingMatch> ResolveEwEGroupsFromSpecies(SURIMI.Datamodel.Species species)
         {
-            return ResolveGroups(m_multiLevelKeyFactory.FromObject(species, KeyDomain.Species, m_keyFieldDescriptorRegistry));
+            return ResolveEwEGroups(m_multiLevelKeyFactory.FromObject(species, KeyDomain.Species, m_keyFieldDescriptorRegistry));
         }
 
-        public IEnumerable<EwEMappingMatch> ResolveGroups(MultiLevelKey key)
+        /// <summary>
+        /// Find all the groups from MLK species records.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        /// 
+        public IEnumerable<EwEMappingMatch> ResolveEwEGroups(MultiLevelKey key)
         {
             if (key.Domain != KeyDomain.Species)
                 yield break;
@@ -229,16 +235,21 @@ namespace Ecopath.Services
                 yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
         }
 
-        public IEnumerable<EwEMappingMatch> ResolveFleets(SURIMI.Datamodel.FleetSegment fleetsegment)
+        /// <summary>
+        /// Find the EwE fleets that match a given SURIMI fleet segment
+        /// </summary>
+        /// <param name="fleetsegment"></param>
+        /// <returns></returns>
+        public IEnumerable<EwEMappingMatch> ResolveEwEFleets(SURIMI.Datamodel.FleetSegment fleetsegment)
         {
             var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptorRegistry.GetAll(KeyDomain.FleetSegment));
             foreach (var match in resolver.FindAllMatches(m_multiLevelKeyFactory.FromObject(fleetsegment, KeyDomain.FleetSegment, m_keyFieldDescriptorRegistry)))
                 yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
         }
 
-        public IEnumerable<EwEMappingMatch> ResolveMarkets(string gearcode, string marketcode)
+        public IEnumerable<EwEMappingMatch> ResolveEwEFleetsFromMarket(string marketcode)
         {
-            MultiLevelKey key = m_multiLevelKeyFactory.FromPairs([(FishingFields.GearCode, gearcode), (MarketFields.MarketCode, marketcode)], KeyDomain.Market, m_keyFieldDescriptorRegistry);
+            MultiLevelKey key = m_multiLevelKeyFactory.FromPairs([(MarketFields.MarketCode, marketcode)], KeyDomain.Market, m_keyFieldDescriptorRegistry);
             var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptorRegistry.GetAll(KeyDomain.Market));
             foreach (var match in resolver.FindAllMatches(key))
                 yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
@@ -357,7 +368,7 @@ namespace Ecopath.Services
                         // Can add to mappings?
                         if (configuration.FishedGroups.Contains(iGroup) && !string.IsNullOrEmpty(code))
                         {
-                            // #Yes: add
+                            // #Yes: add a species code to the specific iGroup
                             key = new EwEMapping("", KeyDomain.Species, iGroup, m_keyFieldDescriptorRegistry, proportion);
                             key.SetField(SpeciesFields.SpeciesCode, vocSpecies.VocabularyName + ":" + code, m_keyFieldDescriptorRegistry);
                             if (!string.IsNullOrEmpty(ls))
@@ -401,7 +412,7 @@ namespace Ecopath.Services
                 for (int iFleet = 1; iFleet <= core.nFleets; iFleet++)
                 {
                     var fleet = (cEcopathFleetInput?)core.get_EcopathFleetInputs(iFleet);
-                    if(fleet == null)
+                    if (fleet == null)
                     {
                         m_logger.LogWarning("Fleet index {iFleet} has no corresponding fleet input", iFleet);
                         continue;
