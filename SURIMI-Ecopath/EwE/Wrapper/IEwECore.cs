@@ -42,6 +42,14 @@ namespace Ecopath.EwE.Wrapper
         public int nGroups { get; }
         int nTaxon { get; }
 
+        // --- Lifecycle ---
+
+        /// <summary>Creates the underlying cCore and cPluginManager. Must be called before any other member.</summary>
+        void Initialize();
+
+        /// <summary>Closes and disposes the underlying cCore and cPluginManager, resetting this instance to an uninitialized state.</summary>
+        void Teardown();
+
         // --- Utility methods ---
 
         DateTime EcosimTimestepToAbsoluteTime(int iTimestep);

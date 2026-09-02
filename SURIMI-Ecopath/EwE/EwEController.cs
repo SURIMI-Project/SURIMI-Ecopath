@@ -87,35 +87,25 @@ namespace Ecopath.EwE
 
         #endregion // Private vars 
 
-        public EwEController(ILogger<EwEController> logger, IEwEConfigurationService configurationService, IEwECore core, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory)
+        public EwEController(ILogger<EwEController> logger, IEwEConfigurationService configurationService, IEwECore core, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory, IVocabulariesRegisterService vocabulariesRegisterService)
         {
             m_core = core;
             m_keyFieldDescriptorRegistry = keyFieldDescriptorRegistry;
             m_multiLevelKeyFactory = multiLevelKeyFactory;
             m_configurationService = configurationService;
+            vocabulariesRegisterService.RegisterVocabularies();
 
             RunState = RunStates.idle;
 
             // To make sure we can find local resources. This is rather hack.
             Directory.SetCurrentDirectory(System.AppDomain.CurrentDomain.BaseDirectory);
             m_logger = logger;
-
-            //m_core.PluginManager = new cPluginManager();
-            m_logger.LogInformation("EwE loaded {0} plug-in(s)", m_core.PluginManager.LoadPlugins());
-
-            IPlugin? pi = GetPlugin(typeof(cEcospaceBridgePlugin));
-            if (pi != null)
-            {
-                cEcospaceBridgePlugin ppt = (cEcospaceBridgePlugin)pi;
-                ppt.BridgeCallback = BridgeCallback;
-            }
         }
 
         ~EwEController()
         {
             ForceStop();
-            m_core.CloseModel();
-            m_core.Dispose();
+            m_core.Teardown(); // No-op if already torn down
         }
 
         #region EwE helpers
@@ -174,6 +164,17 @@ namespace Ecopath.EwE
 
             // Commence configuration
             RunState = RunStates.starting;
+
+            // Create the EwE core and wire the bridge plugin for this simulation
+            m_core.Initialize();
+            m_logger.LogInformation("EwE loaded {0} plug-in(s)", m_core.PluginManager.LoadPlugins());
+
+            IPlugin? pi = GetPlugin(typeof(cEcospaceBridgePlugin));
+            if (pi != null)
+            {
+                cEcospaceBridgePlugin ppt = (cEcospaceBridgePlugin)pi;
+                ppt.BridgeCallback = BridgeCallback;
+            }
 
             m_configuration = await m_configurationService.CreateConfigurationAsync(scenarioName);
 
@@ -321,39 +322,24 @@ namespace Ecopath.EwE
         }
 
         /// <summary>
-        /// Stop any simulation
+        /// Stop any simulation. Interrupts the Ecospace thread and tears down the EwE core.
+        /// Never calls StopEcospace() because that call does not return.
         /// </summary>
         /// <returns></returns>
-        public async Task<bool> StopAsync(int timeoutMs = 10000)
+        public Task<bool> StopAsync(int timeoutMs = 10000)
         {
-            var tcs = new TaskCompletionSource();
+            m_logger.LogInformation("EwE - stopping simulation");
 
-            void Handler(RunStates state)
-            {
-                if (state == RunStates.idle)
-                    tcs.TrySetResult();
-            }
+            ForceStop(); // Interrupt the Ecospace thread and set RunState = idle
 
-            OnRunStateChanged += Handler;
+            // Give the thread a brief window to observe the interrupt and exit cleanly
+            m_thread?.Join(2000);
+            m_thread = null;
 
-            m_core.StopEcospace(); // Initiate graceful shutdown
+            m_core.Teardown(); // CloseModel + Dispose + null internals
+            m_configuration = null;
 
-            if (RunState == RunStates.idle)
-            {
-                OnRunStateChanged -= Handler;
-                return true;
-            }
-
-            var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMs));
-
-            if (completedTask == tcs.Task)
-                return true; // All good
-
-            // Timeout hit: force kill
-            OnRunStateChanged -= Handler;
-            ForceStop();
-            m_configuration = null; // Delete configuration
-            return false;
+            return Task.FromResult(true);
         }
 
         public Task<bool> UpdatePricesAsync(List<SpeciesPrice> speciesPrices)
@@ -728,6 +714,7 @@ namespace Ecopath.EwE
                                 {
                                     GearCode = mlkFleet.GetField(FishingFields.GearCode)!.ToString(m_configuration.IncludeVocabularies),
                                     SpeciesCode = mlkSpecies.GetField(SpeciesFields.SpeciesCode)!.ToString(m_configuration.IncludeVocabularies),
+                                    CategoryCode = "",
                                     Quantity = saleTot.Volume,
                                     Value = saleTot.Value
                                 };

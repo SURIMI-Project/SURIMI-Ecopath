@@ -9,11 +9,11 @@ namespace Ecopath.Services;
 public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
 {
     private readonly ILogger<EcologyService> m_logger;
-    private readonly CheckSimulationService m_checksimulationservice;
+    private readonly ICheckSimulationService m_checksimulationservice;
     private readonly IEwEController m_controller;
     private readonly string _version;
 
-    public EcologyService(ILogger<EcologyService> logger, CheckSimulationService service, IEwEController controller, ProtocolVersionService protocolVersionService)
+    public EcologyService(ILogger<EcologyService> logger, ICheckSimulationService service, IEwEController controller, ProtocolVersionService protocolVersionService)
     {
         m_logger = logger;
         m_checksimulationservice = service;
@@ -42,13 +42,14 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
         catch (Exception ex)
         {
             m_checksimulationservice.ReleaseSimulation(request.SimulationId);
-            m_logger.LogInformation("In Initialise. EwE - exception ...{Message}", ex.Message);
+            m_logger.LogError(ex, "In Initialise. EwE - exception ...{Message}", ex.Message);
             throw;
         }
     }
 
     public override async Task<FinaliseSimulationResponse> FinaliseSimulation(FinaliseSimulationRequest request, ServerCallContext context)
     {
+        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
         m_checksimulationservice.ReleaseSimulation(request.SimulationId);
         m_logger.LogInformation($"Finalizing simulation {request.SimulationId}");
 
@@ -70,6 +71,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
 
     public override async Task<CancelSimulationResponse> CancelSimulation(CancelSimulationRequest request, ServerCallContext context)
     {
+        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
         m_checksimulationservice.ReleaseSimulation(request.SimulationId);
         m_logger.LogInformation($"Cancel simulation {request.SimulationId}");
 
@@ -91,7 +93,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
 
     public override async Task<SimulateStepResponse> SimulateStep(SimulateStepRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync("SimulateStep", request.SimulationId, context);
+        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
         m_logger.LogInformation($"Simulate step for simulation {request.SimulationId}");
 
         var res = await m_controller.ContinueAsync();
@@ -101,7 +103,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
 
     public override async Task<GetBiomassResponse> GetBiomass(GetBiomassRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync("GetBiomass", request.SimulationId, context);
+        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
         m_logger.LogInformation($"GetBiomass for simulation {request.SimulationId}");
 
         var biomass = await m_controller.GetBiomassAsync();
@@ -140,7 +142,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
 
     public override async Task<UpdateCatchDispositionResponse> UpdateCatchDisposition(UpdateCatchDispositionRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync("UpdateCatchDisposition", request.SimulationId, context);
+        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
         GrpcValidation.ArgumentNotNullOrEmpty(request.SimulationId);
 
         var catchDisposition = new SURIMI.Datamodel.CatchDispositionSummary
@@ -181,7 +183,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
 
     public override async Task<UpdateEnvironmentVariablesResponse> UpdateEnvironmentVariables(UpdateEnvironmentVariablesRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync("UpdateEnvironmentVariables", request.SimulationId, context);
+        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
         m_logger.LogInformation($"Updating environment variables for {request.EnvironmentVariablesSummary.EnvironmentVariablesGrids.Count} variables...");
 
         var environmentVariables = new SURIMI.Datamodel.EnvironmentVariablesSummary
@@ -209,7 +211,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
 
     public override async Task<GetCatchDispositionResponse> GetCatchDisposition(GetCatchDispositionRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync("GetCatchDisposition", request.SimulationId, context);
+        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
         m_logger.LogInformation($"Ecopath GetCatchDisposition for {request.SimulationId}...");
 
         var catchDisposition = await m_controller.GetCatchDispositionSummaryAsync(
@@ -268,7 +270,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
 
     public override async Task<GetFishingActivityResponse> GetFishingActivity(GetFishingActivityRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync("GetFishingActivity", request.SimulationId, context);
+        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
         m_logger.LogInformation($"Getting Fishing Activity for Simulation {request.SimulationId}...");
 
         var fishingActivity = await m_controller.GetFishingActivityAsync();
@@ -299,7 +301,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
 
     public override async Task<UpdateRegulationsResponse> UpdateRegulations(UpdateRegulationsRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync("UpdateRegulations", request.SimulationId, context);
+        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
         m_logger.LogInformation($"Updating Regulations for Simulation {request.SimulationId} ");
 
         var regulations = new SURIMI.Datamodel.RegulationsSummary
@@ -330,7 +332,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
 
     public override async Task<GetSalesResponse> GetSales(GetSalesRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync("GetSales", request.SimulationId, context);
+        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
         m_logger.LogInformation($"Ecopath GetSales for {request.SimulationId}...");
 
         var salesSummaries = await m_controller.GetSalesSummariesAsync(request.StartDateTime.ToDateTime(), request.EndDateTime.ToDateTime());
@@ -359,9 +361,11 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
                         FleetSegment = new FleetSegment()
                         {
                             GearCode = sale.GearCode,
+                            CountryCode = summary.MarketCode == "ES" ? "ESP" : "FRA"    // TODO This is a hack to get the country code for the fleet segment. 
                         },
                         Quantity = sale.Quantity,
                         Value = sale.Value,
+                        CategoryCode = "Fresh - Whole"  // TODO. THis is true for the northwestern_med scenario
                     }));
                 }
 
@@ -374,7 +378,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
 
     public override async Task<UpdateSpeciesPricesResponse> UpdateSpeciesPrices(UpdateSpeciesPricesRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync("UpdateSpeciesPrices", request.SimulationId, context);
+        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
         m_logger.LogInformation($"Updating prices for {request.SpeciesPriceSummary.SpeciesPrices.Count} species...");
 
         var speciesPrices = request.SpeciesPriceSummary.SpeciesPrices
@@ -383,7 +387,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
                 // Note that the market does not distinguish species sizes, ages and lengths, and ignores gear specifics other than gearcode.
                 // Although this is by design but may have to be revisited; the limitations seem like an oversight.
                 SpeciesCode = p.Species.SpeciesCode,
-                GearCode = p.GearCode,
+                CategoryCode = p.CategoryCode,
                 Price = p.Price,
                 Currency = p.Currency,
                 MarketCode = p.MarketCode,
@@ -488,6 +492,12 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
                         MarketCode = c.MarketCode,
                     })
                     .ToList(),
+                Price_Categories = simulation.Items.PriceCategories
+                    .Select(c => new SURIMI.Datamodel.PriceCategory
+                    {
+                        CategoryCode = c.CategoryCode,
+                    })
+                    .ToList()
             }
         };
     }

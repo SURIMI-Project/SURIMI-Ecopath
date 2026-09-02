@@ -35,10 +35,6 @@ namespace Ecopath.Services
         private readonly List<EwEMapping> m_mappings = new();
         private readonly IKeyFieldDescriptorRegistry m_keyFieldDescriptorRegistry;
         private readonly IVocabularyRegistry m_vocabularies;
-        private readonly ASFISSpeciesCodeVocabulary m_asfisVocabulary;
-        private readonly ISSCFGGearCodeVocabulary m_iSSCFGGearCodeVocabulary;
-        private readonly ISO3166CountryCodeVocabulary m_iSO3166CountryCodeVocabulary;
-        private readonly SURIMILifestageVocabulary m_SURIMILifestageVocabulary;
         private readonly IMultiLevelKeyFactory m_multiLevelKeyFactory;
         private readonly ILogger<EwEConfiguration> m_logger;
         private readonly IBlobStore m_blobStore;
@@ -61,12 +57,8 @@ namespace Ecopath.Services
             }
         }
 
-        public EwEConfigurationService(ASFISSpeciesCodeVocabulary asfisVocabulary, ISSCFGGearCodeVocabulary iSSCFGGearCodeVocabulary, ISO3166CountryCodeVocabulary iSO3166CountryCodeVocabulary, SURIMILifestageVocabulary sURIMILifestageVocabulary, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory, ILogger<EwEConfiguration> logger, IVocabularyRegistry vocabularies, IBlobStore blobStore, ISurimiContractToEwEService surimiContractToEwEService)
+        public EwEConfigurationService(IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory, ILogger<EwEConfiguration> logger, IVocabularyRegistry vocabularies, IBlobStore blobStore)
         {
-            m_asfisVocabulary = asfisVocabulary;
-            m_iSSCFGGearCodeVocabulary = iSSCFGGearCodeVocabulary;
-            m_iSO3166CountryCodeVocabulary = iSO3166CountryCodeVocabulary;
-            m_SURIMILifestageVocabulary = sURIMILifestageVocabulary;
             m_keyFieldDescriptorRegistry = keyFieldDescriptorRegistry;
             m_multiLevelKeyFactory = multiLevelKeyFactory;
             m_logger = logger;
@@ -82,7 +74,7 @@ namespace Ecopath.Services
 
             // Load model
             var modelName = $"{scenarioName}.eiixml";
-            if (!await m_blobStore.ExistsAsync(modelName, PathType.Input))    //This used to be @"GSA0607EwENBS.eiixml"
+            if (!await m_blobStore.ExistsAsync(modelName, PathType.Input))
                 throw new FileNotFoundException($"EwE model file '{modelName}' cannot be found");
 
             // If connected to a remote blob store, copy the model file locally to the Includes folder
@@ -116,25 +108,6 @@ namespace Ecopath.Services
             context.SetYears(1990, 2020);
             context.SetTimestamp(DateTime.UtcNow);
 
-            // Register the different species fields that the application may be interested in
-            m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(SpeciesFields.SpeciesCode, KeyDomain.Species, KeyPurpose.Species, FieldKind.Code, true, 10));
-            m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(SpeciesFields.Lifestage, KeyDomain.Species, KeyPurpose.Lifestage, FieldKind.Label, false, 3));
-            m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(SpeciesFields.Length, KeyDomain.Species, KeyPurpose.Length, FieldKind.Label, false, 3));
-            m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(SpeciesFields.Age, KeyDomain.Species, KeyPurpose.Age, FieldKind.Label, false, 3));
-
-            // Register the different gear fields that the application may be interested in
-            m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(FishingFields.GearCode, KeyDomain.FleetSegment, KeyPurpose.Gear, FieldKind.Code, true, 10));
-            m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(FishingFields.CountryCode, KeyDomain.FleetSegment, KeyPurpose.Country, FieldKind.Code, false, 3));
-
-            // Register the different market fields that the application may be interested in
-            m_keyFieldDescriptorRegistry.Register(new KeyFieldDescriptor(MarketFields.MarketCode, KeyDomain.FleetSegment, KeyPurpose.Market, FieldKind.Code, true, 10));
-
-            // Register available look-up vocabularies
-            m_vocabularies.Register(m_asfisVocabulary);
-            m_vocabularies.Register(m_SURIMILifestageVocabulary);
-            m_vocabularies.Register(m_iSSCFGGearCodeVocabulary);
-            m_vocabularies.Register(m_iSO3166CountryCodeVocabulary);
-
             return configuration;
         }
 
@@ -165,16 +138,16 @@ namespace Ecopath.Services
 
 
             // Register fleet segments as gear + market code pairs to match fleet > market deliveries
-            m_mappings.Add(new EwEMapping("gearcode=OTB; marketcode=ESALC", KeyDomain.Market, 1, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=ESALC", KeyDomain.Market, 2, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=LLS; marketcode=ESALC", KeyDomain.Market, 3, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:ART; marketcode=ESALC", KeyDomain.Market, 4, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; marketcode=ESALC", KeyDomain.Market, 5, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=OTB; marketcode=ES", KeyDomain.Market, 1, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=ES", KeyDomain.Market, 2, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=LLS; marketcode=ES", KeyDomain.Market, 3, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:ART; marketcode=ES", KeyDomain.Market, 4, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; marketcode=ES", KeyDomain.Market, 9, m_keyFieldDescriptorRegistry));
 
-            m_mappings.Add(new EwEMapping("gearcode=OTB; marketcode=ESBRX", KeyDomain.Market, 6, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=TM; marketcode=ESBRX", KeyDomain.Market, 7, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=ESBRX", KeyDomain.Market, 8, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:ART; marketcode=ESBRX", KeyDomain.Market, 9, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=OTB; marketcode=FR", KeyDomain.Market, 5, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=TM; marketcode=FR", KeyDomain.Market, 6, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=FR", KeyDomain.Market, 7, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:ART; marketcode=FR", KeyDomain.Market, 8, m_keyFieldDescriptorRegistry));
 
             for (int iGroup = 1; iGroup <= core.nGroups; iGroup++)
                 if (core.get_EcopathGroupInputs(iGroup).IsFished)
