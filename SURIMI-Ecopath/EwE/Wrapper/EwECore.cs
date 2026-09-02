@@ -5,80 +5,129 @@ using EwECore.Plugins;
 namespace Ecopath.EwE.Wrapper
 {
     /// <summary>
-    /// This class encapsulates the cCore, and provides an implementation of the <see cref="IEwECore"/> interface,
+    /// This class encapsulates the cCore, and provides an implementation of the <see cref="IEwECore"/> interface.
+    /// <para>
+    /// Instances start uninitialized. Call <see cref="Initialize"/> before using any other member,
+    /// and <see cref="Teardown"/> to release all resources afterwards.
+    /// </para>
     /// </summary>
     public class EwECore : IEwECore
     {
-        /// <summary>The <see cref="cCore"/> to operate on.</summary>
-        private readonly cCore m_core;
-        private readonly IPluginManager m_pluginManager;
+        /// <summary>The <see cref="cCore"/> to operate on. Null until <see cref="Initialize"/> is called.</summary>
+        private cCore? m_core;
+        private IPluginManager? m_pluginManager;
 
         public EwECore()
+        {
+            // Intentionally empty — cCore and cPluginManager are created lazily in Initialize().
+        }
+
+        // -----------------------------------------------------------------------
+        // Lifecycle
+        // -----------------------------------------------------------------------
+
+        /// <inheritdoc/>
+        public void Initialize()
         {
             m_core = new cCore();
             m_core.PluginManager = new cPluginManager();
             m_pluginManager = new PluginManager(m_core.PluginManager);
         }
 
-        public cEcopathDataStructures EcopathDataStructures => m_core.EcopathDataStructures;
+        /// <inheritdoc/>
+        public void Teardown()
+        {
+            if (m_core == null) return;
+            m_core.CloseModel();
+            m_core.Dispose();
+            m_core = null;
+            m_pluginManager = null;
+        }
 
-        public cEcospaceDataStructures EcospaceDataStructures => m_core.EcospaceDataStructures;
+        // -----------------------------------------------------------------------
+        // Guard
+        // -----------------------------------------------------------------------
 
-        public cEcospaceBasemap EcospaceBasemap => m_core.EcospaceBasemap;
+        private cCore Core
+        {
+            get
+            {
+                if (m_core == null)
+                    throw new InvalidOperationException("EwECore is not initialized. Call Initialize() first.");
+                return m_core;
+            }
+        }
 
-        public int nFleets => m_core.nFleets;
+        // -----------------------------------------------------------------------
+        // IEwECore members
+        // -----------------------------------------------------------------------
 
-        public bool EcospacePaused { get => m_core.EcospacePaused; set => m_core.EcospacePaused = value; }
+        public cEcopathDataStructures EcopathDataStructures => Core.EcopathDataStructures;
 
-        public cEcoSimModelParameters EcosimModelParameters => m_core.EcosimModelParameters;
+        public cEcospaceDataStructures EcospaceDataStructures => Core.EcospaceDataStructures;
 
-        public cEcospaceModelParameters EcospaceModelParameters => m_core.EcospaceModelParameters;
+        public cEcospaceBasemap EcospaceBasemap => Core.EcospaceBasemap;
 
-        public void CloseModel() => m_core.CloseModel();
+        public int nFleets => Core.nFleets;
 
-        public void DiscardChanges() => m_core.DiscardChanges();
+        public bool EcospacePaused { get => Core.EcospacePaused; set => Core.EcospacePaused = value; }
 
-        public void Dispose() => m_core.Dispose();
+        public cEcoSimModelParameters EcosimModelParameters => Core.EcosimModelParameters;
 
-        public bool LoadEcosimScenario(int scenario) => m_core.LoadEcosimScenario(scenario);
+        public cEcospaceModelParameters EcospaceModelParameters => Core.EcospaceModelParameters;
 
-        public bool LoadEcospaceScenario(int scenario) => m_core.LoadEcospaceScenario(scenario);
+        public void CloseModel() => Core.CloseModel();
 
-        public bool LoadModel(string modelName) => m_core.LoadModel(modelName);
+        public void DiscardChanges() => Core.DiscardChanges();
 
-        public bool LoadTimeSeries(int timeSeries) => m_core.LoadTimeSeries(timeSeries);
+        public void Dispose() => Core.Dispose();
 
-        public bool RunEcopath(ref bool isBalanced) => m_core.RunEcopath(ref isBalanced);
+        public bool LoadEcosimScenario(int scenario) => Core.LoadEcosimScenario(scenario);
 
-        public bool RunEcosim() => m_core.RunEcosim();
+        public bool LoadEcospaceScenario(int scenario) => Core.LoadEcospaceScenario(scenario);
 
-        public void RunEcospace(ref cCore.EcoSpaceInterfaceDelegate? dgt) => m_core.RunEcospace(ref dgt);
+        public bool LoadModel(string modelName) => Core.LoadModel(modelName);
 
-        public void StopEcospace() => m_core.StopEcospace();
+        public bool LoadTimeSeries(int timeSeries) => Core.LoadTimeSeries(timeSeries);
 
-        public cAuxiliaryData AuxillaryData(string strValueId) => m_core.get_AuxillaryData(strValueId);
+        public bool RunEcopath(ref bool isBalanced) => Core.RunEcopath(ref isBalanced);
 
-        public cEcoPathGroupInput get_EcopathGroupInputs(int iGroup) => m_core.get_EcopathGroupInputs(iGroup);
+        public bool RunEcosim() => Core.RunEcosim();
 
-        public cTaxon get_Taxon(int iTaxa) => m_core.get_Taxon(iTaxa);
+        public void RunEcospace(ref cCore.EcoSpaceInterfaceDelegate? dgt) => Core.RunEcospace(ref dgt);
 
-        public cStanzaGroup get_StanzaGroups(int v) => m_core.get_StanzaGroups(v);
+        public void StopEcospace() => Core.StopEcospace();
 
-        public cCoreInputOutputBase? get_EcopathFleetInputs(int index) => m_core.get_EcopathFleetInputs(index);
+        public cAuxiliaryData AuxillaryData(string strValueId) => Core.get_AuxillaryData(strValueId);
 
- 
-        public int nGroups => m_core.nGroups;
+        public cEcoPathGroupInput get_EcopathGroupInputs(int iGroup) => Core.get_EcopathGroupInputs(iGroup);
 
-        public int nTaxon => m_core.nTaxon;
+        public cTaxon get_Taxon(int iTaxa) => Core.get_Taxon(iTaxa);
 
-        IPluginManager IEwECore.PluginManager { get => m_pluginManager; }
+        public cStanzaGroup get_StanzaGroups(int v) => Core.get_StanzaGroups(v);
 
-        public string OutputPath { get => m_core.OutputPath; set => m_core.OutputPath = value; }
+        public cCoreInputOutputBase? get_EcopathFleetInputs(int index) => Core.get_EcopathFleetInputs(index);
 
-        public DateTime EcosimTimestepToAbsoluteTime(int iTime) => m_core.EcosimTimestepToAbsoluteTime(iTime);
-        public int AbsoluteTimeToEcosimTimestep(DateTime dt) => m_core.AbsoluteTimeToEcosimTimestep(dt);
+        public int nGroups => Core.nGroups;
 
-        public DateTime EcospaceTimestepToAbsoluteTime(int iTime) => m_core.EcospaceTimestepToAbsoluteTime(iTime);
-        public int AbsoluteTimeToEcospaceTimestep(DateTime dt) => m_core.AbsoluteTimeToEcospaceTimestep(dt);
+        public int nTaxon => Core.nTaxon;
+
+        IPluginManager IEwECore.PluginManager
+        {
+            get
+            {
+                if (m_pluginManager == null)
+                    throw new InvalidOperationException("EwECore is not initialized. Call Initialize() first.");
+                return m_pluginManager;
+            }
+        }
+
+        public string OutputPath { get => Core.OutputPath; set => Core.OutputPath = value; }
+
+        public DateTime EcosimTimestepToAbsoluteTime(int iTime) => Core.EcosimTimestepToAbsoluteTime(iTime);
+        public int AbsoluteTimeToEcosimTimestep(DateTime dt) => Core.AbsoluteTimeToEcosimTimestep(dt);
+
+        public DateTime EcospaceTimestepToAbsoluteTime(int iTime) => Core.EcospaceTimestepToAbsoluteTime(iTime);
+        public int AbsoluteTimeToEcospaceTimestep(DateTime dt) => Core.AbsoluteTimeToEcospaceTimestep(dt);
     }
 }
