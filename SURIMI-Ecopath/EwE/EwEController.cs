@@ -188,9 +188,6 @@ namespace Ecopath.EwE
                 throw new Exception("EwE - Ecopath does not balance");
             m_logger.LogInformation("EwE - Ecopath does balance");
 
-            // Calculate base prices
-            CalculateBasePrices(true);
-
             // Check and load Ecosim
             if (m_configuration.EcosimScenario <= 0 | !m_core.LoadEcosimScenario(m_configuration.EcosimScenario))
                 throw new Exception($"EwE - Ecosim scenario {m_configuration.EcosimScenario} not loaded");
@@ -219,6 +216,9 @@ namespace Ecopath.EwE
 
             // Now load the configuration
             await m_configurationService.LoadAsync(m_core, m_configuration, surimiContract);
+
+            // Calculate base prices
+            CalculateBasePrices(true);
 
             StringBuilder info = new();
             info.AppendLine("EwE FG - species mappings:");
@@ -426,10 +426,10 @@ namespace Ecopath.EwE
             {
                 float pr = (float)price.Price;
 
-                foreach (var marketinfo in m_configurationService.ResolveEwEFleetsFromMarket(price.MarketCode))
+                foreach (var marketinfo in m_configurationService.ResolveEwEFleet(price.MarketCode))
                 {
                     int iFleet = marketinfo.EwEMapping.Index;
-                    foreach (var groupinfo in m_configurationService.ResolveEwEGroupsFromSpecies(price.SpeciesCode))
+                    foreach (var groupinfo in m_configurationService.ResolveEwEGroupFromSpecies(price.SpeciesCode))
                     {
                         int iGroup = groupinfo.EwEMapping.Index;
 
@@ -456,11 +456,16 @@ namespace Ecopath.EwE
             {
                 // Try to parse species code in grid
                 MultiLevelKey key = m_multiLevelKeyFactory.FromObject(grid.Species, KeyDomain.Species, m_keyFieldDescriptorRegistry);
-                // Resolve mapping key for grid fleet segment
-                foreach (var fleetinfo in m_configurationService.ResolveFleets(grid.FleetSegment))
+
+                if (grid.FleetSegment == null)
+                    throw new Exception(string.Format("EwE controller cannot integrate Catch Disposition for species {0} because the fleet segment is missing", key.ToString()));
+
+                var fleetCode = grid.FleetSegment?.ToString() ?? "";
+                // Resolve mapping key for grid fleet segment. This ONLY works because the fleet design aligns 100% with the gear+market design
+                foreach (var fleetinfo in m_configurationService.ResolveEwEFleet(fleetCode))
                 {
                     int iFleet = fleetinfo.EwEMapping.Index;
-                    foreach (var groupinfo in m_configurationService.ResolveEwEGroups(key))
+                    foreach (var groupinfo in m_configurationService.ResolveEwEGroup(key))
                     {
                         int iGroup = groupinfo.EwEMapping.Index;
                         // Validate group and fleet codes
@@ -983,6 +988,14 @@ namespace Ecopath.EwE
             cEcopathDataStructures ds = m_core.EcopathDataStructures;
             _priceBridge = new PriceBridge(ds.Market);
 
+            // First, set the fleet and market mappings
+            foreach (EwEMapping key in m_configurationService.Mappings(KeyDomain.Market))
+            {
+                _priceBridge.MapFleetToMarket(key.ToString(), key.Index);
+            }
+
+
+            // Second, add base prices to this
             for (int iFleet = 1; iFleet < ds.NumFleet; iFleet++)
             {
                 for (int iGroup = 1; iGroup < ds.NumGroups; iGroup++)
@@ -998,12 +1011,8 @@ namespace Ecopath.EwE
             // - The mappings reroute those to a fleet segment, which is what EwE actually uses to store prices
 
             // The following call, therefore, resolves a market code to a fleet segment, and then maps the fleet segment to the market code in the PriceBridge
-            foreach (EwEMapping key in m_configurationService.Mappings(KeyDomain.Market))
-            {
-                _priceBridge.MapFleetToMarket(key.ToString(), key.Index);
-            }
+
         }
     }
-
         #endregion // Internal - EwE interactions
 }

@@ -9,10 +9,6 @@ using Eii.ControlledVocabularies.Registries;
 using Eii.ControlledVocabularies.Resolve;
 using Eii.ControlledVocabularies.Utils;
 using Eii.ControlledVocabularies.Vocabularies;
-using Eii.ControlledVocabularies.Vocabularies.Country;
-using Eii.ControlledVocabularies.Vocabularies.Gear;
-using Eii.ControlledVocabularies.Vocabularies.LifeStage;
-using Eii.ControlledVocabularies.Vocabularies.Species;
 using EwECore;
 using EwECore.Auxiliary;
 using SURIMI.Datamodel;
@@ -57,7 +53,7 @@ namespace Ecopath.Services
             }
         }
 
-        public EwEConfigurationService(IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory, ILogger<EwEConfiguration> logger, IVocabularyRegistry vocabularies, IBlobStore blobStore)
+        public EwEConfigurationService(IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory, ILogger<EwEConfiguration> logger, IVocabularyRegistry vocabularies, IBlobStore blobStore, ISurimiContractToEwEService surimiContractToEwEService)
         {
             m_keyFieldDescriptorRegistry = keyFieldDescriptorRegistry;
             m_multiLevelKeyFactory = multiLevelKeyFactory;
@@ -125,16 +121,17 @@ namespace Ecopath.Services
             await m_surimiContractToEwEService.ConvertSurimiContractToEwEAsync(m_mappings, core, surimiContract);
 
             // Register fleet segments as gear + countrycode pairs to match fleet + countrycode fishing
-            //m_mappings.Add(new EwEMapping("gearcode=OTB; countrycode=ESP", KeyDomain.FleetSegment, 1, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=PS; countrycode=ESP", KeyDomain.FleetSegment, 2, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=LLS; countrycode=ESP", KeyDomain.FleetSegment, 3, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=EwE:ART; countrycode=ESP", KeyDomain.FleetSegment, 4, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; countrycode=ESP", KeyDomain.FleetSegment, 9, m_keyFieldDescriptorRegistry));
+            // ToDo: obtain from Semantic Registry instead of hardcoding here
+            m_mappings.Add(new EwEMapping("gearcode=OTB; countrycode=ESP", KeyDomain.FleetSegment, 1, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=PS; countrycode=ESP", KeyDomain.FleetSegment, 2, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=LLS; countrycode=ESP", KeyDomain.FleetSegment, 3, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:ART; countrycode=ESP", KeyDomain.FleetSegment, 4, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; countrycode=ESP", KeyDomain.FleetSegment, 9, m_keyFieldDescriptorRegistry));
 
-            //m_mappings.Add(new EwEMapping("gearcode=OTB; countrycode=FRA", KeyDomain.FleetSegment, 5, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=TM; countrycode=FRA", KeyDomain.FleetSegment, 6, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=PS; countrycode=FRA", KeyDomain.FleetSegment, 7, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=EwE:ART; countrycode=FRA", KeyDomain.FleetSegment, 8, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=OTB; countrycode=FRA", KeyDomain.FleetSegment, 5, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=TM; countrycode=FRA", KeyDomain.FleetSegment, 6, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=PS; countrycode=FRA", KeyDomain.FleetSegment, 7, m_keyFieldDescriptorRegistry));
+            m_mappings.Add(new EwEMapping("gearcode=EwE:ART; countrycode=FRA", KeyDomain.FleetSegment, 8, m_keyFieldDescriptorRegistry));
 
 
             // Register fleet segments as gear + market code pairs to match fleet > market deliveries
@@ -181,15 +178,15 @@ namespace Ecopath.Services
 
         #region Consulting the registry
 
-        public IEnumerable<EwEMappingMatch> ResolveEwEGroupsFromSpecies(string speciescode)
+        public IEnumerable<EwEMappingMatch> ResolveEwEGroupFromSpecies(string speciescode)
         {
             MultiLevelKey key = m_multiLevelKeyFactory.FromPairs([(SpeciesFields.SpeciesCode, speciescode)], KeyDomain.Species, m_keyFieldDescriptorRegistry);
-            return ResolveEwEGroups(key);
+            return ResolveEwEGroup(key);
         }
 
-        public IEnumerable<EwEMappingMatch> ResolveEwEGroupsFromSpecies(SURIMI.Datamodel.Species species)
+        public IEnumerable<EwEMappingMatch> ResolveEwEGroupFromSpecies(SURIMI.Datamodel.Species species)
         {
-            return ResolveEwEGroups(m_multiLevelKeyFactory.FromObject(species, KeyDomain.Species, m_keyFieldDescriptorRegistry));
+            return ResolveEwEGroup(m_multiLevelKeyFactory.FromObject(species, KeyDomain.Species, m_keyFieldDescriptorRegistry));
         }
 
         /// <summary>
@@ -198,7 +195,7 @@ namespace Ecopath.Services
         /// <param name="key"></param>
         /// <returns></returns>
         /// 
-        public IEnumerable<EwEMappingMatch> ResolveEwEGroups(MultiLevelKey key)
+        public IEnumerable<EwEMappingMatch> ResolveEwEGroup(MultiLevelKey key)
         {
             if (key.Domain != KeyDomain.Species)
                 yield break;
@@ -220,7 +217,7 @@ namespace Ecopath.Services
                 yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);
         }
 
-        public IEnumerable<EwEMappingMatch> ResolveEwEFleetsFromMarket(string marketcode)
+        public IEnumerable<EwEMappingMatch> ResolveEwEFleet(string marketcode)
         {
             MultiLevelKey key = m_multiLevelKeyFactory.FromPairs([(MarketFields.MarketCode, marketcode)], KeyDomain.Market, m_keyFieldDescriptorRegistry);
             var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptorRegistry.GetAll(KeyDomain.Market));

@@ -1,9 +1,9 @@
 {
     "simulation_id": "123e4567-e89b-12d3-a456-426614174000",
-    "scenario_name": "qwe",
+    "scenario_name": "northwestern_med",
     "end_date_time": "2014-01-01T00:00:00.000Z",
     "simulation": {
-        "case_study_name": "Western Med",
+        "case_study_name": "Northwestern Med (GSA 06 and 07)",
         "start_date_time": "2013-01-01T00:00:00.000Z",
         "maximum_end_date_time": "2050-01-01T00:00:00.000Z",
         "time_step": "P1M",
