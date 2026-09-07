@@ -5,16 +5,11 @@ using Eii.BlobStore;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
 using Eii.SemanticRegistry;
-using EwECore;
-using EwECore.Plugins;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using SURIMI.Datamodel;
 using Xunit;
-using Eii.BlobStore;
-using Ecopath.Services;
-using Eii.SemanticRegistry;
 
 namespace Ecopath.Tests.EwE
 {
