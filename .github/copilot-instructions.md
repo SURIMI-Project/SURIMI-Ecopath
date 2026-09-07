@@ -1,5 +1,10 @@
 # Copilot instructions for SURIMI-Ecopath
 
+## General Guidelines
+- Always place `using` directives at the top of the file, outside the namespace block. Never nest `using` statements inside a namespace declaration.
+- In .NET SDK-style projects, do not explicitly add `using` directives for namespaces that are already covered by implicit global usings (e.g., System, System.Linq, System.Collections.Generic, System.Threading.Tasks, etc.). Always treat these as redundant and remove them if they are not used.
+- Always remove unused `using` directives and sort the remaining ones (System namespaces first, then others alphabetically) in every file that is created or modified.
+
 ## Build and test
 
 Before restoring, building, or testing, make sure the private NuGet feeds from `NuGet.config` are authenticated in the **global** NuGet config. This repository depends on GitHub Packages (`SURIMI.*`, `Eii.*`) and Buf Schema Registry (`BSR.*`), and the README documents the `dotnet nuget add source ...` commands to configure those credentials.

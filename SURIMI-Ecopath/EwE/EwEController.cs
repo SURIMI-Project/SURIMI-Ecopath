@@ -1,4 +1,5 @@
-﻿using Ecopath.EwE.Wrapper;
+﻿using Ecopath.EwE.Prices;
+using Ecopath.EwE.Wrapper;
 using Ecopath.Services;
 using Eii.ControlledVocabularies.Common;
 using Eii.ControlledVocabularies.Core;
@@ -17,7 +18,7 @@ namespace Ecopath.EwE
     // - The aim was to insert agent-based fisheries into EwE with a minimal code changes
     // - EwE needs to account for this fishing in the running model data, but also in the various result arrays
     //
-    // This implementation relies on a plug-in bridge (to supercharge EwE interop) and the 'off-the-shelf' Ecospace pause mechanism
+    // This implementation relies on a plug-in _priceBridge (to supercharge EwE interop) and the 'off-the-shelf' Ecospace pause mechanism
     // * It is important to know that the Ecospace Pause mechanism waits at the BEGINNING of a time step
     // - Ecospace biomass, catch, sales and other end-of timestep data is gathered at the end of a timestep
     // - Ecospace then pauses at the beginning of a new timestep for POSEIDON to provide catch dispositions
@@ -32,7 +33,7 @@ namespace Ecopath.EwE
     // V We now properly fish! Data integration performed in the middle of the Ecospace time step, using catch dispositions received earlier
 
     // General things to do:
-    // ! devise a mechanism to bridge time step sizes; right now the code assumes that time steps are monthly
+    // ! devise a mechanism to _priceBridge time step sizes; right now the code assumes that time steps are monthly
     // ! expand entity matching logic
     // ! devise system to order up the same scenario across all participating models
     // ! user stories in GitHub!!!
@@ -64,7 +65,7 @@ namespace Ecopath.EwE
         private event Action<RunStates>? OnRunStateChanged;
 
         // --- Data in and out 
-        private List<SpeciesPrice>? m_pricesIn;
+        private List<SpeciesPrice>? _pricesIn;
         private CatchDispositionSummary? m_catchIn;
 
         private Biomass? m_biomassOut;
@@ -81,6 +82,8 @@ namespace Ecopath.EwE
         /// To track species group proportions affected by external fishing
         /// </summary>
         private Dictionary<int, GroupSpeciesProportions> m_groupSpeciesProportions = new();
+
+        private PriceBridge? _priceBridge = null;
 
         #endregion // Private vars 
 
@@ -175,7 +178,6 @@ namespace Ecopath.EwE
 
             m_configuration = await m_configurationService.CreateConfigurationAsync(scenarioName);
 
-
             if (!m_core.LoadModel(m_configuration.LocalModelFile))
                 throw new Exception($"EwE could not load model '{m_configuration.LocalModelFile}'");
             m_logger.LogInformation("EwE - Ecopath loaded file '{localModelFile}', model '{modelName}'", m_configuration.LocalModelFile, m_core.EcopathDataStructures.ModelName);
@@ -213,15 +215,18 @@ namespace Ecopath.EwE
             m_logger.LogInformation("EwE - Ecospace scenario {0} loaded", m_configuration.EcospaceScenario);
 
             // Now load the configuration
-            m_configurationService.Load(m_core, m_configuration, surimiContract);
+            await m_configurationService.LoadAsync(m_core, m_configuration, surimiContract);
+
+            // Calculate base prices
+            CalculateBasePrices(true);
 
             StringBuilder info = new();
             info.AppendLine("EwE FG - species mappings:");
             foreach (var mapping in m_configurationService.Mappings(KeyDomain.Species))
-                info.AppendLine(string.Format(" - {0}", GetMappingInfoString(mapping,m_core)));
+                info.AppendLine(string.Format(" - {0}", GetMappingInfoString(mapping, m_core)));
             info.AppendLine("EwE fleet - fleetsegment mappings:");
             foreach (var mapping in m_configurationService.Mappings(KeyDomain.FleetSegment))
-                info.AppendLine(string.Format(" - {0}", GetMappingInfoString(mapping,m_core)));
+                info.AppendLine(string.Format(" - {0}", GetMappingInfoString(mapping, m_core)));
             info.AppendLine("EwE fleet - market mappings:");
             foreach (var mapping in m_configurationService.Mappings(KeyDomain.Market))
                 info.AppendLine(string.Format(" - {0}", GetMappingInfoString(mapping, m_core)));
@@ -294,7 +299,7 @@ namespace Ecopath.EwE
         public async Task<bool> ContinueAsync(int timeoutMs = 60000)
         {
             if (RunState != RunStates.waiting) return false;
-    
+
             // Need to wait for RunState to switch back to Waiting. Only return after
             var tcs = new TaskCompletionSource();
 
@@ -340,7 +345,7 @@ namespace Ecopath.EwE
         public Task<bool> UpdatePricesAsync(List<SpeciesPrice> speciesPrices)
         {
             // Make prices up for grabs
-            m_pricesIn = speciesPrices;
+            _pricesIn = speciesPrices;
             return Task.FromResult(true);
         }
 
@@ -404,41 +409,39 @@ namespace Ecopath.EwE
         /// <summary>
         /// This method integrates the prices received from the Market model into the EwE model. It maps to a Market price per fleet and group.
         /// </summary>
+        /// <remarks>
+        /// 03 July 2026: prices are now by species; the gear code no longer applies
+        //  What these changes call for:
+        // - Each fleet has a market code attached
+        // - Prices are set by species + market, applying to all the fleets that fall within the same market
+        // - Prices are applied proportionally to the EwE off-vessel prices, PER MARKET
+        /// </remarks>
         private void IntegratePrices()
         {
-            if (m_pricesIn == null) return;
+            if (_pricesIn == null) return;
             if (m_configuration == null) return;
+            if (_priceBridge == null) return;
 
-            var ds = m_core.EcopathDataStructures;
-
-            foreach (var price in m_pricesIn)
+            foreach (var price in _pricesIn)
             {
                 float pr = (float)price.Price;
-                foreach (var marketinfo in  m_configurationService.ResolveMarkets(price.CategoryCode, price.MarketCode))
+
+                foreach (var marketinfo in m_configurationService.ResolveEwEFleet(price.MarketCode))
                 {
                     int iFleet = marketinfo.EwEMapping.Index;
-                    foreach (var groupinfo in m_configurationService.ResolveGroups(price.SpeciesCode))
+                    foreach (var groupinfo in m_configurationService.ResolveEwEGroupFromSpecies(price.SpeciesCode))
                     {
                         int iGroup = groupinfo.EwEMapping.Index;
 
-                        // ToDo: implement unit conversions?
-                        //Debug.Assert(string.Compare(price.Currency, "eur", true) == 0);
-                        //Debug.Assert(string.Compare(price.MeasurementUnit, "kg", true) == 0);
-
-                        if (iFleet > 0 && iGroup > 0)
-                            ds.Market[iFleet, iGroup] = pr;
-                        else
-                        {
-                            // ToDo_JS: decide how to respond to a potential EwE misconfiguration.
-                            m_logger.LogWarning("EwE - !! Price record category '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.CategoryCode, price.MarketCode, price.SpeciesCode);
-                            //throw new Exception("Price record category '{0}', market '{1}', species '{2}' cannot be mapped to EwE", price.CategoryCode, price.MarketCode, price.SpeciesCode);
-                        }
+                        _priceBridge.AddEvolvingPrice(price.MarketCode, iGroup, pr, iFleet, 1.0);
                     }
                 }
             }
 
             // Done, clear buffer. Prices within EwE will remain fixed until the next change
-            m_pricesIn = null;
+            _priceBridge.AppyToEwE();
+
+            _pricesIn = null;
         }
 
         private void IntegrateCatchDispositions(int iTime)
@@ -453,11 +456,16 @@ namespace Ecopath.EwE
             {
                 // Try to parse species code in grid
                 MultiLevelKey key = m_multiLevelKeyFactory.FromObject(grid.Species, KeyDomain.Species, m_keyFieldDescriptorRegistry);
-                // Resolve mapping key for grid fleet segment
-                foreach (var fleetinfo in m_configurationService.ResolveFleets(grid.FleetSegment))
+
+                if (grid.FleetSegment == null)
+                    throw new Exception(string.Format("EwE controller cannot integrate Catch Disposition for species {0} because the fleet segment is missing", key.ToString()));
+
+                var fleetCode = grid.FleetSegment?.ToString() ?? "";
+                // Resolve mapping key for grid fleet segment. This ONLY works because the fleet design aligns 100% with the gear+market design
+                foreach (var fleetinfo in m_configurationService.ResolveEwEFleet(fleetCode))
                 {
                     int iFleet = fleetinfo.EwEMapping.Index;
-                    foreach (var groupinfo in m_configurationService.ResolveGroups(key))
+                    foreach (var groupinfo in m_configurationService.ResolveEwEGroup(key))
                     {
                         int iGroup = groupinfo.EwEMapping.Index;
                         // Validate group and fleet codes
@@ -573,7 +581,7 @@ namespace Ecopath.EwE
         /// Prepare a snapshot of catch data for export. Only include internal gears, e.g., of catches produced by EwE.
         /// </summary>
         private void CacheCatchAndSalesData()
-        { 
+        {
             if (m_catchOut == null)
                 m_catchOut = new();
             else
@@ -755,7 +763,7 @@ namespace Ecopath.EwE
             // ToDo_JS: validate actual model currency unit
             float area = m_core.EcospaceDataStructures.CellArea[irow, icol];
             if (area == 0) area = 1; // Can happen
-            return (float) kg / (area * 1000);
+            return (float)kg / (area * 1000);
         }
 
         #endregion // Data interactions
@@ -785,7 +793,7 @@ namespace Ecopath.EwE
         }
 
         public IPlugin? GetPlugin(System.Type t)
-        { 
+        {
             IPluginManager pm = m_core.PluginManager;
             List<IPlugin> plugins = (List<IPlugin>)pm.GetPlugins(t);
             if (plugins.Count > 0)
@@ -826,7 +834,7 @@ namespace Ecopath.EwE
                             // Tick
                             m_iSpinUpStep += 1;
                             if (m_iSpinUpStep % cCore.N_MONTHS == 0)
-                                m_logger.LogInformation("EwE - finished spinup year {0}", (int) (m_iSpinUpStep / cCore.N_MONTHS));
+                                m_logger.LogInformation("EwE - finished spinup year {0}", (int)(m_iSpinUpStep / cCore.N_MONTHS));
                         }
                         else
                         {
@@ -863,6 +871,8 @@ namespace Ecopath.EwE
                     case cEcospaceBridgePlugin.EventType.EndRun:
                         m_logger.LogInformation("EwE - end run callback");
 
+                        // Clear all modifications made to core data, if any
+                        m_core.DiscardChanges();
                         // Correctly reset the state and clean up
                         RunState = RunStates.idle;
                         m_thread = null;
@@ -870,7 +880,7 @@ namespace Ecopath.EwE
 
                     default:
                         // NOP
-                        break; 
+                        break;
                 }
             }
             catch (Exception ex)
@@ -881,7 +891,7 @@ namespace Ecopath.EwE
 
         private bool MustPauseNext(int iTime)
         {
-            if(m_configuration == null) throw new InvalidOperationException("Configuration is not set.");
+            if (m_configuration == null) throw new InvalidOperationException("Configuration is not set.");
 
             // Do not halt while in spin-up
             cEcospaceDataStructures ds = m_core.EcospaceDataStructures;
@@ -948,6 +958,61 @@ namespace Ecopath.EwE
             return Task.FromResult(summary);
         }
 
-        #endregion // Internal - EwE interactions
+        /// <summary>
+        /// Makes a snapshot of the EwE off-vessel prices and calculates the mean
+        /// functional-group price for a market.
+        ///
+        /// The market-level functional-group prices are used as reference prices when
+        /// translating market- and species-level price changes to EwE fleet ×
+        /// functional-group prices.
+        /// </summary>
+        /// <param name="marketCode">
+        /// The SURIMI market code associated with the selected fleets.
+        /// </param>
+        /// <param name="bWeighted">
+        /// True to weight the mean prices by Ecopath landings; false to calculate
+        /// an unweighted mean across fleets with landings.
+        /// </param>
+        /// <remarks>
+        /// The SURIMI Market model provides prices by market and species. These prices
+        /// are aggregated to functional-group prices before being applied to EwE.
+        ///
+        /// Row zero of the stored matrix contains the market-level reference price for
+        /// each functional group. Rows one and above contain the original EwE
+        /// fleet × functional-group prices.
+        ///
+        /// Fleet filtering by market is not yet implemented.
+        /// </remarks>
+        void CalculateBasePrices(bool bWeighted = true)
+        {
+            cEcopathDataStructures ds = m_core.EcopathDataStructures;
+            _priceBridge = new PriceBridge(ds.Market);
+
+            // First, set the fleet and market mappings
+            foreach (EwEMapping key in m_configurationService.Mappings(KeyDomain.Market))
+            {
+                _priceBridge.MapFleetToMarket(key.ToString(), key.Index);
+            }
+
+
+            // Second, add base prices to this
+            for (int iFleet = 1; iFleet < ds.NumFleet; iFleet++)
+            {
+                for (int iGroup = 1; iGroup < ds.NumGroups; iGroup++)
+                {
+                    float price = ds.Market[iFleet, iGroup];
+                    if (price > 0.0f)
+                        _priceBridge.SetBasePrice(iGroup, iFleet, price, ds.Landing[iFleet, iGroup]);
+                }
+            }
+
+            // Some reverse archaeology
+            // - Market codes are defined as a MLK with the values "gearcode" and "countrycode"
+            // - The mappings reroute those to a fleet segment, which is what EwE actually uses to store prices
+
+            // The following call, therefore, resolves a market code to a fleet segment, and then maps the fleet segment to the market code in the PriceBridge
+
+        }
     }
+        #endregion // Internal - EwE interactions
 }

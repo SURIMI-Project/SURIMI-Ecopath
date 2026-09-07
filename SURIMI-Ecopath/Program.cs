@@ -92,6 +92,7 @@ public class Program
         builder.Services.AddSingleton<ProtocolVersionService>();
         builder.Services.AddSingleton<IEwEConfigurationService, EwEConfigurationService>();
         builder.Services.AddSingleton<ISemanticRegistry, SemanticRegistry>();
+        builder.Services.AddTransient<ISurimiContractToEwEService, SurimiContractToEwEService>();
         builder.Services.AddTransient<IVocabulariesRegisterService, VocabulariesRegisterService>();
 
         var app = builder.Build();
