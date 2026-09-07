@@ -1,17 +1,15 @@
 ﻿using Ecopath.EwE;
 using Ecopath.EwE.Wrapper;
-using SURIMI.Datamodel;
+using Ecopath.Services;
+using Eii.BlobStore;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
-using EwECore;
-using EwECore.Plugins;
+using Eii.SemanticRegistry;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using SURIMI.Datamodel;
 using Xunit;
-using Eii.BlobStore;
-using Ecopath.Services;
-using Eii.SemanticRegistry;
 
 namespace Ecopath.Tests.EwE
 {
