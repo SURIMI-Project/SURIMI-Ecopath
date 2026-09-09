@@ -156,7 +156,7 @@ namespace Ecopath.EwE
         /// Start EwE and wait for Ecospace to get ready for simulations
         /// </summary>
         /// <returns></returns>
-        public async Task<int> StartAsync(SurimiContract surimiContract, string scenarioName, int timeoutMs = 60 * 10 * 1000)
+        public async Task<int> StartAsync(SurimiContract surimiContract, string scenarioName, string climateScenarioCode, int timeoutMs = 60 * 10 * 1000)
         {
             // Check readiness
             if (RunState != RunStates.idle)
@@ -167,7 +167,7 @@ namespace Ecopath.EwE
 
             // Create the EwE core and wire the bridge plugin for this simulation
             m_core.Initialize();
-            m_logger.LogInformation("EwE loaded {0} plug-in(s)", m_core.PluginManager.LoadPlugins());
+            m_logger.LogInformation("EwE loaded {NrOfPlugins} plug-in(s)", m_core.PluginManager.LoadPlugins());
 
             IPlugin? pi = GetPlugin(typeof(cEcospaceBridgePlugin));
             if (pi != null)
@@ -180,7 +180,7 @@ namespace Ecopath.EwE
 
             if (!m_core.LoadModel(m_configuration.LocalModelFile))
                 throw new Exception($"EwE could not load model '{m_configuration.LocalModelFile}'");
-            m_logger.LogInformation("EwE - Ecopath loaded file '{localModelFile}', model '{modelName}'", m_configuration.LocalModelFile, m_core.EcopathDataStructures.ModelName);
+            m_logger.LogInformation("EwE - Ecopath loaded file '{LocalModelFile}', model '{ModelName}'", m_configuration.LocalModelFile, m_core.EcopathDataStructures.ModelName);
 
             // Check Ecopath balancing
             bool bIsBalanced = false;
@@ -191,7 +191,7 @@ namespace Ecopath.EwE
             // Check and load Ecosim
             if (m_configuration.EcosimScenario <= 0 | !m_core.LoadEcosimScenario(m_configuration.EcosimScenario))
                 throw new Exception($"EwE - Ecosim scenario {m_configuration.EcosimScenario} not loaded");
-            m_logger.LogInformation("EwE - Ecosim scenario {0} loaded", m_configuration.EcosimScenario);
+            m_logger.LogInformation("EwE - Ecosim scenario {EcosimScenario} loaded", m_configuration.EcosimScenario);
             if (m_configuration.EcosimTimeSeries > 0)
             {
                 if (!m_core.LoadTimeSeries(m_configuration.EcosimTimeSeries))
@@ -204,7 +204,7 @@ namespace Ecopath.EwE
             parmsSim.NumberYears = m_configuration.MaxRunYears; // No of years apply to both Sim and Space
 
             // Run Ecosim
-            m_logger.LogInformation("EwE - Going to run Ecosim for {0} years", parmsSim.NumberYears);
+            m_logger.LogInformation("EwE - Going to run Ecosim for {NumberYears} years", parmsSim.NumberYears);
             if (!m_core.RunEcosim())
                 throw new Exception("EwE - Ecosim failed to run");
             m_logger.LogInformation("EwE - Ecosim run successfully");
@@ -212,7 +212,7 @@ namespace Ecopath.EwE
             // Check and load Ecospace
             if (m_configuration.EcospaceScenario <= 0 | !m_core.LoadEcospaceScenario(m_configuration.EcospaceScenario))
                 throw new Exception($"EwE - Ecospace scenario {m_configuration.EcospaceScenario} not loaded");
-            m_logger.LogInformation("EwE - Ecospace scenario {0} loaded", m_configuration.EcospaceScenario);
+            m_logger.LogInformation("EwE - Ecospace scenario {EcospaceScenario} loaded", m_configuration.EcospaceScenario);
 
             // Now load the configuration
             await m_configurationService.LoadAsync(m_core, m_configuration, surimiContract);
@@ -230,7 +230,7 @@ namespace Ecopath.EwE
             info.AppendLine("EwE fleet - market mappings:");
             foreach (var mapping in m_configurationService.Mappings(KeyDomain.Market))
                 info.AppendLine(string.Format(" - {0}", GetMappingInfoString(mapping, m_core)));
-            m_logger.LogInformation(info.ToString());
+            m_logger.LogInformation("{MappingInfo}", info.ToString());
 
             // Build species proportion accounting
             foreach (int iGroup in m_configuration.FishedGroups)
@@ -242,7 +242,7 @@ namespace Ecopath.EwE
 
             ds.SpinUpYears = m_configuration.SpinupYears;
             ds.UseSpinUp = (m_configuration.SpinupYears > 0);
-            m_logger.LogInformation("EwE - Ecospace spin-up for {0} years", ds.UseSpinUp ? m_configuration.SpinupYears.ToString() : "off");
+            m_logger.LogInformation("EwE - Ecospace spin-up for {SpinupYears} years", ds.UseSpinUp ? m_configuration.SpinupYears.ToString() : "off");
 
             // Configure output writers
             string outputPath = m_configuration.OutputPath;
@@ -786,7 +786,7 @@ namespace Ecopath.EwE
             }
             catch (Exception ex)
             {
-                m_logger.LogInformation("In ForceStopEwE. - exception ...{Message}", ex.Message);
+                m_logger.LogError(ex, "In ForceStopEwE - exception");
             }
 
             RunState = RunStates.idle; // Manually reset to idle if needed
@@ -834,12 +834,12 @@ namespace Ecopath.EwE
                             // Tick
                             m_iSpinUpStep += 1;
                             if (m_iSpinUpStep % cCore.N_MONTHS == 0)
-                                m_logger.LogInformation("EwE - finished spinup year {0}", (int)(m_iSpinUpStep / cCore.N_MONTHS));
+                                m_logger.LogInformation("EwE - finished spinup year {SpinupYear}", (int)(m_iSpinUpStep / cCore.N_MONTHS));
                         }
                         else
                         {
                             if (iTime % cCore.N_MONTHS == 0)
-                                m_logger.LogInformation("EwE - finished year {0}", m_core.EcospaceTimestepToAbsoluteTime(iTime).Year);
+                                m_logger.LogInformation("EwE - finished year {Year}", m_core.EcospaceTimestepToAbsoluteTime(iTime).Year);
                         }
                         break;
 
@@ -856,7 +856,7 @@ namespace Ecopath.EwE
                             CacheBiomassData();
                             CacheCatchAndSalesData();
 
-                            m_logger.LogInformation("EwE - pausing at timestep {0}", iTime + 1);
+                            m_logger.LogInformation("EwE - pausing at timestep {Timestep}", iTime + 1);
                             RunState = RunStates.waiting;
                             m_core.EcospacePaused = true;
                         }
@@ -885,7 +885,7 @@ namespace Ecopath.EwE
             }
             catch (Exception ex)
             {
-                m_logger.LogInformation("EwE - exception {0} on bridgecallback {1}", ex.Message, e.ToString());
+                m_logger.LogError(ex, "EwE - exception on bridge callback {EventType}", e.ToString());
             }
         }
 
