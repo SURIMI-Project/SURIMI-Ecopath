@@ -27,12 +27,12 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
         await m_checksimulationservice.ReserveSimulationAsync(request.SimulationId, context);
 
 
-        m_logger.LogInformation($"Initializing simulation {request.SimulationId}, scenario {request.ScenarioName}...");
+        m_logger.LogInformation("Initializing simulation {SimulationId}, scenario {ScenarioName}, climate scenario {ClimateScenario}...", request.SimulationId, request.ScenarioName, request.ClimateScenario);
         try
         {
             var contract = GetSurimiContract(request.Simulation);
 
-            var result = await m_controller.StartAsync(contract, request.ScenarioName);
+            var result = await m_controller.StartAsync(contract, request.ScenarioName, request.ClimateScenario);
             if (result != 1)
             {
                 throw new RpcException(new Status(StatusCode.Internal, "Failed to initialise Ecopath"));
@@ -51,7 +51,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
     {
         await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
         m_checksimulationservice.ReleaseSimulation(request.SimulationId);
-        m_logger.LogInformation($"Finalizing simulation {request.SimulationId}");
+        m_logger.LogInformation("Finalizing simulation {SimulationId}", request.SimulationId);
 
         try
         {
@@ -64,7 +64,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
         }
         catch (Exception ex)
         {
-            m_logger.LogInformation("In Finalise. - exception ...{Message}", ex.Message);
+            m_logger.LogError(ex, "In Finalise - exception");
             throw;
         }
     }
@@ -73,7 +73,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
     {
         await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
         m_checksimulationservice.ReleaseSimulation(request.SimulationId);
-        m_logger.LogInformation($"Cancel simulation {request.SimulationId}");
+        m_logger.LogInformation("Cancel simulation {SimulationId}", request.SimulationId);
 
         try
         {
@@ -86,7 +86,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
         }
         catch (Exception ex)
         {
-            m_logger.LogInformation("In Cancel. - exception ...{Message}", ex.Message);
+            m_logger.LogError(ex, "In Cancel - exception");
             throw;
         }
     }
@@ -94,7 +94,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
     public override async Task<SimulateStepResponse> SimulateStep(SimulateStepRequest request, ServerCallContext context)
     {
         await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
-        m_logger.LogInformation($"Simulate step for simulation {request.SimulationId}");
+        m_logger.LogInformation("Simulate step for simulation {SimulationId}", request.SimulationId);
 
         var res = await m_controller.ContinueAsync();
 
@@ -104,7 +104,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
     public override async Task<GetBiomassResponse> GetBiomass(GetBiomassRequest request, ServerCallContext context)
     {
         await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
-        m_logger.LogInformation($"GetBiomass for simulation {request.SimulationId}");
+        m_logger.LogInformation("GetBiomass for simulation {SimulationId}", request.SimulationId);
 
         var biomass = await m_controller.GetBiomassAsync();
 
@@ -184,7 +184,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
     public override async Task<UpdateEnvironmentVariablesResponse> UpdateEnvironmentVariables(UpdateEnvironmentVariablesRequest request, ServerCallContext context)
     {
         await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
-        m_logger.LogInformation($"Updating environment variables for {request.EnvironmentVariablesSummary.EnvironmentVariablesGrids.Count} variables...");
+        m_logger.LogInformation("Updating environment variables for {VariableCount} variables...", request.EnvironmentVariablesSummary.EnvironmentVariablesGrids.Count);
 
         var environmentVariables = new SURIMI.Datamodel.EnvironmentVariablesSummary
         {
@@ -212,7 +212,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
     public override async Task<GetCatchDispositionResponse> GetCatchDisposition(GetCatchDispositionRequest request, ServerCallContext context)
     {
         await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
-        m_logger.LogInformation($"Ecopath GetCatchDisposition for {request.SimulationId}...");
+        m_logger.LogInformation("Ecopath GetCatchDisposition for {SimulationId}...", request.SimulationId);
 
         var catchDisposition = await m_controller.GetCatchDispositionSummaryAsync(
             request.StartDateTime.ToDateTime(),
@@ -271,7 +271,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
     public override async Task<GetFishingActivityResponse> GetFishingActivity(GetFishingActivityRequest request, ServerCallContext context)
     {
         await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
-        m_logger.LogInformation($"Getting Fishing Activity for Simulation {request.SimulationId}...");
+        m_logger.LogInformation("Getting Fishing Activity for Simulation {SimulationId}...", request.SimulationId);
 
         var fishingActivity = await m_controller.GetFishingActivityAsync();
 
@@ -302,7 +302,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
     public override async Task<UpdateRegulationsResponse> UpdateRegulations(UpdateRegulationsRequest request, ServerCallContext context)
     {
         await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
-        m_logger.LogInformation($"Updating Regulations for Simulation {request.SimulationId} ");
+        m_logger.LogInformation("Updating Regulations for Simulation {SimulationId}", request.SimulationId);
 
         var regulations = new SURIMI.Datamodel.RegulationsSummary
         {
@@ -333,7 +333,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
     public override async Task<GetSalesResponse> GetSales(GetSalesRequest request, ServerCallContext context)
     {
         await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
-        m_logger.LogInformation($"Ecopath GetSales for {request.SimulationId}...");
+        m_logger.LogInformation("Ecopath GetSales for {SimulationId}...", request.SimulationId);
 
         var salesSummaries = await m_controller.GetSalesSummariesAsync(request.StartDateTime.ToDateTime(), request.EndDateTime.ToDateTime());
 
@@ -379,7 +379,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
     public override async Task<UpdateSpeciesPricesResponse> UpdateSpeciesPrices(UpdateSpeciesPricesRequest request, ServerCallContext context)
     {
         await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
-        m_logger.LogInformation($"Updating prices for {request.SpeciesPriceSummary.SpeciesPrices.Count} species...");
+        m_logger.LogInformation("Updating prices for {SpeciesCount} species...", request.SpeciesPriceSummary.SpeciesPrices.Count);
 
         var speciesPrices = request.SpeciesPriceSummary.SpeciesPrices
             .Select(p => new SURIMI.Datamodel.SpeciesPrice
@@ -492,10 +492,16 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
                         MarketCode = c.MarketCode,
                     })
                     .ToList(),
-                Price_Categories = simulation.Items.PriceCategories
+                PriceCategories = simulation.Items.PriceCategories
                     .Select(c => new SURIMI.Datamodel.PriceCategory
                     {
                         CategoryCode = c.CategoryCode,
+                    })
+                    .ToList(),
+                ClimateScenarios = simulation.Items.ClimateScenarios
+                    .Select(c => new SURIMI.Datamodel.ClimateScenario
+                    {
+                        ClimateScenarioCode = c.ClimateScenarioCode,
                     })
                     .ToList()
             }
