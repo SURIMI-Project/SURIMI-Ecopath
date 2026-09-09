@@ -87,7 +87,7 @@ public class EcologyServiceTests : IClassFixture<EcopathWebApplicationFactory>
             @"GetSales\EcologyService_GetSales.json");
         var getSalesResponse = await client.GetSalesAsync(getSalesRequest);
         getSalesResponse.SimulationId.Should().Be("123e4567-e89b-12d3-a456-426614174000");
-        getSalesResponse.SalesSummary.MarketSales.Count.Should().Be(0);
+        getSalesResponse.SalesSummary.MarketSales.Count.Should().BeGreaterThan(0);
 
         // 7. Get fishing activity and verify the response
         var getFishingActivityRequest = LoadMessage<GetFishingActivityRequest>(

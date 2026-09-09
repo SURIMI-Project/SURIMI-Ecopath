@@ -2,6 +2,7 @@
     "simulation_id": "123e4567-e89b-12d3-a456-426614174000",
     "scenario_name": "northwestern_med",
     "end_date_time": "2014-01-01T00:00:00.000Z",
+    "climate_scenario": "RCP_2.6",
     "simulation": {
         "case_study_name": "Northwestern Med (GSA 06 and 07)",
         "start_date_time": "2013-01-01T00:00:00.000Z",
@@ -768,6 +769,17 @@
                     "scale": "",
                     "country_code": "FRA",
                     "model": "EwE"
+                }
+            ],
+            "climate_scenarios": [
+                {
+                    "climate_scenario_code": "RCP_2.6"
+                },
+                {
+                    "climate_scenario_code": "RCP_4.5"
+                },
+                {
+                    "climate_scenario_code": "RCP_8.5"
                 }
             ]
         }
