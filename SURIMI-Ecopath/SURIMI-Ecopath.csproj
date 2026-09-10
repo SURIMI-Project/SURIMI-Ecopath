@@ -59,6 +59,1941 @@
         <None Update="Includes\northwestern_med\northwestern_med.eiixml">
           <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+        <None Update="Includes\northwestern_med\northwestern_med_drivers_ssp126_0833dd_annual.xml">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\northwestern_med_drivers_ssp245_0833dd_annual.xml">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\northwestern_med_drivers_ssp585_0833dd_annual.xml">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_1993.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_1994.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_1995.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_1996.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_1997.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_1998.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_1999.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2000.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2001.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2002.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2003.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2004.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2005.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2006.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2007.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2008.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2009.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2010.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2011.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2012.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2013.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2014.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2015.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2016.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2017.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2018.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2019.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2020.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2021.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2022.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2023.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2024.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2025.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2026.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2027.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2028.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2029.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2030.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2031.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2032.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2033.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2034.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2035.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2036.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2037.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2038.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2039.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2040.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2041.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2042.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2043.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2044.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2045.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2046.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2047.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2048.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2049.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2050.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2051.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2052.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2053.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2054.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2055.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2056.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2057.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2058.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2059.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2060.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2061.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2062.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2063.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2064.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2065.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2066.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2067.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2068.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2069.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2070.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2071.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2072.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2073.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2074.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2075.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2076.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2077.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2078.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2079.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2080.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2081.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2082.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2083.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2084.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2085.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2086.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2087.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2088.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2089.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2090.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2091.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2092.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2093.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2094.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2095.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2096.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2097.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2098.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\phyc_surface-150m_annual\phyc_2099.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_1993.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_1994.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_1995.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_1996.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_1997.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_1998.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_1999.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2000.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2001.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2002.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2003.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2004.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2005.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2006.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2007.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2008.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2009.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2010.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2011.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2012.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2013.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2014.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2015.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2016.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2017.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2018.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2019.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2020.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2021.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2022.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2023.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2024.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2025.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2026.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2027.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2028.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2029.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2030.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2031.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2032.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2033.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2034.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2035.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2036.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2037.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2038.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2039.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2040.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2041.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2042.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2043.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2044.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2045.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2046.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2047.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2048.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2049.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2050.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2051.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2052.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2053.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2054.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2055.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2056.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2057.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2058.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2059.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2060.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2061.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2062.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2063.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2064.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2065.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2066.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2067.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2068.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2069.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2070.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2071.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2072.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2073.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2074.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2075.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2076.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2077.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2078.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2079.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2080.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2081.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2082.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2083.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2084.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2085.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2086.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2087.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2088.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2089.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2090.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2091.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2092.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2093.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2094.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2095.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2096.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2097.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2098.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp126\mean\thetao_surface-150m_annual\thetao_2099.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_1993.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_1994.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_1995.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_1996.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_1997.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_1998.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_1999.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2000.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2001.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2002.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2003.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2004.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2005.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2006.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2007.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2008.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2009.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2010.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2011.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2012.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2013.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2014.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2015.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2016.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2017.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2018.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2019.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2020.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2021.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2022.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2023.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2024.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2025.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2026.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2027.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2028.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2029.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2030.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2031.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2032.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2033.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2034.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2035.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2036.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2037.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2038.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2039.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2040.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2041.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2042.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2043.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2044.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2045.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2046.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2047.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2048.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2049.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2050.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2051.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2052.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2053.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2054.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2055.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2056.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2057.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2058.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2059.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2060.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2061.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2062.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2063.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2064.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2065.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2066.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2067.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2068.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2069.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2070.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2071.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2072.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2073.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2074.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2075.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2076.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2077.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2078.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2079.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2080.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2081.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2082.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2083.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2084.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2085.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2086.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2087.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2088.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2089.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2090.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2091.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2092.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2093.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2094.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2095.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2096.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2097.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2098.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\phyc_surface-150m_annual\phyc_2099.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_1993.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_1994.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_1995.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_1996.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_1997.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_1998.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_1999.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2000.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2001.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2002.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2003.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2004.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2005.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2006.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2007.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2008.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2009.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2010.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2011.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2012.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2013.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2014.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2015.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2016.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2017.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2018.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2019.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2020.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2021.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2022.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2023.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2024.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2025.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2026.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2027.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2028.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2029.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2030.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2031.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2032.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2033.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2034.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2035.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2036.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2037.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2038.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2039.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2040.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2041.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2042.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2043.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2044.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2045.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2046.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2047.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2048.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2049.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2050.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2051.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2052.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2053.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2054.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2055.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2056.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2057.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2058.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2059.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2060.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2061.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2062.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2063.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2064.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2065.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2066.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2067.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2068.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2069.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2070.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2071.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2072.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2073.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2074.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2075.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2076.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2077.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2078.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2079.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2080.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2081.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2082.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2083.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2084.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2085.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2086.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2087.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2088.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2089.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2090.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2091.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2092.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2093.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2094.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2095.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2096.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2097.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2098.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp245\mean\thetao_surface-150m_annual\thetao_2099.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_1993.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_1994.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_1995.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_1996.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_1997.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_1998.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_1999.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2000.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2001.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2002.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2003.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2004.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2005.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2006.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2007.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2008.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2009.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2010.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2011.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2012.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2013.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2014.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2015.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2016.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2017.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2018.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2019.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2020.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2021.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2022.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2023.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2024.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2025.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2026.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2027.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2028.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2029.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2030.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2031.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2032.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2033.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2034.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2035.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2036.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2037.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2038.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2039.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2040.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2041.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2042.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2043.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2044.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2045.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2046.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2047.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2048.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2049.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2050.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2051.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2052.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2053.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2054.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2055.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2056.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2057.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2058.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2059.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2060.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2061.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2062.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2063.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2064.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2065.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2066.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2067.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2068.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2069.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2070.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2071.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2072.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2073.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2074.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2075.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2076.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2077.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2078.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2079.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2080.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2081.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2082.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2083.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2084.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2085.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2086.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2087.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2088.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2089.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2090.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2091.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2092.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2093.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2094.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2095.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2096.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2097.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2098.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\phyc_surface-150m_annual\phyc_2099.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_1993.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_1994.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_1995.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_1996.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_1997.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_1998.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_1999.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2000.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2001.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2002.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2003.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2004.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2005.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2006.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2007.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2008.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2009.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2010.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2011.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2012.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2013.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2014.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2015.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2016.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2017.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2018.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2019.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2020.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2021.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2022.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2023.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2024.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2025.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2026.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2027.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2028.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2029.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2030.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2031.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2032.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2033.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2034.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2035.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2036.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2037.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2038.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2039.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2040.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2041.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2042.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2043.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2044.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2045.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2046.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2047.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2048.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2049.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2050.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2051.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2052.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2053.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2054.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2055.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2056.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2057.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2058.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2059.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2060.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2061.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2062.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2063.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2064.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2065.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2066.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2067.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2068.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2069.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2070.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2071.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2072.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2073.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2074.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2075.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2076.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2077.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2078.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2079.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2080.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2081.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2082.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2083.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2084.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2085.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2086.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2087.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2088.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2089.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2090.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2091.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2092.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2093.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2094.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2095.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2096.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2097.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2098.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Includes\northwestern_med\ssp585\mean\thetao_surface-150m_annual\thetao_2099.asc">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
     
     <!-- Custom target to copy Includes directory from build output to publish directory. So the csv files from the controlledVocabularies package are also present-->
