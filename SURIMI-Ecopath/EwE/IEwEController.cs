@@ -14,7 +14,6 @@ namespace Ecopath.EwE
         Task<List<SalesSummary>> GetSalesSummariesAsync(DateTime start, DateTime end);
         Task<CatchDispositionSummary> GetCatchDispositionSummaryAsync(DateTime start, DateTime end);
         Task<bool> UpdateCatchDispositionSummaryAsync(CatchDispositionSummary catchDispositionSummary);
-        Task<bool> UpdateEnvironmentVariablesAsync(EnvironmentVariablesSummary environmentVariables);
         Task<bool> UpdateRegulationsAsync(RegulationsSummary regulations);
         Task<FishingActivitySummary> GetFishingActivityAsync();
     }

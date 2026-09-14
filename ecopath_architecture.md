@@ -26,7 +26,7 @@ No licence file was found in this repository. Contact the repository owner
 - Accept external catch dispositions (fishing pressure computed by POSEIDON/other agents) and inject
   them into the EwE time step before EwE's own fishing occurs.
 - Accept species prices from the market model and integrate them into the EwE market layer.
-- Accept environmental variables and regulations (stubs; not yet fully wired).
+- Accept regulations (stub; not yet fully wired).
 - Return spatially explicit biomass, catch disposition, and sales snapshots to the controller after
   each time step.
 - Guard access with a single-simulation reservation so only one active simulation can run at a time
@@ -62,7 +62,6 @@ The gRPC contract is defined in the external
 | ← received | `SimulateStep` | Advances Ecospace by one time step. |
 | ← received | `UpdateCatchDisposition` | Delivers externally computed catch (gross catch, live/dead discards per species/fleet/cell) to be injected in the current step. |
 | ← received | `UpdateSpeciesPrices` | Delivers species market prices for the current step. |
-| ← received | `UpdateEnvironmentVariables` | Delivers environmental forcing data (stub). |
 | ← received | `UpdateRegulations` | Delivers TAC regulations (stub). |
 | → sent | `GetBiomass` | Returns spatially gridded biomass per species after the last completed step. |
 | → sent | `GetCatchDisposition` | Returns spatially gridded catch (gross, live discards, dead discards) per species/fleet for the last step. |

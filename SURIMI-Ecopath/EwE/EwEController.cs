@@ -925,12 +925,6 @@ namespace Ecopath.EwE
             return 1 / Math.Max(1, stanza.nLifeStages);
         }
 
-        public Task<bool> UpdateEnvironmentVariablesAsync(EnvironmentVariablesSummary environmentVariables)
-        {
-            // TODO
-            return Task.FromResult(true);
-        }
-
         public Task<bool> UpdateRegulationsAsync(RegulationsSummary regulations)
         {
             // TODO
