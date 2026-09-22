@@ -1,6 +1,6 @@
 ﻿using EwECore;
 using EwECore.Auxiliary;
-using EwECore.Plugins;
+using EwECore.SpatialData;
 
 namespace Ecopath.EwE.Wrapper
 {
@@ -65,6 +65,8 @@ namespace Ecopath.EwE.Wrapper
         public cEcopathDataStructures EcopathDataStructures => Core.EcopathDataStructures;
 
         public cEcospaceDataStructures EcospaceDataStructures => Core.EcospaceDataStructures;
+
+        public cSpatialDataConnectionManager SpatialDataConnectionManager => Core.SpatialDataConnectionManager;
 
         public cEcospaceBasemap EcospaceBasemap => Core.EcospaceBasemap;
 

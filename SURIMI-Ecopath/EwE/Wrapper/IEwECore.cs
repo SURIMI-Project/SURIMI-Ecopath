@@ -1,5 +1,6 @@
 ﻿using EwECore;
 using EwECore.Auxiliary;
+using EwECore.SpatialData;
 
 namespace Ecopath.EwE.Wrapper
 {
@@ -11,6 +12,7 @@ namespace Ecopath.EwE.Wrapper
         IPluginManager PluginManager { get; }
         cEcopathDataStructures EcopathDataStructures { get; }
         cEcospaceDataStructures EcospaceDataStructures { get; }
+        cSpatialDataConnectionManager SpatialDataConnectionManager { get; }
         cEcospaceBasemap EcospaceBasemap { get; }
         int nFleets { get; }
         bool EcospacePaused { get; set; }
