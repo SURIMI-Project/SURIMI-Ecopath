@@ -63,7 +63,7 @@ namespace Ecopath.Services
             m_surimiContractToEwEService = surimiContractToEwEService;
         }
 
-        public async Task<IEwEConfiguration> CreateConfigurationAsync(string scenarioName)
+        public async Task<IEwEConfiguration> CreateConfigurationAsync(string scenarioName, CancellationToken cancellationToken)
         {
             // adjust the Blobstore S3 directory for the scenario, so different scenarios can have different configurations and outputs
             m_blobStore.SetSubdirectory(scenarioName);
@@ -74,7 +74,8 @@ namespace Ecopath.Services
                 throw new FileNotFoundException($"EwE model file '{modelName}' cannot be found");
 
             // If connected to a remote blob store, copy the model file locally to the Includes folder
-            var localModelFile = await m_blobStore.CopyToLocalFileOrIgnoreAsync(modelName, PathType.Input);
+            await m_blobStore.CopyToLocalDirectoryOrIgnoreAsync("", PathType.Input, cancellationToken);
+            var localModelFile = Path.Combine(m_blobStore.LocalInputRoot, modelName);
 
             var configuration = new EwEConfiguration()
             {
