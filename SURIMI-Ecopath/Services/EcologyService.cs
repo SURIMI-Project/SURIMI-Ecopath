@@ -32,7 +32,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
         {
             var contract = GetSurimiContract(request.Simulation);
 
-            var result = await m_controller.StartAsync(contract, request.ScenarioName, request.ClimateScenario);
+            var result = await m_controller.StartAsync(contract, request.ScenarioName, request.ClimateScenario, context.CancellationToken);
             if (result != 1)
             {
                 throw new RpcException(new Status(StatusCode.Internal, "Failed to initialise Ecopath"));
