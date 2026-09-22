@@ -990,6 +990,7 @@ namespace Ecopath.EwE
             return Task.FromResult(summary);
         }
 
+
         /// <summary>
         /// Makes a snapshot of the EwE off-vessel prices and calculates the mean
         /// functional-group price for a market.
