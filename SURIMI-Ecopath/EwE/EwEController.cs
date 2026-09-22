@@ -1,6 +1,7 @@
 ﻿using Ecopath.EwE.Prices;
 using Ecopath.EwE.Wrapper;
 using Ecopath.Services;
+using Eii.BlobStore;
 using Eii.ControlledVocabularies.Common;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
@@ -8,6 +9,7 @@ using EwEBridge.Ecospace;
 using EwECore;
 using EwECore.Common;
 using EwECore.Plugins;
+using EwECore.SpatialData;
 using SURIMI.Datamodel;
 using System.Diagnostics;
 using System.Text;
@@ -53,6 +55,7 @@ namespace Ecopath.EwE
         private Thread? m_thread;
         /// <summary>EwE configuration that defines how EwE entities relate to common concepts (species, fishing, markets, etc).</summary>
         private IEwEConfiguration? m_configuration;
+        private readonly IBlobStore m_blobStore;
 
         private readonly IEwEConfigurationService m_configurationService;
         private readonly ILogger<EwEController> m_logger;
@@ -87,7 +90,7 @@ namespace Ecopath.EwE
 
         #endregion // Private vars 
 
-        public EwEController(ILogger<EwEController> logger, IEwEConfigurationService configurationService, IEwECore core, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory, IVocabulariesRegisterService vocabulariesRegisterService)
+        public EwEController(ILogger<EwEController> logger, IEwEConfigurationService configurationService, IEwECore core, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory, IVocabulariesRegisterService vocabulariesRegisterService, IBlobStore lobStore)
         {
             m_core = core;
             m_keyFieldDescriptorRegistry = keyFieldDescriptorRegistry;
@@ -100,6 +103,7 @@ namespace Ecopath.EwE
             // To make sure we can find local resources. This is rather hack.
             Directory.SetCurrentDirectory(System.AppDomain.CurrentDomain.BaseDirectory);
             m_logger = logger;
+            m_blobStore = lobStore;
         }
 
         ~EwEController()
@@ -156,7 +160,7 @@ namespace Ecopath.EwE
         /// Start EwE and wait for Ecospace to get ready for simulations
         /// </summary>
         /// <returns></returns>
-        public async Task<int> StartAsync(SurimiContract surimiContract, string scenarioName, string climateScenarioCode, int timeoutMs = 60 * 10 * 1000)
+        public async Task<int> StartAsync(SurimiContract surimiContract, string scenarioName, string climateScenarioCode, CancellationToken cancellationToken)
         {
             // Check readiness
             if (RunState != RunStates.idle)
@@ -176,11 +180,29 @@ namespace Ecopath.EwE
                 ppt.BridgeCallback = BridgeCallback;
             }
 
-            m_configuration = await m_configurationService.CreateConfigurationAsync(scenarioName);
+            m_configuration = await m_configurationService.CreateConfigurationAsync(scenarioName, cancellationToken);
 
+            // if on S3, the entire "scenarioName" directory is now downloaded to the local instance, including the ModelFile
             if (!m_core.LoadModel(m_configuration.LocalModelFile))
                 throw new Exception($"EwE could not load model '{m_configuration.LocalModelFile}'");
             m_logger.LogInformation("EwE - Ecopath loaded file '{LocalModelFile}', model '{ModelName}'", m_configuration.LocalModelFile, m_core.EcopathDataStructures.ModelName);
+
+            var externalDatasetsFileName = @$"{scenarioName}_drivers_{climateScenarioCode.Replace(".", "").ToLower()}_annual.xml";
+            if (!await m_blobStore.ExistsAsync(externalDatasetsFileName, PathType.Input))
+                throw new FileNotFoundException($"External Dataset file '{externalDatasetsFileName}' cannot be found");
+
+           var externalDatasetsLocalFileName = Path.Combine(m_blobStore.LocalInputRoot, externalDatasetsFileName);
+
+            cSpatialDataConnectionManager man = m_core.SpatialDataConnectionManager;
+            cSpatialDataSetManager dsm = man.DatasetManager();
+            if (dsm.Load(externalDatasetsLocalFileName, true))
+            {
+                Console.WriteLine("Loaded STDF data from '{0}', {1} dataset(s)", externalDatasetsLocalFileName, dsm.Datasets().Length);
+            }
+            else
+            {
+                throw new Exception("EwE - Could not load STDF data from '" + externalDatasetsLocalFileName + "'");
+            }
 
             // Check Ecopath balancing
             bool bIsBalanced = false;
@@ -280,7 +302,7 @@ namespace Ecopath.EwE
             m_nSpinUpSteps = ds.UseSpinUp ? (int)(ds.SpinUpYears / ds.TimeStep) : 0;
             m_iSpinUpStep = 0;
 
-            var completedTask = await Task.WhenAny(tcs.Task); //, Task.Delay(timeoutMs ));
+            var completedTask = await Task.WhenAny(tcs.Task);
             OnRunStateChanged -= Handler;
 
             if (completedTask != tcs.Task)
