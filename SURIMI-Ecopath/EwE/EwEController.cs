@@ -188,36 +188,37 @@ namespace Ecopath.EwE
                 throw new Exception($"EwE could not load model '{_configuration.LocalModelFile}'");
             _logger.LogInformation("EwE - Ecopath loaded file '{LocalModelFile}', model '{ModelName}'", _configuration.LocalModelFile, m_core.EcopathDataStructures.ModelName);
 
-            var externalDatasetsFileName = @$"{scenarioName}_drivers_{climateScenarioCode.Replace(".", "").ToLower()}_annual.xml";
-            if (await _blobStore.ExistsAsync(externalDatasetsFileName, PathType.Input))
+            if (!string.IsNullOrEmpty(climateScenarioCode))
             {
+                var externalDatasetsFileName = @$"{scenarioName}_drivers_{climateScenarioCode.Replace(".", "").ToLower()}_annual.xml";
+                if (!await _blobStore.ExistsAsync(externalDatasetsFileName, PathType.Input))
+                    throw new Exception($"EwE - Could not find STDF data for '{externalDatasetsFileName}' in blob store");
+
                 var externalDatasetsLocalFileName = Path.Combine(_blobStore.LocalInputRoot, externalDatasetsFileName);
 
                 cSpatialDataConnectionManager man = m_core.SpatialDataConnectionManager;
                 cSpatialDataSetManager dsm = man.DatasetManager();
-                if (dsm.Load(externalDatasetsLocalFileName, true))
-                {
-                    _logger.LogInformation("Loaded STDF data from '{ConfigFile}', {DatasetCount} dataset(s)", externalDatasetsLocalFileName, dsm.Datasets().Length);
-
-                    foreach (ISpatialDataSet dset in dsm.Datasets())
-                    {
-                        string sType = cTypeUtils.TypeToString(dset.GetType());
-                        string sName = dset.CustomName;
-
-                        if (sType.ToLower().Contains("placeholder")) sType = "unresolved";
-
-                        _logger.LogInformation("- {DatasetName} ({DatasetType})", sName, sType);
-                    }
-                }
-                else
-                {
+                if (!dsm.Load(externalDatasetsLocalFileName, true))
                     throw new Exception("EwE - Could not load STDF data from '" + externalDatasetsLocalFileName + "'");
+
+                _logger.LogInformation("Loaded STDF data from '{ConfigFile}', {DatasetCount} dataset(s)", externalDatasetsLocalFileName, dsm.Datasets().Length);
+
+                foreach (ISpatialDataSet dset in dsm.Datasets())
+                {
+                    string sType = cTypeUtils.TypeToString(dset.GetType());
+                    string sName = dset.CustomName;
+
+                    // Can't access inaccessible cSpatialDataSetPlaceholder type, so check for "placeholder" in the type name
+                    if (sType.ToLower().Contains("placeholder"))
+                        throw new Exception("EwE - Could not resolve STDF dataset of type '" + sType + "'");
+
+                    _logger.LogInformation("- {DatasetName} ({DatasetType})", sName, sType);
                 }
             }
             else
             {
-                // It's fine if no external data is provided; EwE will run with its own internal data. But we need to log that
-                _logger.LogInformation("EwE - No STDF data found for '{ExternalDatasetsFileName}'", externalDatasetsFileName);
+                // It's fine if no climate is provided, but good to log that
+                _logger.LogInformation("EwE - No climate scenario specified");
             }
 
             // Check Ecopath balancing
