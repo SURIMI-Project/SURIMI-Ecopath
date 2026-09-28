@@ -27,6 +27,7 @@ The NuGet.config file in the solution describes what package sources to use. It 
 To install the (PERSONAL) passwords encrypted on Windows you can use the following CLI command:
 
 - github-Official-EwE: `dotnet nuget add source "https://nuget.pkg.github.com/Official-EwE/index.json" -n "github-Official-EwE" -u "<your-github-username>" -p "<your-PAT>"`
+- github-surimi-project: `dotnet nuget add source "https://nuget.pkg.github.com/surimi-project/index.json" -n "github-surimi-project" -u "<your-github-username>" -p "<your-PAT>"`
 - BSR: `dotnet nuget add source "https://buf.build/gen/nuget/index.json" -n "BSR" -u "<your-github-username>" -p "<your-BSR-Password>"`
 
 This changes the mother of all NuGet.config files which is stored in `C:\Users\<user>\AppData\Roaming\NuGet`. The secrets in this file are encrypted.
@@ -77,3 +78,4 @@ To create a new docker image you have to pass the GITHUB_TOKEN and the BSR_TOKEN
 - `docker build -f .\SURIMI-Ecopath\Dockerfile --build-arg GITHUB_TOKEN=<github token> --build-arg BSR_TOKEN=<BSR token> -t rikkert242/ecopath:latest .`
 - `docker push rikkert242/ecopath:latest`
 
+x

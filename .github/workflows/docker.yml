@@ -27,11 +27,11 @@ jobs:
         run: |
           docker build \
             -f ./SURIMI-Ecopath/Dockerfile \
-            -t ghcr.io/official-ewe/surimiecopath:latest \
+            -t ghcr.io/surimi-project/surimiecopath:latest \
             --secret id=GITHUB_TOKEN,env=GITHUB_TOKEN \
             --secret id=BSR_TOKEN,env=BSR_TOKEN \
             .
 
       - name: Push Docker image
         run: |
-          docker push ghcr.io/official-ewe/surimiecopath:latest
+          docker push ghcr.io/surimi-project/surimiecopath:latest
