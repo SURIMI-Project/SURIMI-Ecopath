@@ -13,8 +13,7 @@ The service is written in **C# (.NET 10)** and developed in **Microsoft Visual S
 
 ### Licence
 
-No licence file was found in this repository. Contact the repository owner
-([Official-EwE](https://github.com/Official-EwE)) for licencing information.
+This repository is licensed under the **EUROPEAN UNION PUBLIC LICENCE v. 1.2** (EUPL v1.2). See the `LICENSE` file for details.
 
 ---
 
