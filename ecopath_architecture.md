@@ -42,7 +42,7 @@ This repository is licensed under the **EUROPEAN UNION PUBLIC LICENCE v. 1.2** (
 ## Interfaces
 
 The gRPC contract is defined in the external
-[SURIMI-protocol](https://github.com/Official-EwE/SURIMI-protocol) repository (hosted on the
+[SURIMI-protocol](https://github.com/surimi-project/SURIMI-protocol) repository (hosted on the
 [Buf Schema Registry](https://buf.build/surimi/surimi-protocol)) and consumed as the NuGet package
 `BSR.Surimi.Surimi-Protocol.Grpc.Csharp`. There are **no `.proto` files** in this repository.
 
@@ -289,7 +289,7 @@ When all five `VAULT_*` variables are set, secrets are loaded from Vault into en
 
 | Workflow | Trigger | What it does |
 |----------|---------|--------------|
-| **Build Check** (`.github/workflows/build-check.yml`) | Pull request to `master` | Runs `dotnet build` via the shared `Official-EwE/Eii.GithubActions/BuildCheckNet80` action to verify the solution compiles. Uses `BSR_TOKEN` from repository secrets to authenticate the Buf Schema Registry NuGet feed. |
+| **Build Check** (`.github/workflows/build-check.yml`) | Pull request to `master` | Runs `dotnet build` via the shared `surimi-project/Eii.GithubActions/BuildCheckNet80` action to verify the solution compiles. Uses `BSR_TOKEN` from repository secrets to authenticate the Buf Schema Registry NuGet feed. |
 
 ### Docker image
 
@@ -299,14 +299,14 @@ The `Dockerfile` uses a multi-stage build:
 2. **`publish`** — Runs `dotnet publish`.
 3. **`final`** — Runtime image based on `mcr.microsoft.com/dotnet/aspnet:10.0` (Linux). An empty `Includes/` directory is created with correct ownership for the non-root application user.
 
-The image is tagged as `ghcr.io/official-ewe/surimiecopath:latest` and pushed to the **GitHub Container Registry (GHCR)** under the `Official-EwE` organisation.
+The image is tagged as `ghcr.io/surimi-project/surimiecopath:latest` and pushed to the **GitHub Container Registry (GHCR)** under the `SURIMI-project` organisation.
 
 Build command:
 ```bash
 docker build -f .\SURIMI-Ecopath\Dockerfile \
   --secret id=GITHUB_TOKEN,env=GITHUB_TOKEN \
   --secret id=BSR_TOKEN,env=BSR_TOKEN \
-  -t ghcr.io/official-ewe/surimiecopath:latest .
+  -t ghcr.io/surimi-project/surimiecopath:latest .
 ```
 
 ---
@@ -369,9 +369,9 @@ SURIMI-Ecopath/
 ## Source control
 
 Git is used for source control, hosted on **GitHub** at
-[Official-EwE/SURIMI-Ecopath](https://github.com/Official-EwE/SURIMI-Ecopath). The default
+[surimi-project/SURIMI-Ecopath](https://github.com/surimi-project/SURIMI-Ecopath). The default
 integration branch is `master`. There are no Git submodules. The gRPC contract lives in a
-**separate repository** ([SURIMI-protocol](https://github.com/Official-EwE/SURIMI-protocol)) and is
+**separate repository** ([SURIMI-protocol](https://github.com/surimi-project/SURIMI-protocol)) and is
 consumed as a versioned NuGet package from the Buf Schema Registry, so proto-file changes do not
 require commits here — only a package version bump in the `.csproj`.
 
