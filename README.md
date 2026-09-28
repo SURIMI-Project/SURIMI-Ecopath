@@ -78,3 +78,4 @@ To create a new docker image you have to pass the GITHUB_TOKEN and the BSR_TOKEN
 - `docker build -f .\SURIMI-Ecopath\Dockerfile --build-arg GITHUB_TOKEN=<github token> --build-arg BSR_TOKEN=<BSR token> -t rikkert242/ecopath:latest .`
 - `docker push rikkert242/ecopath:latest`
 
+x
