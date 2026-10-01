@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>74f0a63a-fc70-49c2-85c4-61d71e502bdc</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <CopyDebugSymbolFilesFromPackages>true</CopyDebugSymbolFilesFromPackages>
   </PropertyGroup>
 
   <ItemGroup>
