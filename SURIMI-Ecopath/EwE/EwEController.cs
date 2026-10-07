@@ -256,9 +256,6 @@ namespace Ecopath.EwE
             // Now load the configuration
             await _configurationService.LoadAsync(m_core, _configuration, surimiContract);
 
-            // Calculate base prices
-            CalculateBasePrices(true);
-
             StringBuilder info = new();
             info.AppendLine("EwE FG - species mappings:");
             foreach (var mapping in _configurationService.Mappings(KeyDomain.Species))
@@ -271,6 +268,8 @@ namespace Ecopath.EwE
                 info.AppendLine(string.Format(" - {0}", GetMappingInfoString(mapping, m_core)));
             _logger.LogInformation("{MappingInfo}", info.ToString());
 
+            // Calculate base prices
+            CalculateBasePrices(true);
             // Build species proportion accounting
             foreach (int iGroup in _configuration.FishedGroups)
                 _groupSpeciesProportions[iGroup] = GroupSpeciesProportionsFactory.Create(m_core, iGroup, _configurationService.Mappings(KeyDomain.Species));
@@ -1039,13 +1038,6 @@ namespace Ecopath.EwE
                         _priceBridge.SetBasePrice(iGroup, iFleet, price, ds.Landing[iFleet, iGroup]);
                 }
             }
-
-            // Some reverse archaeology
-            // - Market codes are defined as a MLK with the values "gearcode" and "countrycode"
-            // - The mappings reroute those to a fleet segment, which is what EwE actually uses to store prices
-
-            // The following call, therefore, resolves a market code to a fleet segment, and then maps the fleet segment to the market code in the PriceBridge
-
         }
     }
         #endregion // Internal - EwE interactions
