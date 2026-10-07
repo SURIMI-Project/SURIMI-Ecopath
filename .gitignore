@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# this file is in the private repo https://github.com/Official-EwE/Eii.Ecopath.Models. You can copy it locally but it should not be in the public SURIMI-ecopath repo
+SURIMI-Ecopath/Includes/northwestern_med/northwestern_med.eiixml
