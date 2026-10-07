@@ -265,13 +265,13 @@ namespace Ecopath.Services
 
             if (vocSpecies == null || vocLifeStage == null) return;
 
-            StreamWriter? csvWriter = null;
+            StreamWriter? writerContract = null;
             if (writeCSV)
             {
                 string csvFilePath = Path.GetFullPath(@".\EwE_functional-group_species.csv");
 
-                csvWriter = new StreamWriter(csvFilePath);
-                csvWriter.WriteLine("EwE_Group_No,EwE_Group_Name,Taxon_No,Common_Name,Genus,Species,FAO_Code,Lifestage_Code,Is_fished");
+                writerContract = new StreamWriter(csvFilePath);
+                writerContract.WriteLine("Group_No,Group_Name,Group_DBID,Taxon_No,Taxon_DBID,Common_Name,Genus,Species,FAO_Code,Lifestage_Code,Is_fished");
                 m_logger.LogInformation("Writing species CSV file to {csvFilePath}", csvFilePath);
             }
 
@@ -280,10 +280,10 @@ namespace Ecopath.Services
                 cEcoPathGroupInput grp = core.get_EcopathGroupInputs(iGroup);
                 if (grp.NTaxon == 0)
                 {
-                    if (csvWriter != null)
+                    if (writerContract != null)
                     {
-                        //csvWriter.WriteLine("EwE_Group_ID,EwE_Group_Name,Taxon_ID,Common_Name,Genus,Species,FAO_Code,Lifestage_Code,Is_fished");
-                        csvWriter.WriteLine($"{grp.DBID},\"{grp.Name}\",,,,,,,{(grp.IsFished ? "yes" : "")}");
+                        //writerContract.WriteLine("EwE_Group_ID,EwE_Group_Name,Taxon_ID,Common_Name,Genus,Species,FAO_Code,Lifestage_Code,Is_fished");
+                        writerContract.WriteLine($"{grp.DBID},\"{grp.Name}\",,,,,,,{(grp.IsFished ? "yes" : "")}");
                     }
                 }
                 else
@@ -348,20 +348,20 @@ namespace Ecopath.Services
                             this.m_mappings.Add(key);
                         }
 
-                        if (csvWriter != null)
+                        if (writerContract != null)
                         {
-                            //csvWriter.WriteLine("EwE_Group_ID,EwE_Group_Name,Taxon_ID,Common_Name,Genus,Species,FAO_Code,Lifestage_Code,Is_Fished");
-                            csvWriter.WriteLine($"{grp.Index},\"{grp.Name}\",{taxon.Index},\"{taxon.Name}\",\"{taxon.Genus}\",\"{taxon.Species}\",{code},{ls},{(grp.IsFished ? "yes" : "")}");
-                        } // if csvWriter
+                            //writerContract.WriteLine("Group_No,Group_Name,Group_DBID,Taxon_No,Taxon_DBID,Common_Name,Genus,Species,FAO_Code,Lifestage_Code,Is_fished");
+                            writerContract.WriteLine($"{grp.Index},\"{grp.Name}\",{grp.DBID},{taxon.Index},{taxon.DBID},\"{taxon.Name}\",\"{taxon.Genus}\",\"{taxon.Species}\",{code},{ls},{(grp.IsFished ? "yes" : "")}");
+                        } // if writerContract
 
                     } // for iTaxa
                 } // if iTaxa
             } // for iGroup
 
-            if (csvWriter != null)
+            if (writerContract != null)
             {
-                csvWriter.Flush();
-                csvWriter.Close();
+                writerContract.Flush();
+                writerContract.Close();
             }
         }
 
@@ -377,7 +377,7 @@ namespace Ecopath.Services
                 string csvFilePath = Path.GetFullPath(@".\EwE_functional-group_fisheries.csv");
 
                 csvWriter = new StreamWriter(csvFilePath);
-                csvWriter.WriteLine("EwE_Fleet_No,EwE_Fleet_Name, EwE_Group_No,EwE_Group_Name");
+                csvWriter.WriteLine("Fleet_No,Fleet_Name,Fleet_DBIB,Group_No,Group_Name,Group_DBID");
                 m_logger.LogInformation("Writing fisheries CSV file to {csvFilePath}", csvFilePath);
 
                 for (int iFleet = 1; iFleet <= core.nFleets; iFleet++)
@@ -394,8 +394,8 @@ namespace Ecopath.Services
                         {
                             cEcoPathGroupInput grp = core.get_EcopathGroupInputs(iGroup);
 
-                            //csvWriter.WriteLine("EwE_Group_ID,EwE_Group_Name,EwE_Fleet_ID,EwE_Fleet_Name");
-                            csvWriter.WriteLine($"{iFleet},\"{fleet.Name}\",{grp.Index},\"{grp.Name}\"");
+                            //writerContract.WriteLine("Fleet_No,Fleet_Name,Fleet_DBIB,Group_No,Group_Name,Group_DBID");
+                            csvWriter.WriteLine($"{iFleet},\"{fleet.Name}\",{fleet.DBID},{grp.Index},\"{grp.Name}\",{grp.DBID}");
                         }
                     }
                 }
