@@ -30,7 +30,7 @@
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="Eii.BlobStore.S3" Version="1.0.*" />
     <PackageReference Include="Eii.ControlledVocabularies" Version="1.0.*" />
-    <PackageReference Include="Eii.Ecopath.Bridge" Version="1.0.*" />
+    <PackageReference Include="Eii.Ecopath.BridgePlugin" Version="1.0.*" />
     <PackageReference Include="Eii.Ecopath.EwECore" Version="6.7.*" />
     <PackageReference Include="Eii.Ecopath.SpatialAssetsEnginePlugin" Version="1.0.*" />
     <PackageReference Include="Eii.SemanticRegistry" Version="2.0.*" />
