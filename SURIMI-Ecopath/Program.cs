@@ -12,7 +12,6 @@ using Eii.ControlledVocabularies.Vocabularies.Country;
 using Eii.ControlledVocabularies.Vocabularies.Gear;
 using Eii.ControlledVocabularies.Vocabularies.LifeStage;
 using Eii.ControlledVocabularies.Vocabularies.Species;
-using Eii.SemanticRegistry;
 using EwEUtils.Logging;
 using SURIMI.Common.gRPC;
 using SURIMI.Common.gRPC.Services;
@@ -61,7 +60,7 @@ public class Program
 
             // Default local Filesystem
             logger.LogInformation("Using LocalBlobStore");
-            return new LocalBlobStore( inputRoot: "Includes", outputRoot: "Output");
+            return new LocalBlobStore(inputRoot: "Includes", outputRoot: "Output");
         });
 
         builder.AddServiceDefaults();
@@ -91,7 +90,6 @@ public class Program
         builder.Services.AddSingleton<IMultiLevelKeyFactory, MultiLevelKeyFactory>();
         builder.Services.AddSingleton<ProtocolVersionService>();
         builder.Services.AddSingleton<IEwEConfigurationService, EwEConfigurationService>();
-        builder.Services.AddSingleton<ISemanticRegistry, SemanticRegistry>();
         builder.Services.AddTransient<ISurimiContractToEwEService, SurimiContractToEwEService>();
         builder.Services.AddTransient<IVocabulariesRegisterService, VocabulariesRegisterService>();
 

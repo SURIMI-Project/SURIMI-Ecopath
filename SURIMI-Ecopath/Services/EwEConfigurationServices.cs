@@ -118,46 +118,41 @@ namespace Ecopath.Services
             string cfgtext = GetConfigBucket(core).Remark;
 
             // Load fleet segment mappings from the semantics file
+            WriteSpeciesMappingsFromModel(core, configuration, surimiContract.Items.Species);
 
-            await m_surimiContractToEwEService.ConvertSurimiContractToEwEAsync(m_mappings, core, surimiContract);
+            await m_surimiContractToEwEService.ReadSemanticMappings(m_mappings, core, surimiContract);
 
-            // Register fleet segments as gear + countrycode pairs to match fleet + countrycode fishing
-            // ToDo: obtain from Semantic Registry instead of hardcoding here
-            m_mappings.Add(new EwEMapping("gearcode=OTB; countrycode=ESP", KeyDomain.FleetSegment, 1, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=PS; countrycode=ESP", KeyDomain.FleetSegment, 2, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=LLS; countrycode=ESP", KeyDomain.FleetSegment, 3, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:ART; countrycode=ESP", KeyDomain.FleetSegment, 4, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; countrycode=ESP", KeyDomain.FleetSegment, 9, m_keyFieldDescriptorRegistry));
+            //// Register fleet segments as gear + countrycode pairs to match fleet + countrycode fishing
+            //// ToDo: obtain from Semantic Registry instead of hardcoding here
+            //m_mappings.Add(new EwEMapping("gearcode=OTB; countrycode=ESP", KeyDomain.FleetSegment, 1, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=PS; countrycode=ESP", KeyDomain.FleetSegment, 2, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=LLS; countrycode=ESP", KeyDomain.FleetSegment, 3, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=EwE:ART; countrycode=ESP", KeyDomain.FleetSegment, 4, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; countrycode=ESP", KeyDomain.FleetSegment, 9, m_keyFieldDescriptorRegistry));
 
-            m_mappings.Add(new EwEMapping("gearcode=OTB; countrycode=FRA", KeyDomain.FleetSegment, 5, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=TM; countrycode=FRA", KeyDomain.FleetSegment, 6, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=PS; countrycode=FRA", KeyDomain.FleetSegment, 7, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:ART; countrycode=FRA", KeyDomain.FleetSegment, 8, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=OTB; countrycode=FRA", KeyDomain.FleetSegment, 5, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=TM; countrycode=FRA", KeyDomain.FleetSegment, 6, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=PS; countrycode=FRA", KeyDomain.FleetSegment, 7, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=EwE:ART; countrycode=FRA", KeyDomain.FleetSegment, 8, m_keyFieldDescriptorRegistry));
 
 
-            // Register fleet segments as gear + market code pairs to match fleet > market deliveries
-            m_mappings.Add(new EwEMapping("gearcode=OTB; marketcode=ES", KeyDomain.Market, 1, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=ES", KeyDomain.Market, 2, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=LLS; marketcode=ES", KeyDomain.Market, 3, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:ART; marketcode=ES", KeyDomain.Market, 4, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; marketcode=ES", KeyDomain.Market, 9, m_keyFieldDescriptorRegistry));
+            //// Register fleet segments as gear + market code pairs to match fleet > market deliveries
+            //m_mappings.Add(new EwEMapping("gearcode=OTB; marketcode=ES", KeyDomain.Market, 1, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=ES", KeyDomain.Market, 2, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=LLS; marketcode=ES", KeyDomain.Market, 3, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=EwE:ART; marketcode=ES", KeyDomain.Market, 4, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; marketcode=ES", KeyDomain.Market, 9, m_keyFieldDescriptorRegistry));
 
-            m_mappings.Add(new EwEMapping("gearcode=OTB; marketcode=FR", KeyDomain.Market, 5, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=TM; marketcode=FR", KeyDomain.Market, 6, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=FR", KeyDomain.Market, 7, m_keyFieldDescriptorRegistry));
-            m_mappings.Add(new EwEMapping("gearcode=EwE:ART; marketcode=FR", KeyDomain.Market, 8, m_keyFieldDescriptorRegistry));
-
-            for (int iGroup = 1; iGroup <= core.nGroups; iGroup++)
-                if (core.get_EcopathGroupInputs(iGroup).IsFished)
-                    configuration.FishedGroups.Add(iGroup);
+            //m_mappings.Add(new EwEMapping("gearcode=OTB; marketcode=FR", KeyDomain.Market, 5, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=TM; marketcode=FR", KeyDomain.Market, 6, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=FR", KeyDomain.Market, 7, m_keyFieldDescriptorRegistry));
+            //m_mappings.Add(new EwEMapping("gearcode=EwE:ART; marketcode=FR", KeyDomain.Market, 8, m_keyFieldDescriptorRegistry));
 
             if (surimiContract.Items == null || surimiContract.Items.Species == null || surimiContract.Items.Species.Count == 0)
             {
                 throw new Exception("No species mappings found in configuration contract; species will not be resolved to functional groups");
             }
 
-            ReadSpeciesMappings(core, configuration, surimiContract.Items.Species);
-            ReadFleetMappings(core);
 
             m_mappings.Sort(new EwEMappingComparer());
 
@@ -257,7 +252,7 @@ namespace Ecopath.Services
         /// only applies to fished groups. Species that are not fished, or fished functional groups 
         /// without taxonomic records / species attached, are not registered here.
         /// </remarks>
-        private void ReadSpeciesMappings(IEwECore core, IEwEConfiguration configuration, List<Species> speciesList, bool writeCSV = false)
+        private void WriteSpeciesMappingsFromModel(IEwECore core, IEwEConfiguration configuration, List<Species> speciesList)
         {
             // The name of the vocabulary is implied here, but should be read from the species code
             IControlledVocabulary? vocSpecies = m_vocabularies.Get("asfis");
@@ -265,146 +260,58 @@ namespace Ecopath.Services
 
             if (vocSpecies == null || vocLifeStage == null) return;
 
-            StreamWriter? writerContract = null;
-            if (writeCSV)
-            {
-                string csvFilePath = Path.GetFullPath(@".\EwE_functional-group_species.csv");
+            string csvFilePath = Path.GetFullPath(@".\speciesmappings.csv");
+            StreamWriter writerContract = new StreamWriter(csvFilePath);
 
-                writerContract = new StreamWriter(csvFilePath);
-                writerContract.WriteLine("Group_No,Group_Name,Group_DBID,Taxon_No,Taxon_DBID,Common_Name,Genus,Species,FAO_Code,Lifestage_Code,Is_fished");
-                m_logger.LogInformation("Writing species CSV file to {csvFilePath}", csvFilePath);
-            }
-
-            for (int iGroup = 1; iGroup <= core.nGroups; iGroup++)
+            foreach (int iGroup in configuration.FishedGroups)
             {
                 cEcoPathGroupInput grp = core.get_EcopathGroupInputs(iGroup);
-                if (grp.NTaxon == 0)
+                for (int iTaxa = 1; iTaxa <= grp.NTaxon; iTaxa++)
                 {
-                    if (writerContract != null)
-                    {
-                        //writerContract.WriteLine("EwE_Group_ID,EwE_Group_Name,Taxon_ID,Common_Name,Genus,Species,FAO_Code,Lifestage_Code,Is_fished");
-                        writerContract.WriteLine($"{grp.DBID},\"{grp.Name}\",,,,,,,{(grp.IsFished ? "yes" : "")}");
-                    }
-                }
-                else
-                {
-                    for (int iTaxa = 1; iTaxa <= grp.NTaxon; iTaxa++)
-                    {
-                        cTaxon taxon = core.get_Taxon(grp.get_iTaxon(iTaxa));
-                        string code = taxon.CodeFAO;
-                        string ls = "";
-                        float proportion = 1;
+                    cTaxon taxon = core.get_Taxon(grp.get_iTaxon(iTaxa));
+                    string code = taxon.CodeFAO;
+                    string ls = "";
 
-                        EwEMapping? key = null;
+                    if (String.IsNullOrEmpty(code))
+                    {
+                        // Make robust to encoding imperfections
+                        string common = FieldPolicy.ForValue(taxon.Common, FieldKind.Label);
+                        if (string.IsNullOrEmpty(common))
+                            common = taxon.Genus + ' ' + taxon.Species;
+                        code = vocSpecies.FindCode(common);
 
-                        if (String.IsNullOrEmpty(code))
+                        // Last resort: try spp.    
+                        if (string.IsNullOrEmpty(code))
                         {
-                            // Make robust to encoding imperfections
-                            string common = FieldPolicy.ForValue(taxon.Common, FieldKind.Label);
-                            if (string.IsNullOrEmpty(common))
-                                common = taxon.Genus + ' ' + taxon.Species;
+                            common = common.Substring(0, Math.Max(0, common.LastIndexOf(' '))) + " spp.";
                             code = vocSpecies.FindCode(common);
-
-                            // Last resort: try spp.    
-                            if (string.IsNullOrEmpty(code))
-                            {
-                                common = common.Substring(0, Math.Max(0, common.LastIndexOf(' '))) + " spp.";
-                                code = vocSpecies.FindCode(common);
-                            }
                         }
+                    }
 
-                        if (!speciesList.Any(s => s.SpeciesCode == code))
-                        {
-                            m_logger.LogInformation("Skipping taxon '{taxon}'; code '{code}' not in EwE_functional-group_species.csv", taxon.Common, code);
-                            continue;
-                        }
-
-                        // Taxon refers to a multi-stanza configuration?
-                        if (taxon.iStanza > 0)
-                        {
-                            // #Yes: find life stage code and biomass proportion    
-                            ls = vocLifeStage.FindCode(grp.Name);
-                            proportion = taxon.PropB / 100;
-                        }
-                        else
-                        {
-                            if (grp.iStanza > 0)
-                            {
-                                Console.WriteLine("EwE Config error: regular taxon {0} attached to stanza group {1}", taxon.DBID, taxon.iGroup);
-                                continue;
-                            }
-                            proportion = 1;
-                        } // if stanza
-
-                        // Can add to mappings?
-                        if (configuration.FishedGroups.Contains(iGroup) && !string.IsNullOrEmpty(code))
-                        {
-                            // #Yes: add a species code to the specific iGroup
-                            key = new EwEMapping("", KeyDomain.Species, iGroup, m_keyFieldDescriptorRegistry, proportion);
-                            key.SetField(SpeciesFields.SpeciesCode, vocSpecies.VocabularyName + ":" + code, m_keyFieldDescriptorRegistry);
-                            if (!string.IsNullOrEmpty(ls))
-                                key.SetField(SpeciesFields.Lifestage, vocLifeStage.VocabularyName + ":" + ls, m_keyFieldDescriptorRegistry);
-
-                            this.m_mappings.Add(key);
-                        }
-
-                        if (writerContract != null)
-                        {
-                            //writerContract.WriteLine("Group_No,Group_Name,Group_DBID,Taxon_No,Taxon_DBID,Common_Name,Genus,Species,FAO_Code,Lifestage_Code,Is_fished");
-                            writerContract.WriteLine($"{grp.Index},\"{grp.Name}\",{grp.DBID},{taxon.Index},{taxon.DBID},\"{taxon.Name}\",\"{taxon.Genus}\",\"{taxon.Species}\",{code},{ls},{(grp.IsFished ? "yes" : "")}");
-                        } // if writerContract
-
-                    } // for iTaxa
-                } // if iTaxa
-            } // for iGroup
-
-            if (writerContract != null)
-            {
-                writerContract.Flush();
-                writerContract.Close();
-            }
-        }
-
-        private void ReadFleetMappings(IEwECore core, bool writeCSV = false)
-        {
-            // The name of the vocabulary is implied here, but should be read from the fields
-            IControlledVocabulary vocGear = m_vocabularies.Get("ISSCFG")!;
-            IControlledVocabulary vocCountry = m_vocabularies.Get("ISO-3166")!;
-
-            StreamWriter? csvWriter = null;
-            if (writeCSV)
-            {
-                string csvFilePath = Path.GetFullPath(@".\EwE_functional-group_fisheries.csv");
-
-                csvWriter = new StreamWriter(csvFilePath);
-                csvWriter.WriteLine("Fleet_No,Fleet_Name,Fleet_DBIB,Group_No,Group_Name,Group_DBID");
-                m_logger.LogInformation("Writing fisheries CSV file to {csvFilePath}", csvFilePath);
-
-                for (int iFleet = 1; iFleet <= core.nFleets; iFleet++)
-                {
-                    var fleet = (cEcopathFleetInput?)core.get_EcopathFleetInputs(iFleet);
-                    if (fleet == null)
+                    if (!speciesList.Any(s => s.SpeciesCode == code))
                     {
-                        m_logger.LogWarning("Fleet index {iFleet} has no corresponding fleet input", iFleet);
+                        m_logger.LogInformation("Skipping taxon '{taxon}'; code '{code}' not found in SURIMI contract", taxon.Common, code);
                         continue;
                     }
-                    for (int iGroup = 1; iGroup <= core.nGroups; iGroup++)
+
+                    writerContract.WriteLine(",");
+                    writerContract.WriteLine("{");
+                    writerContract.Write("    \"Source\": \"speciescode=" + code);
+                    if (taxon.iStanza > 0)
                     {
-                        if (fleet.get_Landings(iGroup) > 0 || fleet.get_Discards(iGroup) > 0)
-                        {
-                            cEcoPathGroupInput grp = core.get_EcopathGroupInputs(iGroup);
-
-                            //writerContract.WriteLine("Fleet_No,Fleet_Name,Fleet_DBIB,Group_No,Group_Name,Group_DBID");
-                            csvWriter.WriteLine($"{iFleet},\"{fleet.Name}\",{fleet.DBID},{grp.Index},\"{grp.Name}\",{grp.DBID}");
-                        }
+                        ls = vocLifeStage.FindCode(grp.Name);
+                        writerContract.Write(";lifestage=" + ls);
                     }
-                }
-                csvWriter.Flush();
-                csvWriter.Close();
-            }
+                    writerContract.WriteLine("\"");
+                    writerContract.WriteLine("    \"Target\": \"model=group;DBID=" + grp.DBID + "\"");
+                    writerContract.Write("}");
+
+                } // for iTaxa
+            } // for iGroup
+
+            writerContract.Flush();
+            writerContract.Close();
         }
-
-
 
         #endregion // Smarts
     }
