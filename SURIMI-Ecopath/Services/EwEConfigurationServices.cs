@@ -176,7 +176,7 @@ namespace Ecopath.Services
 
         public IEnumerable<EwEMappingMatch> ResolveEwEGroupFromSpecies(string speciescode)
         {
-            MultiLevelKey key = m_multiLevelKeyFactory.FromPairs([(SpeciesFields.SpeciesCode, speciescode)], KeyDomain.Species, m_keyFieldDescriptorRegistry);
+            IMultiLevelKey key = m_multiLevelKeyFactory.FromPairs([(SpeciesFields.SpeciesCode, speciescode)], KeyDomain.Species, m_keyFieldDescriptorRegistry);
             return ResolveEwEGroup(key);
         }
 
@@ -191,7 +191,7 @@ namespace Ecopath.Services
         /// <param name="key"></param>
         /// <returns></returns>
         /// 
-        public IEnumerable<EwEMappingMatch> ResolveEwEGroup(MultiLevelKey key)
+        public IEnumerable<EwEMappingMatch> ResolveEwEGroup(IMultiLevelKey key)
         {
             if (key.Domain != KeyDomain.Species)
                 yield break;
@@ -215,7 +215,7 @@ namespace Ecopath.Services
 
         public IEnumerable<EwEMappingMatch> ResolveEwEFleet(string marketcode)
         {
-            MultiLevelKey key = m_multiLevelKeyFactory.FromPairs([(MarketFields.MarketCode, marketcode)], KeyDomain.Market, m_keyFieldDescriptorRegistry);
+            IMultiLevelKey key = m_multiLevelKeyFactory.FromPairs([(MarketFields.MarketCode, marketcode)], KeyDomain.Market, m_keyFieldDescriptorRegistry);
             var resolver = new StrategyKeyResolver(this.m_mappings, this.m_keyFieldDescriptorRegistry.GetAll(KeyDomain.Market));
             foreach (var match in resolver.FindAllMatches(key))
                 yield return new EwEMappingMatch((EwEMapping)match.MatchedKey, match.Score);

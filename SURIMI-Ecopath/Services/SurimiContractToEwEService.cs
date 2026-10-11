@@ -4,10 +4,11 @@ using Eii.BlobStore;
 using Eii.ControlledVocabularies.Common;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
+using Eii.SemanticRegistry.Core;
 using EwECore;
 using SURIMI.Datamodel;
+using SURIMIdto;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Ecopath.Services
 {
@@ -33,12 +34,6 @@ namespace Ecopath.Services
         public async Task ReadSemanticMappings(List<EwEMapping> mappings, IEwECore core, SurimiContract surimiContract)
         {
             cEcopathDataStructures ecopathds = core.EcopathDataStructures;
-            var fleetNames = ecopathds.FleetName;
-            var fleetDBIDs = ecopathds.FleetDBID;
-            var groupNames = ecopathds.GroupName;
-            var groupDBIDs = ecopathds.GroupDBID;
-
-            var factory = new MultiLevelKeyFactory();
 
             // Read the semantics file from blob store
             string semanticsFilePath = "EwE_SURIMI.semantics";
@@ -55,119 +50,64 @@ namespace Ecopath.Services
             }
 
             // Deserialize JSON
-            SemanticDomainDto? semanticsFile;
+            SemanticsFileDto? semanticsFile;
             try
             {
-                semanticsFile = JsonSerializer.Deserialize<SemanticDomainDto>(jsonContent);
+                semanticsFile = JsonSerializer.Deserialize<SemanticsFileDto>(jsonContent);
             }
             catch (Exception ex)
             {
                 throw new Exception($"Failed to parse semantics file '{semanticsFilePath}': {ex.Message}", ex);
             }
 
-            // JS 9Oct26: pragmatic shortcut to avoid having to create a new SemanticRegistry and populate it with the DTO.
-            // This is a temporary measure until we can refactor the code to use the DTO directly.
-            if (semanticsFile?.Domains == null || semanticsFile.Domains.Count == 0)
+            if (semanticsFile == null)
             {
-                throw new Exception($"Semantics file '{semanticsFilePath}' contains no mappings");
+                throw new InvalidDataException($"Semantics file '{semanticsFilePath}' contains no valid data.");
             }
 
-            _logger.LogInformation("Processing {Count} semantic domains", semanticsFile.Domains.Count);
+            IDomainSemanticRegistry registry = SemanticsToRegistryConverter.ToRegistry(semanticsFile!);
+            _logger.LogInformation($"Processing {registry.Domains.Count()} semantic domains");
 
-            foreach (SemanticsDomain semanticsDomain in semanticsFile.Domains)
+            foreach (KeyDomain semanticsDomain in registry.Domains)
             {
-                _logger.LogInformation("Processing domain: {Domain}", semanticsDomain.Domain);
-
-                if (semanticsDomain.Mappings == null || semanticsDomain.Mappings.Count == 0)
+                _logger.LogInformation("Processing domain: {Domain}", semanticsDomain);
+                var dbids = semanticsDomain switch
                 {
-                    _logger.LogWarning("Domain '{Domain}' contains no mappings", semanticsDomain.Domain);
-                    continue;
-                }
+                    KeyDomain.FleetSegment => ecopathds.FleetDBID,
+                    KeyDomain.Market => ecopathds.FleetDBID,
+                    KeyDomain.Species => ecopathds.GroupDBID,
+                    _ => Array.Empty<int>()
+                };
 
+                ISemanticRegistry semregistry = registry.GetRegistry(semanticsDomain);
                 // Process each mapping entry
-                foreach (var entry in semanticsDomain.Mappings)
+                foreach (IMultiLevelKey source in semregistry.GetAllSources())
                 {
-                    if (string.IsNullOrWhiteSpace(entry.Source) || string.IsNullOrWhiteSpace(entry.Target))
+                    if (!semregistry.TryGet(source, out IMultiLevelKey target))
                     {
-                        _logger.LogWarning("Skipping mapping with empty Source or Target");
-                        continue;
+                        throw new InvalidOperationException($"Unable to resolve semantic mapping for '{source}' in domain '{semanticsDomain}'.");
                     }
 
                     // Parse Target to extract index and name
-                    var target = factory.FromString(entry.Target, semanticsDomain.Domain, null);
-                    var name = target.GetField("name")?.Value;
-                    var dbid = Convert.ToInt16(target.GetField("dbid")?.Value);
-                    int index = -1;
-
-                    int[]? ids = null;
-                    string[]? names = null;
-
-                    switch (semanticsDomain.Domain)
+                    if (!int.TryParse(target.GetField("dbid")?.Value, out int dbid))
                     {
-                        case KeyDomain.FleetSegment:
-                        case KeyDomain.Market:
-                            ids = fleetDBIDs;
-                            names = fleetNames;
-                            break;
-                        case KeyDomain.Species:
-                            ids = groupDBIDs;
-                            names = groupNames;
-                            break;
-                        default:
-                            _logger.LogWarning("Mapping Source '{Source}' has unrecognized domain", entry.Source);
-                            break;
+                        throw new InvalidDataException($"Missing or invalid DBID in semantic target '{target}'.");
                     }
 
-                    index = Array.IndexOf(ids!, dbid);
+                    int index = Array.IndexOf(dbids, dbid);
                     if (index == -1)
                     {
-                        _logger.LogWarning("{entry.Target} not found in {domain} domain", entry.Target, semanticsDomain);
+                        _logger.LogWarning($"Target '{target}' not found in {semanticsDomain} domain");
                         continue;
                     }
 
                     // Create EwEMapping and add to mappings list
-                    var mapping = new EwEMapping(entry.Source, semanticsDomain.Domain, index, _keyFieldDescriptorRegistry);
+                    var mapping = new EwEMapping(source, semanticsDomain, index, _keyFieldDescriptorRegistry);
                     mappings.Add(mapping);
-                    _logger.LogDebug("Added mapping: {Source} -> Index {Index} ({Domain})", entry.Source, index, semanticsDomain);
+                    _logger.LogDebug($"Added mapping: {source} -> Index {index} ({semanticsDomain})");
                 }
             }
-            _logger.LogInformation("Successfully loaded {Count} mappings from semantics file", mappings.Count);
-        }
-
-        // JSON DTOs for deserializing the semantics file
-        private sealed class SemanticDomainDto
-        {
-            [JsonPropertyName("Domains")]
-            public List<SemanticsDomain> Domains { get; set; } = new();
-        }
-
-        private sealed class SemanticsDomain
-        {
-            [JsonPropertyName("Domain")]
-            public string DomainString { get; set; } = string.Empty;
-
-            [JsonIgnore]
-            public KeyDomain Domain
-            {
-                get
-                {
-                    if (Enum.TryParse(DomainString, out KeyDomain domain))
-                        return domain;
-                    return KeyDomain.NotSet;
-                }
-            }
-
-            [JsonPropertyName("Mappings")]
-            public List<SemanticsMapping> Mappings { get; set; } = new();
-        }
-
-        private sealed class SemanticsMapping
-        {
-            [JsonPropertyName("Source")]
-            public string Source { get; set; } = string.Empty;
-
-            [JsonPropertyName("Target")]
-            public string Target { get; set; } = string.Empty;
+            _logger.LogInformation($"Successfully loaded {mappings.Count} mappings from semantics file");
         }
     }
 }

@@ -19,12 +19,13 @@ namespace Ecopath.EwE
         /// <param name="index"></param>
         /// <param name="keyFieldDescriptorRegistry"></param>
         /// <param name="proportion"></param>
-        public EwEMapping(string key, KeyDomain domain, int index, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, float proportion = 1) : base(domain)
+        public EwEMapping(IMultiLevelKey key, KeyDomain domain, int index, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, float proportion = 1) : base(domain)
         {
             this.Index = index;
             this.Proportion = proportion;
 
-            this.Parse(key, keyFieldDescriptorRegistry);
+            foreach (string field in key.FieldNames)
+                this.SetField(field, key.GetField(field).Value, keyFieldDescriptorRegistry);
         }
 
         public int Index { get; set; }

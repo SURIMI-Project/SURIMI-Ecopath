@@ -533,7 +533,7 @@ namespace Ecopath.EwE
             foreach (var grid in _catchIn.DispositionGrids)
             {
                 // Try to parse species code in grid
-                MultiLevelKey key = _multiLevelKeyFactory.FromObject(grid.Species, KeyDomain.Species, _keyFieldDescriptorRegistry);
+                IMultiLevelKey key = _multiLevelKeyFactory.FromObject(grid.Species, KeyDomain.Species, _keyFieldDescriptorRegistry);
 
                 if (grid.FleetSegment == null)
                     throw new Exception(string.Format("EwE controller cannot integrate Catch Disposition for species {0} because the fleet segment is missing", key.ToString()));
@@ -987,7 +987,7 @@ namespace Ecopath.EwE
         /// <param name="iGroup"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        private float StanzaWideModifier(int iGroup, MultiLevelKey key)
+        private float StanzaWideModifier(int iGroup, IMultiLevelKey key)
         {
             if (key == null)
                 return 0f;
