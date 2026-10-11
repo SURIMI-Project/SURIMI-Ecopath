@@ -11,7 +11,7 @@ namespace Ecopath.Services
         Task<IEwEConfiguration> CreateConfigurationAsync(string scenarioName, CancellationToken cancellationToken);
         Task<bool> LoadAsync(IEwECore core, IEwEConfiguration configuration, SurimiContract surimiContract);
         IEnumerable<EwEMappingMatch> ResolveEwEFleet(string marketcode);
-        IEnumerable<EwEMappingMatch> ResolveEwEGroup(MultiLevelKey key);
+        IEnumerable<EwEMappingMatch> ResolveEwEGroup(IMultiLevelKey key);
         IEnumerable<EwEMappingMatch> ResolveEwEGroupFromSpecies(string speciescode);
         IEnumerable<EwEMappingMatch> ResolveEwEGroupFromSpecies(SURIMI.Datamodel.Species species);
 

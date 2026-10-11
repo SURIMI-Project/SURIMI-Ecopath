@@ -4,7 +4,6 @@ using Ecopath.Services;
 using Eii.BlobStore;
 using Eii.ControlledVocabularies.Core;
 using Eii.ControlledVocabularies.Descriptors;
-using Eii.SemanticRegistry;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -21,7 +20,6 @@ namespace Ecopath.Tests.EwE
         private readonly Mock<IPluginManager> _pluginManagerMock = new();
         private readonly Mock<IKeyFieldDescriptorRegistry> _keyFieldDescriptorRegistryMock = new Mock<IKeyFieldDescriptorRegistry>();
         private readonly Mock<IMultiLevelKeyFactory> _multiLevelKeyFactoryMock = new Mock<IMultiLevelKeyFactory>();
-        private readonly Mock<ISemanticRegistry> _semanticRegistryMock = new();
         private readonly Mock<IBlobStore> _blobStoreMock = new();
         private readonly Mock<IVocabulariesRegisterService> _vocabulariesRegisterServiceMock = new Mock<IVocabulariesRegisterService>();
 

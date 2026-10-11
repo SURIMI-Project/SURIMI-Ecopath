@@ -1,40 +1,455 @@
 {
-    "Mappings": [
+  "Domains": [
+    {
+      "Domain": "FleetSegment",
+      "Mappings": [
         {
-            "Source": "gearcode=OTB;countrycode=ESP",
-            "Target": "model=fleet;name=Bottom trawl Spain;index=1"
+          "Source": "gearcode=OTB;countrycode=ESP",
+          "Target": "model=fleet;DBID=1"
         },
         {
-            "Source": "gearcode=PS; countrycode=ESP",
-            "Target": "model=fleet;name=Purse seine Spain;index=2"
+          "Source": "gearcode=PS; countrycode=ESP",
+          "Target": "model=fleet;DBID=2"
         },
         {
-            "Source": "gearcode=LLS; countrycode=ESP",
-            "Target": "model=fleet;name=Long-line Spain;index=3"
+          "Source": "gearcode=LLS; countrycode=ESP",
+          "Target": "model=fleet;DBID=3"
         },
         {
-            "Source": "gearcode=EwE:ART; countrycode=ESP",
-            "Target": "model=fleet;name=Artisanal Spain;index=4"
+          "Source": "gearcode=EwE:ART; countrycode=ESP",
+          "Target": "model=fleet;DBID=4"
         },
         {
-            "Source": "gearcode=EwE:RECT; countrycode=ESP",
-            "Target": "model=fleet;name=Recreational Spain;index=9"
+          "Source": "gearcode=EwE:RECT; countrycode=ESP",
+          "Target": "model=fleet;DBID=8"
         },
         {
-            "Source": "gearcode=OTB; countrycode=FRA",
-            "Target": "model=fleet;name=Bottom trawl France;index=5"
+          "Source": "gearcode=OTB; countrycode=FRA",
+          "Target": "model=fleet;DBID=5"
         },
         {
-            "Source": "gearcode=TM; countrycode=FRA",
-            "Target": "model=fleet;name=Mid water trawl France;index=6"
+          "Source": "gearcode=TM; countrycode=FRA",
+          "Target": "model=fleet;DBID=9"
         },
         {
-            "Source": "gearcode=PS; countrycode=FRA",
-            "Target": "model=fleet;name=Purse seine France;index=7"
+          "Source": "gearcode=PS; countrycode=FRA",
+          "Target": "model=fleet;DBID=6"
         },
         {
-            "Source": "gearcode=EwE:ART; countrycode=FRA",
-            "Target": "model=fleet;name=Artisanal France;index=8"
+          "Source": "gearcode=EwE:ART; countrycode=FRA",
+          "Target": "model=fleet;DBID=7"
         }
-    ]
+      ]
+    },
+    {
+      "Domain": "Species",
+      "Mappings": [
+        {
+          "Source": "speciescode=MTS",
+          "Target": "model=group;DBID=11"
+        },
+        {
+          "Source": "speciescode=NEP",
+          "Target": "model=group;DBID=12"
+        },
+        {
+          "Source": "speciescode=ARA",
+          "Target": "model=group;DBID=13"
+        },
+        {
+          "Source": "speciescode=FAM",
+          "Target": "model=group;DBID=14"
+        },
+        {
+          "Source": "speciescode=LKO",
+          "Target": "model=group;DBID=14"
+        },
+        {
+          "Source": "speciescode=LKT",
+          "Target": "model=group;DBID=14"
+        },
+        {
+          "Source": "speciescode=SKM",
+          "Target": "model=group;DBID=14"
+        },
+        {
+          "Source": "speciescode=GRQ",
+          "Target": "model=group;DBID=15"
+        },
+        {
+          "Source": "speciescode=LQZ",
+          "Target": "model=group;DBID=15"
+        },
+        {
+          "Source": "speciescode=OLV",
+          "Target": "model=group;DBID=15"
+        },
+        {
+          "Source": "speciescode=BOY",
+          "Target": "model=group;DBID=16"
+        },
+        {
+          "Source": "speciescode=EOI",
+          "Target": "model=group;DBID=18"
+        },
+        {
+          "Source": "speciescode=OCC",
+          "Target": "model=group;DBID=18"
+        },
+        {
+          "Source": "speciescode=OUL",
+          "Target": "model=group;DBID=19"
+        },
+        {
+          "Source": "speciescode=OUM",
+          "Target": "model=group;DBID=19"
+        },
+        {
+          "Source": "speciescode=SQM",
+          "Target": "model=group;DBID=19"
+        },
+        {
+          "Source": "speciescode=OQT",
+          "Target": "model=group;DBID=20"
+        },
+        {
+          "Source": "speciescode=HQB",
+          "Target": "model=group;DBID=21"
+        },
+        {
+          "Source": "speciescode=SQE",
+          "Target": "model=group;DBID=21"
+        },
+        {
+          "Source": "speciescode=MUT;lifestage=juvenile",
+          "Target": "model=group;DBID=23"
+        },
+        {
+          "Source": "speciescode=MUT;lifestage=adult",
+          "Target": "model=group;DBID=56"
+        },
+        {
+          "Source": "speciescode=WHB",
+          "Target": "model=group;DBID=24"
+        },
+        {
+          "Source": "speciescode=ANK",
+          "Target": "model=group;DBID=25"
+        },
+        {
+          "Source": "speciescode=MON",
+          "Target": "model=group;DBID=25"
+        },
+        {
+          "Source": "speciescode=HKE",
+          "Target": "model=group;DBID=26"
+        },
+        {
+          "Source": "speciescode=HKE;lifestage=juvenile",
+          "Target": "model=group;DBID=26"
+        },
+        {
+          "Source": "speciescode=HKE;lifestage=adult",
+          "Target": "model=group;DBID=27"
+        },
+        {
+          "Source": "speciescode=POD",
+          "Target": "model=group;DBID=28"
+        },
+        {
+          "Source": "speciescode=BIB",
+          "Target": "model=group;DBID=28"
+        },
+        {
+          "Source": "speciescode=COE",
+          "Target": "model=group;DBID=29"
+        },
+        {
+          "Source": "speciescode=CIL",
+          "Target": "model=group;DBID=30"
+        },
+        {
+          "Source": "speciescode=LDB",
+          "Target": "model=group;DBID=30"
+        },
+        {
+          "Source": "speciescode=BLL",
+          "Target": "model=group;DBID=30"
+        },
+        {
+          "Source": "speciescode=SOO",
+          "Target": "model=group;DBID=30"
+        },
+        {
+          "Source": "speciescode=SRG",
+          "Target": "model=group;DBID=31"
+        },
+        {
+          "Source": "speciescode=LDV",
+          "Target": "model=group;DBID=31"
+        },
+        {
+          "Source": "speciescode=SRJ",
+          "Target": "model=group;DBID=31"
+        },
+        {
+          "Source": "speciescode=SBA",
+          "Target": "model=group;DBID=32"
+        },
+        {
+          "Source": "speciescode=PAC",
+          "Target": "model=group;DBID=32"
+        },
+        {
+          "Source": "speciescode=BRF",
+          "Target": "model=group;DBID=33"
+        },
+        {
+          "Source": "speciescode=SFS",
+          "Target": "model=group;DBID=33"
+        },
+        {
+          "Source": "speciescode=TSU",
+          "Target": "model=group;DBID=33"
+        },
+        {
+          "Source": "speciescode=GLI",
+          "Target": "model=group;DBID=34"
+        },
+        {
+          "Source": "speciescode=LXQ",
+          "Target": "model=group;DBID=34"
+        },
+        {
+          "Source": "speciescode=SPC",
+          "Target": "model=group;DBID=34"
+        },
+        {
+          "Source": "speciescode=BOG",
+          "Target": "model=group;DBID=35"
+        },
+        {
+          "Source": "speciescode=SYC",
+          "Target": "model=group;DBID=36"
+        },
+        {
+          "Source": "speciescode=SCK",
+          "Target": "model=group;DBID=55"
+        },
+        {
+          "Source": "speciescode=SHO",
+          "Target": "model=group;DBID=55"
+        },
+        {
+          "Source": "speciescode=JDP",
+          "Target": "model=group;DBID=37"
+        },
+        {
+          "Source": "speciescode=RJC",
+          "Target": "model=group;DBID=37"
+        },
+        {
+          "Source": "speciescode=JRS",
+          "Target": "model=group;DBID=37"
+        },
+        {
+          "Source": "speciescode=ANE;lifestage=juvenile",
+          "Target": "model=group;DBID=38"
+        },
+        {
+          "Source": "speciescode=ANE;lifestage=adult",
+          "Target": "model=group;DBID=39"
+        },
+        {
+          "Source": "speciescode=PIL;lifestage=juvenile",
+          "Target": "model=group;DBID=40"
+        },
+        {
+          "Source": "speciescode=PIL;lifestage=adult",
+          "Target": "model=group;DBID=41"
+        },
+        {
+          "Source": "speciescode=SAA",
+          "Target": "model=group;DBID=42"
+        },
+        {
+          "Source": "speciescode=SPR",
+          "Target": "model=group;DBID=43"
+        },
+        {
+          "Source": "speciescode=HMM",
+          "Target": "model=group;DBID=44"
+        },
+        {
+          "Source": "speciescode=JAA",
+          "Target": "model=group;DBID=44"
+        },
+        {
+          "Source": "speciescode=HOM",
+          "Target": "model=group;DBID=44"
+        },
+        {
+          "Source": "speciescode=MAC",
+          "Target": "model=group;DBID=45"
+        },
+        {
+          "Source": "speciescode=BFT",
+          "Target": "model=group;DBID=46"
+        },
+        {
+          "Source": "speciescode=BON",
+          "Target": "model=group;DBID=47"
+        },
+        {
+          "Source": "speciescode=ALB",
+          "Target": "model=group;DBID=47"
+        },
+        {
+          "Source": "speciescode=BSK",
+          "Target": "model=group;DBID=59"
+        },
+        {
+          "Source": "speciescode=RMM",
+          "Target": "model=group;DBID=59"
+        },
+        {
+          "Source": "speciescode=MOX",
+          "Target": "model=group;DBID=59"
+        },
+        {
+          "Source": "speciescode=BSH",
+          "Target": "model=group;DBID=60"
+        },
+        {
+          "Source": "speciescode=TTL",
+          "Target": "model=group;DBID=48"
+        },
+        {
+          "Source": "speciescode=CDI",
+          "Target": "model=group;DBID=49"
+        },
+        {
+          "Source": "speciescode=FPA",
+          "Target": "model=group;DBID=49"
+        },
+        {
+          "Source": "speciescode=DAZ",
+          "Target": "model=group;DBID=49"
+        },
+        {
+          "Source": "speciescode=LVH",
+          "Target": "model=group;DBID=49"
+        },
+        {
+          "Source": "speciescode=LCW",
+          "Target": "model=group;DBID=49"
+        },
+        {
+          "Source": "speciescode=LOW",
+          "Target": "model=group;DBID=49"
+        },
+        {
+          "Source": "speciescode=DTR",
+          "Target": "model=group;DBID=49"
+        },
+        {
+          "Source": "speciescode=DTY",
+          "Target": "model=group;DBID=49"
+        },
+        {
+          "Source": "speciescode=DKH",
+          "Target": "model=group;DBID=49"
+        },
+        {
+          "Source": "speciescode=CVV",
+          "Target": "model=group;DBID=49"
+        },
+        {
+          "Source": "speciescode=MVB",
+          "Target": "model=group;DBID=49"
+        },
+        {
+          "Source": "speciescode=ISY",
+          "Target": "model=group;DBID=49"
+        },
+        {
+          "Source": "speciescode=UIM",
+          "Target": "model=group;DBID=49"
+        },
+        {
+          "Source": "speciescode=UYE",
+          "Target": "model=group;DBID=49"
+        },
+        {
+          "Source": "speciescode=FBP",
+          "Target": "model=group;DBID=49"
+        },
+        {
+          "Source": "speciescode=TVA",
+          "Target": "model=group;DBID=49"
+        },
+        {
+          "Source": "speciescode=PIW",
+          "Target": "model=group;DBID=50"
+        },
+        {
+          "Source": "speciescode=DRR",
+          "Target": "model=group;DBID=50"
+        },
+        {
+          "Source": "speciescode=SPW",
+          "Target": "model=group;DBID=50"
+        },
+        {
+          "Source": "speciescode=DST",
+          "Target": "model=group;DBID=50"
+        },
+        {
+          "Source": "speciescode=DBO",
+          "Target": "model=group;DBID=50"
+        }
+      ]
+    },
+    {
+      "Domain": "Market",
+      "Mappings": [
+        {
+          "Source": "gearcode=OTB;marketcode=ES",
+          "Target": "model=fleet;DBID=1"
+        },
+        {
+          "Source": "gearcode=PS; marketcode=ES",
+          "Target": "model=fleet;DBID=2"
+        },
+        {
+          "Source": "gearcode=LLS; marketcode=ES",
+          "Target": "model=fleet;DBID=3"
+        },
+        {
+          "Source": "gearcode=EwE:ART; marketcode=ES",
+          "Target": "model=fleet;DBID=4"
+        },
+        {
+          "Source": "gearcode=EwE:RECT; marketcode=ES",
+          "Target": "model=fleet;DBID=8"
+        },
+        {
+          "Source": "gearcode=OTB; marketcode=FR",
+          "Target": "model=fleet;DBID=5"
+        },
+        {
+          "Source": "gearcode=TM; marketcode=FR",
+          "Target": "model=fleet;DBID=9"
+        },
+        {
+          "Source": "gearcode=PS; marketcode=FR",
+          "Target": "model=fleet;DBID=6"
+        },
+        {
+          "Source": "gearcode=EwE:ART; marketcode=FR",
+          "Target": "model=fleet;DBID=7"
+        }
+      ]
+    }
+  ]
 }

@@ -191,28 +191,39 @@ namespace Ecopath.EwE
             if (!string.IsNullOrEmpty(climateScenarioCode))
             {
                 var externalDatasetsFileName = @$"{scenarioName}_drivers_{climateScenarioCode.Replace(".", "").ToLower()}_annual.xml";
-                if (!await _blobStore.ExistsAsync(externalDatasetsFileName, PathType.Input))
-                    throw new Exception($"EwE - Could not find STDF data for '{externalDatasetsFileName}' in blob store");
-
-                var externalDatasetsLocalFileName = Path.Combine(_blobStore.LocalInputRoot, externalDatasetsFileName);
-
-                cSpatialDataConnectionManager man = m_core.SpatialDataConnectionManager;
-                cSpatialDataSetManager dsm = man.DatasetManager();
-                if (!dsm.Load(externalDatasetsLocalFileName, true))
-                    throw new Exception("EwE - Could not load STDF data from '" + externalDatasetsLocalFileName + "'");
-
-                _logger.LogInformation("Loaded STDF data from '{ConfigFile}', {DatasetCount} dataset(s)", externalDatasetsLocalFileName, dsm.Datasets().Length);
-
-                foreach (ISpatialDataSet dset in dsm.Datasets())
+                if (await _blobStore.ExistsAsync(externalDatasetsFileName, PathType.Input))
                 {
-                    string sType = cTypeUtils.TypeToString(dset.GetType());
-                    string sName = dset.CustomName;
+                    var externalDatasetsLocalFileName = Path.Combine(_blobStore.LocalInputRoot, externalDatasetsFileName);
 
-                    // Can't access inaccessible cSpatialDataSetPlaceholder type, so check for "placeholder" in the type name
-                    if (sType.ToLower().Contains("placeholder"))
-                        throw new Exception("EwE - Could not resolve STDF dataset of type '" + sType + "'");
+                    cSpatialDataConnectionManager man = m_core.SpatialDataConnectionManager;
+                    cSpatialDataSetManager dsm = man.DatasetManager();
+                    if (!dsm.Load(externalDatasetsLocalFileName, true))
+                    {
+                        RunState = RunStates.idle;
+                        throw new Exception("EwE - Could not load STDF data from '" + externalDatasetsLocalFileName + "'");
+                    }
 
-                    _logger.LogInformation("- {DatasetName} ({DatasetType})", sName, sType);
+                    _logger.LogInformation("Loaded STDF data from '{ConfigFile}', {DatasetCount} dataset(s)", externalDatasetsLocalFileName, dsm.Datasets().Length);
+
+                    foreach (ISpatialDataSet dset in dsm.Datasets())
+                    {
+                        string sType = cTypeUtils.TypeToString(dset.GetType());
+                        string sName = dset.CustomName;
+
+                        // Can't access inaccessible cSpatialDataSetPlaceholder type, so check for "placeholder" in the type name
+                        if (sType.ToLower().Contains("placeholder"))
+                        {
+                            RunState = RunStates.idle;
+                            throw new Exception("EwE - Could not resolve STDF dataset of type '" + sType + "'");
+                        }
+
+                        _logger.LogInformation("- {DatasetName} ({DatasetType})", sName, sType);
+                    }
+                }
+                else
+                {
+                    // It's fine if no climate data has been found, but good to log that
+                    _logger.LogInformation("EwE - No climate data found");
                 }
             }
             else
@@ -224,17 +235,32 @@ namespace Ecopath.EwE
             // Check Ecopath balancing
             bool bIsBalanced = false;
             if (!m_core.RunEcopath(ref bIsBalanced) | !bIsBalanced)
+            {
+                RunState = RunStates.idle;
                 throw new Exception("EwE - Ecopath does not balance");
+            }
+
+            // Key admin bit
+            for (int iGroup = 1; iGroup <= m_core.nGroups; iGroup++)
+                if (m_core.get_EcopathGroupInputs(iGroup).IsFished)
+                    _configuration.FishedGroups.Add(iGroup);
+
             _logger.LogInformation("EwE - Ecopath does balance");
 
             // Check and load Ecosim
             if (_configuration.EcosimScenario <= 0 | !m_core.LoadEcosimScenario(_configuration.EcosimScenario))
+            {
+                RunState = RunStates.idle;
                 throw new Exception($"EwE - Ecosim scenario {_configuration.EcosimScenario} not loaded");
+            }
             _logger.LogInformation("EwE - Ecosim scenario {EcosimScenario} loaded", _configuration.EcosimScenario);
             if (_configuration.EcosimTimeSeries > 0)
             {
                 if (!m_core.LoadTimeSeries(_configuration.EcosimTimeSeries))
+                {
+                    RunState = RunStates.idle;
                     throw new Exception($"EwE - Ecosim time series {_configuration.EcosimTimeSeries} not loaded");
+                }
                 _logger.LogInformation("EwE - Ecosim time series {EcosimTimeSeries} loaded", _configuration.EcosimTimeSeries);
             }
 
@@ -245,16 +271,30 @@ namespace Ecopath.EwE
             // Run Ecosim
             _logger.LogInformation("EwE - Going to run Ecosim for {NumberYears} years", parmsSim.NumberYears);
             if (!m_core.RunEcosim())
+            {
+                RunState = RunStates.idle;
                 throw new Exception("EwE - Ecosim failed to run");
+            }
             _logger.LogInformation("EwE - Ecosim run successfully");
 
             // Check and load Ecospace
             if (_configuration.EcospaceScenario <= 0 | !m_core.LoadEcospaceScenario(_configuration.EcospaceScenario))
+            {
+                RunState = RunStates.idle;
                 throw new Exception($"EwE - Ecospace scenario {_configuration.EcospaceScenario} not loaded");
+            }
             _logger.LogInformation("EwE - Ecospace scenario {EcospaceScenario} loaded", _configuration.EcospaceScenario);
 
             // Now load the configuration
-            await _configurationService.LoadAsync(m_core, _configuration, surimiContract);
+            try
+            {
+                await _configurationService.LoadAsync(m_core, _configuration, surimiContract);
+            }
+            catch (Exception ex)
+            {
+                RunState = RunStates.idle;
+                throw new Exception("EwE - Semantic configuration failed to load: " + ex.Message);
+            }
 
             StringBuilder info = new();
             info.AppendLine("EwE FG - species mappings:");
@@ -493,7 +533,7 @@ namespace Ecopath.EwE
             foreach (var grid in _catchIn.DispositionGrids)
             {
                 // Try to parse species code in grid
-                MultiLevelKey key = _multiLevelKeyFactory.FromObject(grid.Species, KeyDomain.Species, _keyFieldDescriptorRegistry);
+                IMultiLevelKey key = _multiLevelKeyFactory.FromObject(grid.Species, KeyDomain.Species, _keyFieldDescriptorRegistry);
 
                 if (grid.FleetSegment == null)
                     throw new Exception(string.Format("EwE controller cannot integrate Catch Disposition for species {0} because the fleet segment is missing", key.ToString()));
@@ -947,7 +987,7 @@ namespace Ecopath.EwE
         /// <param name="iGroup"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        private float StanzaWideModifier(int iGroup, MultiLevelKey key)
+        private float StanzaWideModifier(int iGroup, IMultiLevelKey key)
         {
             if (key == null)
                 return 0f;
