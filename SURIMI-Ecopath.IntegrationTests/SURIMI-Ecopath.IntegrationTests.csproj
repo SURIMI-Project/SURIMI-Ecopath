@@ -15,6 +15,7 @@
     <PackageReference Include="Grpc.Net.Client" Version="2.80.0" />
     <PackageReference Include="FluentAssertions" Version="8.10.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -26,10 +27,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Copy all JSON fixtures to the output directory so tests can load them at runtime -->
-    <None Update="GrpcMessages\**\*.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <!-- Show the Postman request files in the project and copy them to the output directory so tests can load them at runtime -->
+    <None Include="..\postman\collections\**\*.request.yaml" Exclude="..\postman\collections\Local\**" Link="postman\collections\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

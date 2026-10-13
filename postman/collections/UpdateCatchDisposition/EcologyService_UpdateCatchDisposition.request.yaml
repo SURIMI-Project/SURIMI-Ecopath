@@ -1,0 +1,126 @@
+$kind: grpc-request
+url: http://localhost:7890
+methodPath: surimi.v1.EcologyService.UpdateCatchDisposition
+methodDescriptor: Cr8ICg9zdXJpbWlfdjEucHJvdG8SCXN1cmltaS52MSJmCgdTcGVjaWVzEhgKDHNwZWNpZXNfY29kZRgBIAEoCUICEAESGAoMbGVuZ3RoX2NsYXNzGAIgASgJQgIQARIPCgNhZ2UYAyABKAlCAhABEhYKCmxpZmVfc3RhZ2UYBCABKAlCAhABIogBCg9EaXNwb3NpdGlvbkdyaWQSHAoHc3BlY2llcxgBIAEoCzIHU3BlY2llc0ICEAESJwoNZmxlZXRfc2VnbWVudBgCIAEoCzIMRmxlZXRTZWdtZW50QgIQARIuChFkaXNwb3NpdGlvbl9jZWxscxgDIAMoCzIPRGlzcG9zaXRpb25DZWxsQgIQASKNAQoPRGlzcG9zaXRpb25DZWxsEhUKCWxvbmdpdHVkZRgBIAEoAUICEAESFAoIbGF0aXR1ZGUYAiABKAFCAhABEhcKC2dyb3NzX2NhdGNoGAMgASgBQgIQABIZCg1saXZlX2Rpc2NhcmRzGAQgASgBQgIQABIZCg1kZWFkX2Rpc2NhcmRzGAUgASgBQgIQACJJChdDYXRjaERpc3Bvc2l0aW9uU3VtbWFyeRIuChFkaXNwb3NpdGlvbl9ncmlkcxgBIAMoCzIPRGlzcG9zaXRpb25HcmlkQgIQASKGAQoMRmxlZXRTZWdtZW50EhUKCWdlYXJfY29kZRgBIAEoCUICEAESHwoTdmVzc2VsX2xlbmd0aF9jbGFzcxgCIAEoCUICEAESEQoFc2NhbGUYAyABKAlCAhABEhgKDGNvdW50cnlfY29kZRgEIAEoCUICEAESEQoFbW9kZWwYBSABKAlCAhABIugBCh1VcGRhdGVDYXRjaERpc3Bvc2l0aW9uUmVxdWVzdBIZCg1zaW11bGF0aW9uX2lkGAEgASgJQgIQARI2Cg9zdGFydF9kYXRlX3RpbWUYAiABKAsyGWdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXBCAhABEjQKDWVuZF9kYXRlX3RpbWUYAyABKAsyGWdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXBCAhABEj4KGWNhdGNoX2Rpc3Bvc2l0aW9uX3N1bW1hcnkYBCABKAsyF0NhdGNoRGlzcG9zaXRpb25TdW1tYXJ5QgIQASI7Ch5VcGRhdGVDYXRjaERpc3Bvc2l0aW9uUmVzcG9uc2USGQoNc2ltdWxhdGlvbl9pZBgBIAEoCUICEAEyfwoORWNvbG9neVNlcnZpY2USbQoWVXBkYXRlQ2F0Y2hEaXNwb3NpdGlvbhIoLnN1cmltaS52MS5VcGRhdGVDYXRjaERpc3Bvc2l0aW9uUmVxdWVzdBopLnN1cmltaS52MS5VcGRhdGVDYXRjaERpc3Bvc2l0aW9uUmVzcG9uc2VCIQoRZXUucHJvamVjdC5zdXJpbWmqAgtHcnBjLlN1cmltaQrnAQoVZ29vZ2xlX3Byb3RvYnVmLnByb3RvEg9nb29nbGUucHJvdG9idWYiMwoJVGltZXN0YW1wEhMKB3NlY29uZHMYASABKANCAhABEhEKBW5hbm9zGAIgASgFQgIQAUKHAQoTY29tLmdvb2dsZS5wcm90b2J1ZkIORmllbGRNYXNrUHJvdG9IAVABWjJnb29nbGUuZ29sYW5nLm9yZy9wcm90b2J1Zi90eXBlcy9rbm93bi9maWVsZG1hc2twYvgBAaICA0dQQqoCHkdvb2dsZS5Qcm90b2J1Zi5XZWxsS25vd25UeXBlcw==
+message:
+  content: |-
+    {
+        "simulation_id": "123e4567-e89b-12d3-a456-426614174000",
+        "start_date_time": "2013-01-01T00:00:00.000Z",
+        "end_date_time": "2014-01-01T00:00:00.000Z",
+        "catch_disposition_summary": {
+            "disposition_grids": [
+                {
+                    "disposition_cells": [
+                        {
+                            "longitude": 0.6058500669845,
+                            "latitude": 40.3875508345555,
+                            "gross_catch": 0.7822208792257277,
+                            "live_discards": 0.035199939565157747,
+                            "dead_discards": 0.003911104396128639
+                        },
+                        {
+                            "longitude": 3.0215501226354995,
+                            "latitude": 41.7203508652595,
+                            "gross_catch": 6.554650191345796,
+                            "live_discards": 0.2949592586105608,
+                            "dead_discards": 0.032773250956728985
+                        }
+                    ],
+                    "species": {
+                        "species_code": "TTL",
+                        "length_class": "",
+                        "age": "",
+                        "life_stage": ""
+                    },
+                    "fleet_segment": {
+                        "gear_code": "PS",
+                        "vessel_length_class": "",
+                        "scale": "",
+                        "country_code": "",
+                        "model": ""
+                    }
+                },
+                {
+                    "disposition_cells": [
+                        {
+                            "longitude": 0.6058500669845,
+                            "latitude": 40.3875508345555,
+                            "gross_catch": 0.7822208792257277,
+                            "live_discards": 0.035199939565157747,
+                            "dead_discards": 0.003911104396128639
+                        },
+                        {
+                            "longitude": 3.0215501226354995,
+                            "latitude": 41.7203508652595,
+                            "gross_catch": 6.554650191345796,
+                            "live_discards": 0.2949592586105608,
+                            "dead_discards": 0.032773250956728985
+                        },
+                        {
+                            "longitude": 0.6058500669845,
+                            "latitude": 40.1376508287985,
+                            "gross_catch": 0.05627017469844073,
+                            "live_discards": 0.002532157861429833,
+                            "dead_discards": 0.0002813508734922037
+                        }
+                    ],
+                    "species": {
+                        "species_code": "RJC",
+                        "length_class": "",
+                        "age": "",
+                        "life_stage": ""
+                    },
+                    "fleet_segment": {
+                        "gear_code": "PS",
+                        "vessel_length_class": "",
+                        "scale": "",
+                        "country_code": "",
+                        "model": ""
+                    }
+                },
+                {
+                    "disposition_cells": [
+                        {
+                            "longitude": 0.6058500669845,
+                            "latitude": 40.3875508345555,
+                            "gross_catch": 0.7822208792257277,
+                            "live_discards": 0.035199939565157747,
+                            "dead_discards": 0.003911104396128639
+                        },
+                        {
+                            "longitude": 3.0215501226354995,
+                            "latitude": 41.7203508652595,
+                            "gross_catch": 6.554650191345796,
+                            "live_discards": 0.2949592586105608,
+                            "dead_discards": 0.032773250956728985
+                        },
+                        {
+                            "longitude": 0.6058500669845,
+                            "latitude": 40.1376508287985,
+                            "gross_catch": 0.05627017469844073,
+                            "live_discards": 0.002532157861429833,
+                            "dead_discards": 0.0002813508734922037
+                        }
+                    ],
+                    "species": {
+                        "species_code": "BIB",
+                        "length_class": "",
+                        "age": "",
+                        "life_stage": ""
+                    },
+                    "fleet_segment": {
+                        "gear_code": "PS",
+                        "vessel_length_class": "",
+                        "scale": "",
+                        "country_code": "",
+                        "model": ""
+                    }
+                }
+            ]
+        }
+    }
+settings: {}
+schema:
+  source: auto
+order: 1000

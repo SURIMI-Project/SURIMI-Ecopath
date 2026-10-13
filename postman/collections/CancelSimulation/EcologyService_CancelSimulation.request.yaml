@@ -1,0 +1,13 @@
+$kind: grpc-request
+url: http://localhost:7890
+methodPath: surimi.v1.EcologyService.CancelSimulation
+methodDescriptor: CpsCCg9zdXJpbWlfdjEucHJvdG8SCXN1cmltaS52MSI0ChdDYW5jZWxTaW11bGF0aW9uUmVxdWVzdBIZCg1zaW11bGF0aW9uX2lkGAEgASgJQgIQASI1ChhDYW5jZWxTaW11bGF0aW9uUmVzcG9uc2USGQoNc2ltdWxhdGlvbl9pZBgBIAEoCUICEAEybQoORWNvbG9neVNlcnZpY2USWwoQQ2FuY2VsU2ltdWxhdGlvbhIiLnN1cmltaS52MS5DYW5jZWxTaW11bGF0aW9uUmVxdWVzdBojLnN1cmltaS52MS5DYW5jZWxTaW11bGF0aW9uUmVzcG9uc2VCIQoRZXUucHJvamVjdC5zdXJpbWmqAgtHcnBjLlN1cmltaQ==
+message:
+  content: |-
+    {
+      "simulation_id": "123e4567-e89b-12d3-a456-426614174000"
+    }
+settings: {}
+schema:
+  source: auto
+order: 1000

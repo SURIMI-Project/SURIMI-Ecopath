@@ -1,0 +1,13 @@
+$kind: grpc-request
+url: http://localhost:7890
+methodPath: surimi.v1.EcologyService.FinaliseSimulation
+methodDescriptor: CqUCCg9zdXJpbWlfdjEucHJvdG8SCXN1cmltaS52MSI2ChlGaW5hbGlzZVNpbXVsYXRpb25SZXF1ZXN0EhkKDXNpbXVsYXRpb25faWQYASABKAlCAhABIjcKGkZpbmFsaXNlU2ltdWxhdGlvblJlc3BvbnNlEhkKDXNpbXVsYXRpb25faWQYASABKAlCAhABMnMKDkVjb2xvZ3lTZXJ2aWNlEmEKEkZpbmFsaXNlU2ltdWxhdGlvbhIkLnN1cmltaS52MS5GaW5hbGlzZVNpbXVsYXRpb25SZXF1ZXN0GiUuc3VyaW1pLnYxLkZpbmFsaXNlU2ltdWxhdGlvblJlc3BvbnNlQiEKEWV1LnByb2plY3Quc3VyaW1pqgILR3JwYy5TdXJpbWk=
+message:
+  content: |-
+    {
+        "simulation_id": "123e4567-e89b-12d3-a456-426614174000"
+    }
+settings: {}
+schema:
+  source: auto
+order: 1000

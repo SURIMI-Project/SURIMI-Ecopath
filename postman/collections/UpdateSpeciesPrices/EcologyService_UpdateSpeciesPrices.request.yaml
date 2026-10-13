@@ -1,0 +1,42 @@
+$kind: grpc-request
+url: http://localhost:7890
+methodPath: surimi.v1.EcologyService.UpdateSpeciesPrices
+methodDescriptor: CsoFCg9zdXJpbWlfdjEucHJvdG8SCXN1cmltaS52MSJmCgdTcGVjaWVzEhgKDHNwZWNpZXNfY29kZRgBIAEoCUICEAESGAoMbGVuZ3RoX2NsYXNzGAIgASgJQgIQARIPCgNhZ2UYAyABKAlCAhABEhYKCmxpZmVfc3RhZ2UYBCABKAlCAhABIqEBChpVcGRhdGVTcGVjaWVzUHJpY2VzUmVxdWVzdBIZCg1zaW11bGF0aW9uX2lkGAEgASgJQgIQARIwCglkYXRlX3RpbWUYAiABKAsyGWdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXBCAhABEjYKFXNwZWNpZXNfcHJpY2Vfc3VtbWFyeRgDIAEoCzITU3BlY2llc1ByaWNlU3VtbWFyeUICEAEiOAobVXBkYXRlU3BlY2llc1ByaWNlc1Jlc3BvbnNlEhkKDXNpbXVsYXRpb25faWQYASABKAlCAhABIokBCgxTcGVjaWVzUHJpY2USHAoHc3BlY2llcxgBIAEoCzIHU3BlY2llc0ICEAESGQoNY2F0ZWdvcnlfY29kZRgCIAEoCUICEAESFwoLbWFya2V0X2NvZGUYAyABKAlCAhABEhEKBXByaWNlGAQgASgBQgIQARIUCghjdXJyZW5jeRgFIAEoCUICEAEiPwoTU3BlY2llc1ByaWNlU3VtbWFyeRIoCg5zcGVjaWVzX3ByaWNlcxgBIAMoCzIMU3BlY2llc1ByaWNlQgIQATJ2Cg5FY29sb2d5U2VydmljZRJkChNVcGRhdGVTcGVjaWVzUHJpY2VzEiUuc3VyaW1pLnYxLlVwZGF0ZVNwZWNpZXNQcmljZXNSZXF1ZXN0GiYuc3VyaW1pLnYxLlVwZGF0ZVNwZWNpZXNQcmljZXNSZXNwb25zZUIhChFldS5wcm9qZWN0LnN1cmltaaoCC0dycGMuU3VyaW1pCucBChVnb29nbGVfcHJvdG9idWYucHJvdG8SD2dvb2dsZS5wcm90b2J1ZiIzCglUaW1lc3RhbXASEwoHc2Vjb25kcxgBIAEoA0ICEAESEQoFbmFub3MYAiABKAVCAhABQocBChNjb20uZ29vZ2xlLnByb3RvYnVmQg5GaWVsZE1hc2tQcm90b0gBUAFaMmdvb2dsZS5nb2xhbmcub3JnL3Byb3RvYnVmL3R5cGVzL2tub3duL2ZpZWxkbWFza3Bi+AEBogIDR1BCqgIeR29vZ2xlLlByb3RvYnVmLldlbGxLbm93blR5cGVz
+message:
+  content: |-
+    {
+        "simulation_id": "123e4567-e89b-12d3-a456-426614174000",
+        "date_time": "2013-01-01T00:00:00.000Z",
+        "species_price_summary": {
+            "species_prices": [
+                {
+                    "species": {
+                        "species_code": "BOG",
+                        "length_class": "",
+                        "age": "",
+                        "life_stage": ""
+                    },
+                    "category_code": "Fresh - Whole",
+                    "market_code": "ESSCR",
+                    "price": 13777517.712172166,
+                    "currency": "EUR"
+                },
+                {
+                    "species": {
+                        "species_code": "PIL",
+                        "length_class": "",
+                        "age": "",
+                        "life_stage": ""
+                    },
+                    "category_code": "Fresh - Whole",
+                    "market_code": "ESSCR",
+                    "price": 42277357.87747139,
+                    "currency": "EUR"
+                }
+            ]
+        }
+    }
+settings: {}
+schema:
+  source: auto
+order: 2000
