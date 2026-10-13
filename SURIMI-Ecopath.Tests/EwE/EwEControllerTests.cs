@@ -45,13 +45,13 @@ namespace Ecopath.Tests.EwE
         }
 
         [Fact]
-        public void StopAsync_TeardownsCore_AndReturnsTrue()
+        public async Task StopAsync_TeardownsCore_AndReturnsTrue()
         {
             // Arrange
             var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, _keyFieldDescriptorRegistryMock.Object, _multiLevelKeyFactoryMock.Object, _vocabulariesRegisterServiceMock.Object, _blobStoreMock.Object);
 
             // Act
-            var result = controller.StopAsync().Result;
+            var result = await controller.StopAsync();
 
             // Assert
             result.Should().BeTrue();

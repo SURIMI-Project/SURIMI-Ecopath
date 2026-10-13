@@ -6,6 +6,6 @@ namespace Ecopath.Services
 {
     public interface ISurimiContractToEwEService
     {
-        Task ReadSemanticMappings(List<EwEMapping> mappings, IEwECore core, SurimiContract surimiContract);
+        Task ReadSemanticMappings(List<EwEMapping> mappings, IEwECore core, string scenarioName);
     }
 }

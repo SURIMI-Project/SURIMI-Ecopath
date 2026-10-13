@@ -288,7 +288,7 @@ namespace Ecopath.EwE
             // Now load the configuration
             try
             {
-                await _configurationService.LoadAsync(m_core, _configuration, surimiContract);
+                await _configurationService.LoadAsync(m_core, _configuration, surimiContract, scenarioName);
             }
             catch (Exception ex)
             {

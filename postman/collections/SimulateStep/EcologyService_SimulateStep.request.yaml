@@ -1,0 +1,14 @@
+$kind: grpc-request
+url: http://localhost:7890
+methodPath: surimi.v1.EcologyService.SimulateStep
+methodDescriptor: CsECCg9zdXJpbWlfdjEucHJvdG8SCXN1cmltaS52MSJqChNTaW11bGF0ZVN0ZXBSZXF1ZXN0EhkKDXNpbXVsYXRpb25faWQYASABKAlCAhABEjgKEWN1cnJlbnRfZGF0ZV90aW1lGAIgASgLMhlnb29nbGUucHJvdG9idWYuVGltZXN0YW1wQgIQASIxChRTaW11bGF0ZVN0ZXBSZXNwb25zZRIZCg1zaW11bGF0aW9uX2lkGAEgASgJQgIQATJhCg5FY29sb2d5U2VydmljZRJPCgxTaW11bGF0ZVN0ZXASHi5zdXJpbWkudjEuU2ltdWxhdGVTdGVwUmVxdWVzdBofLnN1cmltaS52MS5TaW11bGF0ZVN0ZXBSZXNwb25zZUIhChFldS5wcm9qZWN0LnN1cmltaaoCC0dycGMuU3VyaW1pCucBChVnb29nbGVfcHJvdG9idWYucHJvdG8SD2dvb2dsZS5wcm90b2J1ZiIzCglUaW1lc3RhbXASEwoHc2Vjb25kcxgBIAEoA0ICEAESEQoFbmFub3MYAiABKAVCAhABQocBChNjb20uZ29vZ2xlLnByb3RvYnVmQg5GaWVsZE1hc2tQcm90b0gBUAFaMmdvb2dsZS5nb2xhbmcub3JnL3Byb3RvYnVmL3R5cGVzL2tub3duL2ZpZWxkbWFza3Bi+AEBogIDR1BCqgIeR29vZ2xlLlByb3RvYnVmLldlbGxLbm93blR5cGVz
+message:
+  content: |-
+    {
+        "simulation_id": "123e4567-e89b-12d3-a456-426614174000",
+        "current_date_time": "2013-02-01T00:00:00.000Z"
+    }
+settings: {}
+schema:
+  source: auto
+order: 1000

@@ -4,6 +4,7 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using Grpc.Surimi;
 using Xunit;
+using YamlDotNet.RepresentationModel;
 
 namespace Ecopath.IntegrationTests;
 
@@ -33,14 +34,24 @@ public class EcologyServiceTests : IClassFixture<EcopathWebApplicationFactory>
     }
 
     /// <summary>
-    /// Loads a Protobuf message from a JSON fixture file.
-    /// <paramref name="relativeJsonPath"/> is relative to the <c>GrpcMessages</c> directory,
-    /// e.g. <c>InitialiseSimulation\EcologyService_InitialiseSimulation.json</c>.
+    /// Loads a Protobuf message from a Postman gRPC request file.
+    /// <paramref name="relativeJsonPath"/> is relative to the <c>postman\collections</c> directory,
+    /// e.g. <c>InitialiseSimulation\EcologyService_InitialiseSimulation.json</c>; the <c>.json</c>
+    /// extension is mapped to <c>.request.yaml</c>.
     /// </summary>
     private static T LoadMessage<T>(string relativeJsonPath) where T : Google.Protobuf.IMessage<T>, new()
     {
-        var fullPath = Path.Combine(AppContext.BaseDirectory, "GrpcMessages", relativeJsonPath);
-        var json = File.ReadAllText(fullPath);
+        var yamlPath = Path.ChangeExtension(relativeJsonPath, ".request.yaml")
+            .Replace('\\', Path.DirectorySeparatorChar);
+        var fullPath = Path.Combine(AppContext.BaseDirectory, "postman", "collections", yamlPath);
+        var yaml = new YamlStream();
+        using (var reader = new StreamReader(fullPath))
+        {
+            yaml.Load(reader);
+        }
+        var root = (YamlMappingNode)yaml.Documents[0].RootNode;
+        var message = (YamlMappingNode)root.Children[new YamlScalarNode("message")];
+        var json = ((YamlScalarNode)message.Children[new YamlScalarNode("content")]).Value!;
         var parser = new Google.Protobuf.JsonParser(Google.Protobuf.JsonParser.Settings.Default);
         return parser.Parse<T>(json);
     }
@@ -73,14 +84,14 @@ public class EcologyServiceTests : IClassFixture<EcopathWebApplicationFactory>
             @"GetBiomass\EcologyService_GetBiomass.json");
         var getBiomassResponse = await client.GetBiomassAsync(getBiomassRequest);
         getBiomassResponse.SimulationId.Should().Be("123e4567-e89b-12d3-a456-426614174000");
-        getBiomassResponse.BiomassSummary.BiomassGrids.Count.Should().Be(8);
+        getBiomassResponse.BiomassSummary.BiomassGrids.Count.Should().Be(91);
 
         // 5. Get catch disposition and verify the response
         var getCatchDispositionRequest = LoadMessage<GetCatchDispositionRequest>(
             @"GetCatchDisposition\EcologyService_GetCatchDisposition.json");
         var getCatchDispositionResponse = await client.GetCatchDispositionAsync(getCatchDispositionRequest);
         getCatchDispositionResponse.SimulationId.Should().Be("123e4567-e89b-12d3-a456-426614174000");
-        getCatchDispositionResponse.CatchDispositionSummary.DispositionGrids.Count.Should().Be(46);
+        getCatchDispositionResponse.CatchDispositionSummary.DispositionGrids.Count.Should().Be(254);
 
         // 6. Get sales and verify the response
         var getSalesRequest = LoadMessage<GetSalesRequest>(

@@ -111,7 +111,7 @@ namespace Ecopath.Services
 
         #region Persistence
 
-        public async Task<bool> LoadAsync(IEwECore core, IEwEConfiguration configuration, SurimiContract surimiContract)
+        public async Task<bool> LoadAsync(IEwECore core, IEwEConfiguration configuration, SurimiContract surimiContract, string scenarioName)
         {
             m_mappings.Clear();
 
@@ -120,7 +120,7 @@ namespace Ecopath.Services
             // Load fleet segment mappings from the semantics file
             WriteSpeciesMappingsFromModel(core, configuration, surimiContract.Items.Species);
 
-            await m_surimiContractToEwEService.ReadSemanticMappings(m_mappings, core, surimiContract);
+            await m_surimiContractToEwEService.ReadSemanticMappings(m_mappings, core, scenarioName);
 
             //// Register fleet segments as gear + countrycode pairs to match fleet + countrycode fishing
             //// ToDo: obtain from Semantic Registry instead of hardcoding here
