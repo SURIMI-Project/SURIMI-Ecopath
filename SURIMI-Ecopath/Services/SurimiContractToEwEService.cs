@@ -31,12 +31,12 @@ namespace Ecopath.Services
             _multiLevelKeyFactory = multiLevelKeyFactory;
         }
 
-        public async Task ReadSemanticMappings(List<EwEMapping> mappings, IEwECore core, SurimiContract surimiContract)
+        public async Task ReadSemanticMappings(List<EwEMapping> mappings, IEwECore core, string scenarioName)
         {
             cEcopathDataStructures ecopathds = core.EcopathDataStructures;
 
             // Read the semantics file from blob store
-            string semanticsFilePath = "EwE_SURIMI.semantics";
+            string semanticsFilePath = $"{scenarioName}.semantics";
             _logger.LogInformation("Loading fleet mappings from {SemanticsFile}", semanticsFilePath);
 
             string jsonContent;

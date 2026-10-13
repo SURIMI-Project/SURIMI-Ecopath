@@ -9,7 +9,7 @@ namespace Ecopath.Services
     public interface IEwEConfigurationService
     {
         Task<IEwEConfiguration> CreateConfigurationAsync(string scenarioName, CancellationToken cancellationToken);
-        Task<bool> LoadAsync(IEwECore core, IEwEConfiguration configuration, SurimiContract surimiContract);
+        Task<bool> LoadAsync(IEwECore core, IEwEConfiguration configuration, SurimiContract surimiContract, string scenarioName);
         IEnumerable<EwEMappingMatch> ResolveEwEFleet(string marketcode);
         IEnumerable<EwEMappingMatch> ResolveEwEGroup(IMultiLevelKey key);
         IEnumerable<EwEMappingMatch> ResolveEwEGroupFromSpecies(string speciescode);
