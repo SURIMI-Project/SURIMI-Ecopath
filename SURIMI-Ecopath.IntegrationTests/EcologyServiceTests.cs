@@ -41,7 +41,8 @@ public class EcologyServiceTests : IClassFixture<EcopathWebApplicationFactory>
     /// </summary>
     private static T LoadMessage<T>(string relativeJsonPath) where T : Google.Protobuf.IMessage<T>, new()
     {
-        var yamlPath = Path.ChangeExtension(relativeJsonPath, ".request.yaml");
+        var yamlPath = Path.ChangeExtension(relativeJsonPath, ".request.yaml")
+            .Replace('\\', Path.DirectorySeparatorChar);
         var fullPath = Path.Combine(AppContext.BaseDirectory, "postman", "collections", yamlPath);
         var yaml = new YamlStream();
         using (var reader = new StreamReader(fullPath))
