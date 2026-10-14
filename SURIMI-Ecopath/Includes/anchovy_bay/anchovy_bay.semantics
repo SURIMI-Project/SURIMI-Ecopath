@@ -20,7 +20,7 @@
           "Target": "model=fleet;DBID=4"
         },
         {
-          "Source": "gearcode=TBS"
+          "Source": "gearcode=TBS",
           "Target": "model=fleet;DBID=5"
         }
       ]
