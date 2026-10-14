@@ -1,40 +1,75 @@
 {
-    "Mappings": [
+  "Domains": [
+    {
+      "Domain": "FleetSegment",
+      "Mappings": [
         {
-            "Source": "gearcode=OTB;countrycode=ESP",
-            "Target": "model=fleet;name=Bottom trawl Spain;index=1"
+          "Source": "gearcode=MHI",
+          "Target": "model=fleet;DBID=1"
         },
         {
-            "Source": "gearcode=PS; countrycode=ESP",
-            "Target": "model=fleet;name=Purse seine Spain;index=2"
+          "Source": "gearcode=OTB",
+          "Target": "model=fleet;DBID=2"
         },
         {
-            "Source": "gearcode=LLS; countrycode=ESP",
-            "Target": "model=fleet;name=Long-line Spain;index=3"
+          "Source": "gearcode=PS",
+          "Target": "model=fleet;DBID=3"
         },
         {
-            "Source": "gearcode=EwE:ART; countrycode=ESP",
-            "Target": "model=fleet;name=Artisanal Spain;index=4"
+          "Source": "gearcode=LNB",
+          "Target": "model=fleet;DBID=4"
         },
         {
-            "Source": "gearcode=EwE:RECT; countrycode=ESP",
-            "Target": "model=fleet;name=Recreational Spain;index=9"
-        },
-        {
-            "Source": "gearcode=OTB; countrycode=FRA",
-            "Target": "model=fleet;name=Bottom trawl France;index=5"
-        },
-        {
-            "Source": "gearcode=TM; countrycode=FRA",
-            "Target": "model=fleet;name=Mid water trawl France;index=6"
-        },
-        {
-            "Source": "gearcode=PS; countrycode=FRA",
-            "Target": "model=fleet;name=Purse seine France;index=7"
-        },
-        {
-            "Source": "gearcode=EwE:ART; countrycode=FRA",
-            "Target": "model=fleet;name=Artisanal France;index=8"
+          "Source": "gearcode=TBS"
+          "Target": "model=fleet;DBID=5"
         }
-    ]
+      ]
+    },
+    {
+      "Domain": "Species",
+      "Mappings": [
+        {
+          "Source": "speciescode=HUW",
+          "Target": "model=group;DBID=2"
+        },
+        {
+          "Source": "speciescode=GRW",
+          "Target": "model=group;DBID=2"
+        },
+        {
+          "Source": "speciescode=SEG",
+          "Target": "model=group;DBID=3"
+        },
+        {
+          "Source": "speciescode=SEC",
+          "Target": "model=group;DBID=3"
+        },
+        {
+          "Source": "speciescode=COD",
+          "Target": "model=group;DBID=4"
+        },
+        {
+          "Source": "speciescode=WHG",
+          "Target": "model=group;DBID=5"
+        },
+        {
+          "Source": "speciescode=MAC",
+          "Target": "model=group;DBID=6"
+        },
+        {
+          "Source": "speciescode=ANE",
+          "Target": "model=group;DBID=7"
+        },
+        {
+          "Source": "speciescode=ARA",
+          "Target": "model=group;DBID=8"
+        }
+      ]
+    },
+    {
+      "Domain": "Market",
+      "Mappings": [
+	  ]
+    }
+  ]
 }
