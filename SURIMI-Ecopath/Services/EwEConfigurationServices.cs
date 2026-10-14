@@ -10,7 +10,6 @@ using Eii.ControlledVocabularies.Resolve;
 using Eii.ControlledVocabularies.Utils;
 using Eii.ControlledVocabularies.Vocabularies;
 using EwECore;
-using EwECore.Auxiliary;
 using SURIMI.Datamodel;
 
 namespace Ecopath.Services
@@ -115,44 +114,15 @@ namespace Ecopath.Services
         {
             m_mappings.Clear();
 
-            string cfgtext = GetConfigBucket(core).Remark;
-
             // Load fleet segment mappings from the semantics file
             WriteSpeciesMappingsFromModel(core, configuration, surimiContract.Items.Species);
 
             await m_surimiContractToEwEService.ReadSemanticMappings(m_mappings, core, scenarioName);
 
-            //// Register fleet segments as gear + countrycode pairs to match fleet + countrycode fishing
-            //// ToDo: obtain from Semantic Registry instead of hardcoding here
-            //m_mappings.Add(new EwEMapping("gearcode=OTB; countrycode=ESP", KeyDomain.FleetSegment, 1, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=PS; countrycode=ESP", KeyDomain.FleetSegment, 2, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=LLS; countrycode=ESP", KeyDomain.FleetSegment, 3, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=EwE:ART; countrycode=ESP", KeyDomain.FleetSegment, 4, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; countrycode=ESP", KeyDomain.FleetSegment, 9, m_keyFieldDescriptorRegistry));
-
-            //m_mappings.Add(new EwEMapping("gearcode=OTB; countrycode=FRA", KeyDomain.FleetSegment, 5, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=TM; countrycode=FRA", KeyDomain.FleetSegment, 6, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=PS; countrycode=FRA", KeyDomain.FleetSegment, 7, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=EwE:ART; countrycode=FRA", KeyDomain.FleetSegment, 8, m_keyFieldDescriptorRegistry));
-
-
-            //// Register fleet segments as gear + market code pairs to match fleet > market deliveries
-            //m_mappings.Add(new EwEMapping("gearcode=OTB; marketcode=ES", KeyDomain.Market, 1, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=ES", KeyDomain.Market, 2, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=LLS; marketcode=ES", KeyDomain.Market, 3, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=EwE:ART; marketcode=ES", KeyDomain.Market, 4, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=EwE:RECT; marketcode=ES", KeyDomain.Market, 9, m_keyFieldDescriptorRegistry));
-
-            //m_mappings.Add(new EwEMapping("gearcode=OTB; marketcode=FR", KeyDomain.Market, 5, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=TM; marketcode=FR", KeyDomain.Market, 6, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=PS; marketcode=FR", KeyDomain.Market, 7, m_keyFieldDescriptorRegistry));
-            //m_mappings.Add(new EwEMapping("gearcode=EwE:ART; marketcode=FR", KeyDomain.Market, 8, m_keyFieldDescriptorRegistry));
-
             if (surimiContract.Items == null || surimiContract.Items.Species == null || surimiContract.Items.Species.Count == 0)
             {
                 throw new Exception("No species mappings found in configuration contract; species will not be resolved to functional groups");
             }
-
 
             m_mappings.Sort(new EwEMappingComparer());
 
@@ -162,12 +132,6 @@ namespace Ecopath.Services
         public bool Save(cCore core)
         {
             return true;
-        }
-
-        private cAuxiliaryData GetConfigBucket(IEwECore core)
-        {
-            cEcospaceModelParameters parms = core.EcospaceModelParameters;
-            return core.AuxillaryData("SURIMI_link_" + parms.DBID);
         }
 
         #endregion // Persistence
@@ -241,7 +205,6 @@ namespace Ecopath.Services
         #endregion // Mappings
 
         #region Smarts 
-
 
         /// <summary>
         /// Load the species key -> FN group mappings from the model. 
