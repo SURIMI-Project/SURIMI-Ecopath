@@ -10,12 +10,32 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
+      contents: write
       packages: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v4.1.0
+        with:
+          versionSpec: '6.4.0'
+
+      - name: Run GitVersion
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v4.1.0
+        with:
+          overrideConfig: |
+            workflow=TrunkBased/preview1
+            commit-message-incrementing=Enabled
+            tag-prefix=v
+            increment=Patch
+
+      - name: Show extracted version
+        run: echo "Version is ${{ steps.gitversion.outputs.SemVer }}"
 
       - name: Log in to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -28,6 +48,7 @@ jobs:
           docker build \
             -f ./SURIMI-Ecopath/Dockerfile \
             -t ghcr.io/surimi-project/surimiecopath:latest \
+            -t ghcr.io/surimi-project/surimiecopath:${{ steps.gitversion.outputs.SemVer }} \
             --secret id=GITHUB_TOKEN,env=GITHUB_TOKEN \
             --secret id=BSR_TOKEN,env=BSR_TOKEN \
             .
@@ -35,3 +56,14 @@ jobs:
       - name: Push Docker image
         run: |
           docker push ghcr.io/surimi-project/surimiecopath:latest
+          docker push ghcr.io/surimi-project/surimiecopath:${{ steps.gitversion.outputs.SemVer }}
+
+      - name: Create git tag
+        run: |
+          tag="v${{ steps.gitversion.outputs.SemVer }}"
+          if [ -n "$(git ls-remote --tags origin "refs/tags/$tag")" ]; then
+            echo "Tag $tag already exists, skipping"
+            exit 0
+          fi
+          git tag "$tag"
+          git push origin "$tag"
