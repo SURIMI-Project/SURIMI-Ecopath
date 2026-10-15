@@ -240,11 +240,6 @@ namespace Ecopath.EwE
                 throw new Exception("EwE - Ecopath does not balance");
             }
 
-            // Key admin bit
-            for (int iGroup = 1; iGroup <= _core.nGroups; iGroup++)
-                if (_core.get_EcopathGroupInputs(iGroup).IsFished)
-                    _configuration.FishedGroups.Add(iGroup);
-
             _logger.LogInformation("EwE - Ecopath does balance");
 
             // Check and load Ecosim
@@ -296,6 +291,16 @@ namespace Ecopath.EwE
                 throw new Exception("EwE - Semantic configuration failed to load: " + ex.Message);
             }
 
+            // Once mappings have been loaded, determine key interop buffers
+            for (int iGroup = 1; iGroup <= _core.nGroups; iGroup++)
+            {
+                // Create a species proportion object for each group, to track how much of the group is made up of which species
+                _groupSpeciesProportions[iGroup] = GroupSpeciesProportionsFactory.Create(_core, iGroup, _configurationService.Mappings(KeyDomain.Species));
+                // Flag fished groups
+                if (_core.get_EcopathGroupInputs(iGroup).IsFished)
+                    _configuration.FishedGroups.Add(iGroup);
+            }
+
             StringBuilder info = new();
             info.AppendLine("EwE FG - species mappings:");
             foreach (var mapping in _configurationService.Mappings(KeyDomain.Species))
@@ -310,10 +315,6 @@ namespace Ecopath.EwE
 
             // Calculate base prices
             CalculateBasePrices(true);
-
-            // Build species proportion accounting
-            foreach (int iGroup in _configuration.FishedGroups)
-                _groupSpeciesProportions[iGroup] = GroupSpeciesProportionsFactory.Create(_core, iGroup, _configurationService.Mappings(KeyDomain.Species));
 
             // Configure Ecospace
             cEcospaceDataStructures ds = _core.EcospaceDataStructures;
