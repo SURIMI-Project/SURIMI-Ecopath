@@ -312,7 +312,7 @@ namespace Ecopath.EwE
             CalculateBasePrices(true);
 
             // Build species proportion accounting
-            foreach (int iGroup in _configuration.FishedGroups)
+            for (int iGroup = 1; iGroup <= _core.nGroups; iGroup++)
                 _groupSpeciesProportions[iGroup] = GroupSpeciesProportionsFactory.Create(_core, iGroup, _configurationService.Mappings(KeyDomain.Species));
 
             // Configure Ecospace
@@ -633,6 +633,7 @@ namespace Ecopath.EwE
                             Species = species
                         };
                         int iGroup = key.Index;
+                        Debug.Assert(_groupSpeciesProportions.ContainsKey(iGroup));
 
                         for (int ic = 1; ic <= ds.InCol; ic++)
                             for (int ir = 1; ir <= ds.InRow; ir++)
@@ -640,7 +641,6 @@ namespace Ecopath.EwE
                                 {
                                     // Express biomass of group proportion in kg at timestep units (not annual)
                                     double biomassCell = DensityToKg(ds.Bcell[ir, ic, iGroup], ir, ic) * ds.TimeStep;
-                                    // Return the biomass proportion in the FG for the current cell
                                     double biomassSpecies = _groupSpeciesProportions[iGroup].GetSpeciesBiomass(ir, ic, key, biomassCell);
 
                                     grid.BiomassCells.Add(new BiomassCell()
