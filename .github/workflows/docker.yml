@@ -19,3 +19,4 @@ jobs:
         with:
           image-name: ghcr.io/surimi-project/surimiecopath
           bsr-token: ${{ secrets.BSR_TOKEN }}
+          dockerfile: ./SURIMI-Ecopath/Dockerfile
