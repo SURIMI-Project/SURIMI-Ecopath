@@ -40,6 +40,9 @@ internal class PriceBridge
     /// <param name="landings"></param>
     public void SetBasePrice(int group, int fleet, double price, double landings = 1)
     {
+        if (!IsEnabled)
+            throw new Exception("Cannot set base prices when no markets defined");
+
         var market = GetMarket(fleet);
         Debug.Assert(market != null);
         market!.RegisterBasePrice(group, fleet, price, landings);
@@ -47,6 +50,9 @@ internal class PriceBridge
 
     public void AddEvolvingPrice(string market, int group, double price, int fleet = 0, double proportion = 1)
     {
+        if (!IsEnabled)
+            return;
+
         market = NormalizedMarketCode(market);
         if (fleet > 0)
             Debug.Assert(_fleetMarkets[fleet] == market);
@@ -58,9 +64,14 @@ internal class PriceBridge
 
     public void AppyToEwE()
     {
+        if (!IsEnabled)
+            return;
+
         foreach (EwEMarketPricesManager mp in _markets.Values)
             mp.ApplyToEwE(_marketPrices);
     }
+
+    public bool IsEnabled { get { return _markets.Count > 0; } }
 
     #region Internal helpers
 
