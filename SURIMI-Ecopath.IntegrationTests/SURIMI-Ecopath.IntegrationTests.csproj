@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -29,6 +29,10 @@
   <ItemGroup>
     <!-- Show the Postman request files in the project and copy them to the output directory so tests can load them at runtime -->
     <None Include="..\postman\collections\**\*.request.yaml" Exclude="..\postman\collections\Local\**" Link="postman\collections\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="..\postman\collections\InitialiseSimulation\EcologyService_InitialiseSimulation_BadRequest.request.yaml" />
   </ItemGroup>
 
   <ItemGroup>

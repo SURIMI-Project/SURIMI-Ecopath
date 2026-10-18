@@ -6,7 +6,7 @@ methodDescriptor: Cr8RCg9zdXJpbWlfdjEucHJvdG8SCXN1cmltaS52MSJmCgdTcGVjaWVzEhgKDH
 message:
   content: |-
     {
-        "simulation_id": "cc2aad27-441f-4630-b782-3389083901e9",
+        "simulation_id": "123e4567-e89b-12d3-a456-426614174000",
         "simulation": {
             "case_study_name": "Anchovy Bay",
             "start_date_time": "2013-01-01T00:00:00.000Z",

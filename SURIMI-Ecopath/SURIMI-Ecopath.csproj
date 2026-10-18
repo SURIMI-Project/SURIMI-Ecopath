@@ -48,15 +48,11 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<Content Include="includes\**">
+		<Content Include="Includes\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
 
-	<ItemGroup>
-	  <None Include="bin\Debug\net10.0\includes\northwestern_med\northwestern_med.eiixml" />
-	</ItemGroup>
-  
     <!-- Custom target to copy Includes directory from build output to publish directory. So the csv files from the controlledVocabularies package are also present-->
     <Target Name="CopyIncludesToPublish" AfterTargets="Publish">
         <ItemGroup>
