@@ -13,3 +13,4 @@ jobs:
         uses: SURIMI-Project/Surimi-GithubActions/BuildCheckUbuntuBSR@master
         with:
           bsr-token: ${{ secrets.BSR_TOKEN }}
+          run-tests: true
