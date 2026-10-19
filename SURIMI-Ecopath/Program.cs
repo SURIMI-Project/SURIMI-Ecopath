@@ -15,6 +15,7 @@ using Eii.ControlledVocabularies.Vocabularies.Species;
 using EwEUtils.Logging;
 using SURIMI.Common.gRPC;
 using SURIMI.Common.gRPC.Services;
+using SURIMI.Common.Services;
 
 namespace Ecopath;
 
@@ -92,6 +93,7 @@ public class Program
         builder.Services.AddSingleton<IEwEConfigurationService, EwEConfigurationService>();
         builder.Services.AddTransient<ISurimiContractToEwEService, SurimiContractToEwEService>();
         builder.Services.AddTransient<IVocabulariesRegisterService, VocabulariesRegisterService>();
+        builder.Services.AddTransient<VaultService>();
 
         var app = builder.Build();
 
@@ -103,7 +105,8 @@ public class Program
 
         app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
 
-        LoadVaultSecretsInEnvironmentVariables();
+        app.Services.GetRequiredService<VaultService>().LoadVaultSecretsInEnvironmentVariables();
+
         logger.LogInformation("============================= Logging All Environment Variables =============================");
         foreach (System.Collections.DictionaryEntry envVar in Environment.GetEnvironmentVariables())
         {
@@ -114,35 +117,5 @@ public class Program
         logger.LogInformation("Ecopath running.......................");
         app.Run();
         logger.LogInformation("Ecopath shutting down.......................");
-
-        void LoadVaultSecretsInEnvironmentVariables()
-        {
-            var vaultAddr = Environment.GetEnvironmentVariable("VAULT_ADDR");
-            var vaultToken = Environment.GetEnvironmentVariable("VAULT_TOKEN");
-            var vaultTopDir = Environment.GetEnvironmentVariable("VAULT_TOP_DIR");
-            var vaultRelativePath = Environment.GetEnvironmentVariable("VAULT_RELATIVE_PATH");
-            var vaultMount = Environment.GetEnvironmentVariable("VAULT_MOUNT");
-            if (string.IsNullOrEmpty(vaultAddr) || string.IsNullOrEmpty(vaultToken) || string.IsNullOrEmpty(vaultTopDir) || string.IsNullOrEmpty(vaultRelativePath) || string.IsNullOrEmpty(vaultMount))
-            {
-                logger.LogInformation("Vault Addr, Token, Top Dir, Relative Path, or Mount not set in environment variables. Skipping Vault loading.");
-                return;
-            }
-            var vaultClient = new VaultSharp.VaultClient(new VaultSharp.VaultClientSettings(vaultAddr, new VaultSharp.V1.AuthMethods.Token.TokenAuthMethodInfo(vaultToken)));
-            // Assuming secrets are stored under "secret/data/surimi"
-            var secretPath = $"{vaultTopDir}/{vaultRelativePath}";
-            try
-            {
-                var secret = vaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync(secretPath, mountPoint: vaultMount).Result;
-                foreach (var kv in secret.Data.Data)
-                {
-                    Environment.SetEnvironmentVariable(kv.Key, kv.Value.ToString());
-                    Console.WriteLine($"Loaded secret '{kv.Key}' from Vault into environment variables.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading secrets from Vault: {ex.Message}");
-            }
-        }
     }
 }
