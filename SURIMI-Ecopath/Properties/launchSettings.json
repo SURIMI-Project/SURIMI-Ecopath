@@ -18,7 +18,8 @@
         "VAULT_MOUNT": "secret-kv",
         "AWS_S3_ENDPOINT": "minio.dive.edito.eu",
         "AWS_DEFAULT_REGION": "waw3-1",
-        "AWS_BUCKET_NAME": "oidc-rikkert"
+        "AWS_BUCKET_NAME": "oidc-rikkert",
+        "CREATE_HCR_INITIALISE_FILES": "true"
       },
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:7243;http://localhost:7890"
