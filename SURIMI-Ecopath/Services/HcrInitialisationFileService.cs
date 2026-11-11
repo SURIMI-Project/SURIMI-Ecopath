@@ -61,7 +61,7 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
     }
 
     /// <inheritdoc />
-    public async Task WriteInitialFilesAsync(Biomass biomass, CancellationToken cancellationToken)
+    public async Task WriteInitialFilesAsync(Biomass biomass, string scenarioName, CancellationToken cancellationToken)
     {
         if (!Enabled)
             throw new InvalidOperationException("HCR initialization files are not enabled.");
@@ -121,9 +121,10 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
         {
             foreach (var (fileName, csvContent) in files)
             {
-                attemptedFiles.Add(fileName);
+                string blobKey = string.Join('/', scenarioName, fileName);
+                attemptedFiles.Add(blobKey);
                 using var content = new MemoryStream(Encoding.UTF8.GetBytes(csvContent));
-                await _blobStore.UploadAsync(fileName, PathType.Output, content, "text/csv", new Dictionary<string, string>(), cancellationToken);
+                await _blobStore.UploadAsync(blobKey, PathType.Output, content, "text/csv", new Dictionary<string, string>(), cancellationToken);
             }
         }
         catch

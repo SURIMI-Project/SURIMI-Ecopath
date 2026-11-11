@@ -35,8 +35,8 @@ namespace Ecopath.Services
         {
             cEcopathDataStructures ecopathds = core.EcopathDataStructures;
 
-            // Read the semantics file from blob store
-            string semanticsFilePath = $"{scenarioName}.semantics";
+            // Read the semantics file from the scenario's blob-store key prefix
+            string semanticsFilePath = string.Join('/', scenarioName, $"{scenarioName}.semantics");
             _logger.LogInformation("Loading fleet mappings from {SemanticsFile}", semanticsFilePath);
 
             string jsonContent;

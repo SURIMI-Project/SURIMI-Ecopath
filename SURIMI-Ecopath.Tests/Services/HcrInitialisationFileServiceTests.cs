@@ -65,13 +65,13 @@ public class HcrInitialisationFileServiceTests
             biomassGrid.BiomassCells.Add(new BiomassCell { Biomass = 30 });
             biomass.BiomassGrids.Add(biomassGrid);
 
-            await service.WriteInitialFilesAsync(biomass, CancellationToken.None);
+            await service.WriteInitialFilesAsync(biomass, "scenario", CancellationToken.None);
 
-            uploadedFiles.Should().ContainKey("initial_biomasses.csv");
-            uploadedFiles["initial_biomasses.csv"].Should().Contain("SPC,,,,30");
-            uploadedFiles.Should().ContainKey("initial_catch.csv");
-            uploadedFiles["initial_catch.csv"].Should().Contain("Catch").And.Contain("SPC,,,,78");
-            uploadedFiles["initial_catch.csv"].Should().NotContain("CatchKg");
+            uploadedFiles.Should().ContainKey("scenario/initial_biomasses.csv");
+            uploadedFiles["scenario/initial_biomasses.csv"].Should().Contain("SPC,,,,30");
+            uploadedFiles.Should().ContainKey("scenario/initial_catch.csv");
+            uploadedFiles["scenario/initial_catch.csv"].Should().Contain("Catch").And.Contain("SPC,,,,78");
+            uploadedFiles["scenario/initial_catch.csv"].Should().NotContain("CatchKg");
         }
         finally
         {

@@ -186,7 +186,7 @@ namespace Ecopath.EwE
 
             _configuration = await _configurationService.CreateConfigurationAsync(scenarioName, cancellationToken);
 
-            // if on S3, the entire "scenarioName" directory is now downloaded to the local instance, including the ModelFile
+            // The scenario directory is downloaded locally, including the model and any external datasets.
             if (!_core.LoadModel(_configuration.LocalModelFile))
                 throw new Exception($"EwE could not load model '{_configuration.LocalModelFile}'");
             _logger.LogInformation("EwE - Ecopath loaded file '{LocalModelFile}', model '{ModelName}'", _configuration.LocalModelFile, _core.EcopathDataStructures.ModelName);
@@ -194,9 +194,10 @@ namespace Ecopath.EwE
             if (!string.IsNullOrEmpty(climateScenarioCode))
             {
                 var externalDatasetsFileName = @$"{scenarioName}_drivers_{climateScenarioCode.Replace(".", "").ToLower()}_annual.xml";
-                if (await _blobStore.ExistsAsync(externalDatasetsFileName, PathType.Input))
+                var externalDatasetsKey = string.Join('/', scenarioName, externalDatasetsFileName);
+                if (await _blobStore.ExistsAsync(externalDatasetsKey, PathType.Input))
                 {
-                    var externalDatasetsLocalFileName = Path.Combine(_blobStore.LocalInputRoot, externalDatasetsFileName);
+                    var externalDatasetsLocalFileName = Path.Combine(_blobStore.LocalInputRoot, scenarioName, externalDatasetsFileName);
 
                     cSpatialDataConnectionManager man = _core.SpatialDataConnectionManager;
                     cSpatialDataSetManager dsm = man.DatasetManager();
@@ -374,7 +375,7 @@ namespace Ecopath.EwE
             }
             // Ready when running Ecospace is waiting for further instructions
             if (_hcrInitialisationFileService.Enabled)
-                await _hcrInitialisationFileService.WriteInitialFilesAsync(_biomassOut!, cancellationToken);
+                await _hcrInitialisationFileService.WriteInitialFilesAsync(_biomassOut!, scenarioName, cancellationToken);
 
             return (RunState == RunStates.waiting) ? 1 : -1;
         }
