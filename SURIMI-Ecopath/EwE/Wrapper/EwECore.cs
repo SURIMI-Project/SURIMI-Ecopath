@@ -1,4 +1,5 @@
-﻿using EwECore;
+﻿using System.Runtime.Loader;
+using EwECore;
 using EwECore.Auxiliary;
 using EwECore.SpatialData;
 
@@ -17,9 +18,10 @@ namespace Ecopath.EwE.Wrapper
         private cCore? m_core;
         private IPluginManager? m_pluginManager;
 
-        public EwECore()
+        static EwECore()
         {
-            // Intentionally empty — cCore and cPluginManager are created lazily in Initialize().
+            // StartAsync needs the bridge type during JIT compilation, before it can discover plugins.
+            AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.Combine(AppContext.BaseDirectory, "Plugins", "BridgePlugin", "Eii.Ecopath.BridgePlugin.dll"));
         }
 
         // -----------------------------------------------------------------------

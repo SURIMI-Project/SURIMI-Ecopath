@@ -4,12 +4,16 @@
 - Always place `using` directives at the top of the file, outside the namespace block. Never nest `using` statements inside a namespace declaration.
 - In .NET SDK-style projects, do not explicitly add `using` directives for namespaces that are already covered by implicit global usings (e.g., System, System.Linq, System.Collections.Generic, System.Threading.Tasks, etc.). Always treat these as redundant and remove them if they are not used.
 - Always remove unused `using` directives and sort the remaining ones (System namespaces first, then others alphabetically) in every file that is created or modified.
+- When adding a service to dependency injection, define its contract in a separate interface file and inject the interface rather than the concrete implementation.
+- When a class implements a documented interface, add XML `<inheritdoc />` to the implementation and its public members so IntelliSense and generated API documentation inherit the interface documentation.
 
 ## Build and test
 
+- Always structure every unit test with explicit `// Arrange`, `// Act`, and `// Assert` sections, in that order. Apply this convention to all new or modified unit tests.
+
 Before restoring, building, or testing, make sure the private NuGet feeds from `NuGet.config` are authenticated in the **global** NuGet config. This repository depends on GitHub Packages (`SURIMI.*`, `Eii.*`) and Buf Schema Registry (`BSR.*`), and the README documents the `dotnet nuget add source ...` commands to configure those credentials.
 
-- Full build: `dotnet build .\SURIMI-Ecopath.sln --no-restore --no-logo`
+- Full build:
 - Full test suite: `dotnet test .\SURIMI-Ecopath.sln --no-logo`
 - Single test: `dotnet test .\SURIMI-Ecopath.Tests\SURIMI-Ecopath.Tests.csproj --no-logo --filter "FullyQualifiedName~Ecopath.Tests.EwE.EwEControllerTests.GetBiomassAsync_ReturnsBiomass"`
 - Docker image build: `docker build -f .\SURIMI-Ecopath\Dockerfile --build-arg GITHUB_TOKEN=<token> --build-arg BSR_TOKEN=<token> -t ghcr.io/official-ewe/surimiecopath:latest .`

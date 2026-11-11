@@ -54,6 +54,15 @@ More info on https://buf.build/docs/bsr/generated-sdks/nuget/#versions
 ### Build Check
 When you merge a PR to master, the build check Github Action will check if the solution builds.
 
+### Bridge plugin loading
+The BridgePlugin NuGet package places `Eii.Ecopath.BridgePlugin.dll` in `Plugins\BridgePlugin` relative to the application output directory. Keep this directory in build and publish deployments. The EwE runtime wrapper loads the assembly into the default load context when constructed, before `StartAsync` is JIT-compiled; plugin discovery inside `StartAsync` is too late to resolve its direct bridge type references. The EwE engine and plugin manager are still created lazily when a simulation starts.
+
+### Initial biomass and fishing mortality
+`GetInitialBiomasses` and `GetInitialFishingMortalities` read input blobs from the request's `ScenarioName` subdirectory. Locally these are `Includes\<ScenarioName>\initial_biomasses.csv` and `Includes\<ScenarioName>\initial_catch.csv`; S3 uses the same scenario directory under the configured input prefix. These RPCs use the shared blob store and should be called before `InitialiseSimulation`, which changes its active scenario subdirectory.
+
+`IInitialStateFileService` documents the initial-state file-reading contract and returns values keyed by the complete species identity (`SpeciesCode`, `LengthClass`, `Age`, `LifeStage`).
+
+Both CSV files use `SpeciesCode,LengthClass,Age,LifeStage` as the species key, with invariant-culture numeric columns named `Biomass` and `Catch`, respectively. Biomass is returned unchanged. Fishing mortality is annual initial catch divided by initial biomass, matched by the complete species key rather than row order. Both files must contain the same species keys. Missing files, malformed or duplicate rows, negative/non-finite values, and zero biomass in the mortality calculation produce errors rather than incomplete results.
 
 ## Visual package manager doesnt't work
 The visual package manager in Visual Studio does not work for the Buf packages.

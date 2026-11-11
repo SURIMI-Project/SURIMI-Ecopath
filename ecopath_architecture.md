@@ -239,6 +239,8 @@ The service reads and writes the following file types through `IBlobStore`:
 
 Locally the `Includes/` directory serves as the input root and `Output/` as the output root.
 
+The catch file uses the same species columns and `Catch`; it totals gross catch, including dead discards, over the final 12 spin-up timesteps. Catch history is collected only while EwE reports that spin-up is active, never during regular simulation timesteps. The files are written once at the initial simulation pause. Initialization fails if fewer than 12 spin-up timesteps are available.
+
 ### S3 bucket authentication
 
 When the environment variable `AWS_ACCESS_KEY_ID` is present at startup, the service creates an `S3BlobStore` using the following variables:
@@ -270,6 +272,7 @@ The service listens on port **7890** (configured via `ASPNETCORE_HTTP_PORTS`).
 | `AWS_SECRET_ACCESS_KEY` | If S3 | S3 secret access key. |
 | `AWS_S3_ENDPOINT` | If S3 | S3-compatible endpoint URL. |
 | `AWS_BUCKET_NAME` | If S3 | S3 bucket name. |
+| `CREATE_HCR_INITIALISE_FILES` | No | When set, writes initial biomass and catch CSV snapshots at initialization. |
 | `ASPNETCORE_HTTP_PORTS` | No | gRPC listening port (default `7890`). |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | No | OpenTelemetry collector endpoint for metrics/traces. |
 | `OTEL_SERVICE_NAME` | No | Service name reported to OpenTelemetry (default `Ecopath`). |

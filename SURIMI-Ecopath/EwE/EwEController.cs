@@ -1,4 +1,6 @@
-﻿using Ecopath.EwE.Prices;
+﻿using System.Diagnostics;
+using System.Text;
+using Ecopath.EwE.Prices;
 using Ecopath.EwE.Wrapper;
 using Ecopath.Services;
 using Eii.BlobStore;
@@ -12,8 +14,6 @@ using EwECore.Plugins;
 using EwECore.SpatialData;
 using EwEUtils.Utilities;
 using SURIMI.Datamodel;
-using System.Diagnostics;
-using System.Text;
 
 namespace Ecopath.EwE
 {
@@ -59,6 +59,7 @@ namespace Ecopath.EwE
         private readonly IBlobStore _blobStore;
 
         private readonly IEwEConfigurationService _configurationService;
+        private readonly IHcrInitialisationFileService _hcrInitialisationFileService;
         private readonly ILogger<EwEController> _logger;
         private readonly IKeyFieldDescriptorRegistry _keyFieldDescriptorRegistry;
         private readonly IMultiLevelKeyFactory _multiLevelKeyFactory;
@@ -80,7 +81,7 @@ namespace Ecopath.EwE
         private int _numSpinUpSteps = 0;
         private int _spinUpStep = 0;
 
-        private double _minimumSaleQuantity = 1.0; // Minimum sale quantity in kg to be reported to the market. 
+        private double _minimumSaleQuantity = 1.0; // Minimum sale quantity in kg to be reported to the market.
 
         /// <summary>
         /// To track species group proportions affected by external fishing
@@ -91,12 +92,13 @@ namespace Ecopath.EwE
 
         #endregion // Private vars 
 
-        public EwEController(ILogger<EwEController> logger, IEwEConfigurationService configurationService, IEwECore core, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory, IVocabulariesRegisterService vocabulariesRegisterService, IBlobStore lobStore)
+        public EwEController(ILogger<EwEController> logger, IEwEConfigurationService configurationService, IEwECore core, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory, IVocabulariesRegisterService vocabulariesRegisterService, IBlobStore lobStore, IHcrInitialisationFileService hcrInitialisationFileService)
         {
             _core = core;
             _keyFieldDescriptorRegistry = keyFieldDescriptorRegistry;
             _multiLevelKeyFactory = multiLevelKeyFactory;
             _configurationService = configurationService;
+            _hcrInitialisationFileService = hcrInitialisationFileService;
             vocabulariesRegisterService.RegisterVocabularies();
 
             RunState = RunStates.idle;
@@ -168,6 +170,7 @@ namespace Ecopath.EwE
                 throw new Exception("EwE controller already busy, aborting");
 
             // Commence configuration
+            _hcrInitialisationFileService.BeginInitialization();
             RunState = RunStates.starting;
 
             // Create the EwE core and wire the bridge plugin for this simulation
@@ -370,6 +373,9 @@ namespace Ecopath.EwE
                 ForceStop();
             }
             // Ready when running Ecospace is waiting for further instructions
+            if (_hcrInitialisationFileService.Enabled)
+                await _hcrInitialisationFileService.WriteInitialFilesAsync(_biomassOut!, cancellationToken);
+
             return (RunState == RunStates.waiting) ? 1 : -1;
         }
 
@@ -929,14 +935,20 @@ namespace Ecopath.EwE
                         break;
 
                     case cEcospaceBridgePlugin.EventType.EndTimeStep:
-
-                        // Do we need to pause at the start of the next time step?
-                        if (MustPauseNext(iTime + 1))
-                        {
-                            // Prepare data for sending out
+                        bool shouldPause = MustPauseNext(iTime + 1);
+                        bool captureSpinUpCatch = _core.EcospaceDataStructures.bInSpinUp && _hcrInitialisationFileService.Enabled;
+                        if (shouldPause)
                             CacheBiomassData();
-                            CacheCatchAndSalesData();
 
+                        if (shouldPause || captureSpinUpCatch)
+                        {
+                            CacheCatchAndSalesData();
+                            if (captureSpinUpCatch)
+                                _hcrInitialisationFileService.CaptureCatchTimestep(_catchOut!);
+                        }
+
+                        if (shouldPause)
+                        {
                             _logger.LogInformation("EwE - pausing at timestep {Timestep}", iTime + 1);
                             RunState = RunStates.waiting;
                             _core.EcospacePaused = true;

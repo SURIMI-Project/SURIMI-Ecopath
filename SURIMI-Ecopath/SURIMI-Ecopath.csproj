@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BSR.Surimi.Surimi-Protocol.Grpc.Csharp" Version="1.84.10001.101+e8672e632cd9" />
+    <PackageReference Include="BSR.Surimi.Surimi-Protocol.Grpc.Csharp" Version="1.85.10101.103+be08fd333a86" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="Eii.BlobStore.S3" Version="1.0.*" />
     <PackageReference Include="Eii.ControlledVocabularies" Version="1.0.*" />

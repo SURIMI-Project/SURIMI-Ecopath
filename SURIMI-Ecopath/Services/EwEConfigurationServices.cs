@@ -83,14 +83,14 @@ namespace Ecopath.Services
                 EcosimTimeSeries = 0,
                 EcospaceScenario = 1,
                 MaxRunYears = 25,
-#if DEBUG
-                // Just to speed up the process of testing :P
-                SpinupYears = 1,
-                StartYear = 2001,
-#else
+//#if DEBUG
+//                // Just to speed up the process of testing :P
+//                SpinupYears = 1,
+//                StartYear = 2001,
+//#else
                 SpinupYears = 10,
                 StartYear = 2013, // The year that the simulation starts
-#endif
+//#endif
                 LocalModelFile = localModelFile
             };
 
