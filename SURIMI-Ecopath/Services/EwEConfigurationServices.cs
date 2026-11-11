@@ -64,17 +64,15 @@ namespace Ecopath.Services
 
         public async Task<IEwEConfiguration> CreateConfigurationAsync(string scenarioName, CancellationToken cancellationToken)
         {
-            // adjust the Blobstore S3 directory for the scenario, so different scenarios can have different configurations and outputs
-            m_blobStore.SetSubdirectory(scenarioName);
-
-            // Load model
+            // Keep each scenario's inputs and outputs under its own blob-store key prefix.
             var modelName = $"{scenarioName}.eiixml";
-            if (!await m_blobStore.ExistsAsync(modelName, PathType.Input))
-                throw new FileNotFoundException($"EwE model file '{modelName}' cannot be found");
+            var scenarioModelKey = string.Join('/', scenarioName, modelName);
+            if (!await m_blobStore.ExistsAsync(scenarioModelKey, PathType.Input))
+                throw new FileNotFoundException($"EwE model file '{scenarioModelKey}' cannot be found");
 
-            // If connected to a remote blob store, copy the model file locally to the Includes folder
-            await m_blobStore.CopyToLocalDirectoryOrIgnoreAsync("", PathType.Input, cancellationToken);
-            var localModelFile = Path.Combine(m_blobStore.LocalInputRoot, modelName);
+            // If connected to a remote blob store, copy the scenario directory locally to the Includes folder
+            await m_blobStore.CopyToLocalDirectoryOrIgnoreAsync(scenarioName, PathType.Input, cancellationToken);
+            var localModelFile = Path.Combine(m_blobStore.LocalInputRoot, scenarioName, modelName);
 
             var configuration = new EwEConfiguration()
             {

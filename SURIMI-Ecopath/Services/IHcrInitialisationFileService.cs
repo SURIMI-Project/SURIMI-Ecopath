@@ -28,8 +28,9 @@ public interface IHcrInitialisationFileService
     /// Writes the initial biomass snapshot and the catch totals from the final 12 collected spin-up timesteps.
     /// </summary>
     /// <param name="biomass">Biomass snapshot taken at the initial simulation pause.</param>
+    /// <param name="scenarioName">Scenario whose output directory will contain the files.</param>
     /// <param name="cancellationToken">Token used to cancel blob-store uploads.</param>
     /// <returns>A task that completes when both CSV files have been written.</returns>
     /// <exception cref="InvalidOperationException">Files are disabled, the initial biomass snapshot is unavailable, or fewer than 12 catch timesteps have been collected.</exception>
-    Task WriteInitialFilesAsync(Biomass biomass, CancellationToken cancellationToken);
+    Task WriteInitialFilesAsync(Biomass biomass, string scenarioName, CancellationToken cancellationToken);
 }
