@@ -4,6 +4,8 @@
 - Always place `using` directives at the top of the file, outside the namespace block. Never nest `using` statements inside a namespace declaration.
 - In .NET SDK-style projects, do not explicitly add `using` directives for namespaces that are already covered by implicit global usings (e.g., System, System.Linq, System.Collections.Generic, System.Threading.Tasks, etc.). Always treat these as redundant and remove them if they are not used.
 - Always remove unused `using` directives and sort the remaining ones (System namespaces first, then others alphabetically) in every file that is created or modified.
+- When adding a service to dependency injection, define its contract in a separate interface file and inject the interface rather than the concrete implementation.
+- When a class implements a documented interface, add XML `<inheritdoc />` to the implementation and its public members so IntelliSense and generated API documentation inherit the interface documentation.
 
 ## Build and test
 
