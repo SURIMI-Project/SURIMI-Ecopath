@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using Ecopath.EwE;
 using Ecopath.EwE.Wrapper;
 using Ecopath.Services;
@@ -30,6 +31,10 @@ namespace Ecopath.Tests.EwE
 
         public EwEControllerTests()
         {
+            // The bridge assembly lives in Plugins\BridgePlugin and is only preloaded by the EwECore static constructor.
+            // IEwECore is mocked here, so trigger that loader explicitly before any test method referencing bridge types is JIT-compiled.
+            RuntimeHelpers.RunClassConstructor(typeof(Ecopath.EwE.Wrapper.EwECore).TypeHandle);
+
             // No plugin/bridge setup here — Initialize() is now called in StartAsync, not in the constructor.
             // Tests that exercise StartAsync should set up _coreMock.Initialize(), PluginManager, LoadPlugins(), and GetPlugins().
         }
