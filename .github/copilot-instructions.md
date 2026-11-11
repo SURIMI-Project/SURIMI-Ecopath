@@ -7,9 +7,11 @@
 
 ## Build and test
 
+- Always structure every unit test with explicit `// Arrange`, `// Act`, and `// Assert` sections, in that order. Apply this convention to all new or modified unit tests.
+
 Before restoring, building, or testing, make sure the private NuGet feeds from `NuGet.config` are authenticated in the **global** NuGet config. This repository depends on GitHub Packages (`SURIMI.*`, `Eii.*`) and Buf Schema Registry (`BSR.*`), and the README documents the `dotnet nuget add source ...` commands to configure those credentials.
 
-- Full build: `dotnet build .\SURIMI-Ecopath.sln --no-restore --no-logo`
+- Full build:
 - Full test suite: `dotnet test .\SURIMI-Ecopath.sln --no-logo`
 - Single test: `dotnet test .\SURIMI-Ecopath.Tests\SURIMI-Ecopath.Tests.csproj --no-logo --filter "FullyQualifiedName~Ecopath.Tests.EwE.EwEControllerTests.GetBiomassAsync_ReturnsBiomass"`
 - Docker image build: `docker build -f .\SURIMI-Ecopath\Dockerfile --build-arg GITHUB_TOKEN=<token> --build-arg BSR_TOKEN=<token> -t ghcr.io/official-ewe/surimiecopath:latest .`

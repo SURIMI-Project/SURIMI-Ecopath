@@ -54,6 +54,8 @@ More info on https://buf.build/docs/bsr/generated-sdks/nuget/#versions
 ### Build Check
 When you merge a PR to master, the build check Github Action will check if the solution builds.
 
+### Bridge plugin loading
+The BridgePlugin NuGet package places `Eii.Ecopath.BridgePlugin.dll` in `Plugins\BridgePlugin` relative to the application output directory. Keep this directory in build and publish deployments. The EwE runtime wrapper loads the assembly into the default load context when constructed, before `StartAsync` is JIT-compiled; plugin discovery inside `StartAsync` is too late to resolve its direct bridge type references. The EwE engine and plugin manager are still created lazily when a simulation starts.
 
 ## Visual package manager doesnt't work
 The visual package manager in Visual Studio does not work for the Buf packages.

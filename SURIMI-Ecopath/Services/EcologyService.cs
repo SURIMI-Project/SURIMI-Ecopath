@@ -377,6 +377,17 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
         return Task.FromResult(new GetProtocolVersionResponse() { ProtocolVersion = _version });
     }
 
+    public override Task<GetInitialBiomassesResponse> GetInitialBiomasses(GetInitialBiomassesRequest request, ServerCallContext context)
+    {
+
+        return Task.FromResult(new GetInitialBiomassesResponse() { EcopathVersion = _version });
+    }
+
+    public override Task<GetInitialFishingMortalitiesResponse> GetInitialFishingMortalities(GetInitialFishingMortalitiesRequest request, ServerCallContext context)
+    {
+        return Task.FromResult(new GetInitialFishingMortalitiesResponse() { EcopathVersion = _version });
+    }
+
     /// <summary>
     /// Mapping method from gRPC Surimi Simulation to SURIMI Datamodel SurimiContract.
     /// </summary>

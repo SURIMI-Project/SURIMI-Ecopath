@@ -18,7 +18,7 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
     private readonly Queue<Dictionary<SpeciesKey, double>> _catchHistory = new();
 
     private readonly record struct SpeciesKey(string SpeciesCode, string LengthClass, string Age, string LifeStage);
-    private sealed record BiomassCsvRow(string SpeciesCode, string LengthClass, string Age, string LifeStage, double BiomassKg);
+    private sealed record BiomassCsvRow(string SpeciesCode, string LengthClass, string Age, string LifeStage, double Biomass);
     private sealed record CatchCsvRow(string SpeciesCode, string LengthClass, string Age, string LifeStage, double Catch);
 
     public HcrInitialisationFileService(IBlobStore blobStore, ILogger<HcrInitialisationFileService> logger)
