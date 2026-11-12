@@ -78,6 +78,7 @@ public class Program
         builder.Services.AddGrpcReflection();
 
         builder.Services.AddSingleton<ICheckSimulationService, CheckSimulationService>();
+        builder.Services.AddSingleton<SimulationMemoryMonitor>();
         builder.Services.AddSingleton<IHcrInitialisationFileService, HcrInitialisationFileService>();
         builder.Services.AddSingleton<IEwECore, EwE.Wrapper.EwECore>();
         builder.Services.AddSingleton<IEwEController, EwEController>();

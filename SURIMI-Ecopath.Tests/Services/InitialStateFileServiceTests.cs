@@ -193,6 +193,7 @@ public class InitialStateFileServiceTests
 
     private static EcologyService CreateEcologyService(IInitialStateFileService reader)
     {
-        return new EcologyService(NullLogger<EcologyService>.Instance, Mock.Of<ICheckSimulationService>(), Mock.Of<IEwEController>(), new ProtocolVersionService(), reader);
+        return new EcologyService(NullLogger<EcologyService>.Instance, Mock.Of<ICheckSimulationService>(), Mock.Of<IEwEController>(), new ProtocolVersionService(), reader,
+            new SimulationMemoryMonitor(NullLogger<SimulationMemoryMonitor>.Instance));
     }
 }

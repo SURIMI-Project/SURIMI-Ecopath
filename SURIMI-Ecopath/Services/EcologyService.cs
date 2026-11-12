@@ -12,14 +12,16 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
     private readonly ICheckSimulationService m_checksimulationservice;
     private readonly IEwEController m_controller;
     private readonly IInitialStateFileService m_initialStateFileService;
+    private readonly SimulationMemoryMonitor m_memoryMonitor;
     private readonly string _version;
 
-    public EcologyService(ILogger<EcologyService> logger, ICheckSimulationService service, IEwEController controller, ProtocolVersionService protocolVersionService, IInitialStateFileService initialStateFileService)
+    public EcologyService(ILogger<EcologyService> logger, ICheckSimulationService service, IEwEController controller, ProtocolVersionService protocolVersionService, IInitialStateFileService initialStateFileService, SimulationMemoryMonitor memoryMonitor)
     {
         m_logger = logger;
         m_checksimulationservice = service;
         m_controller = controller;
         m_initialStateFileService = initialStateFileService;
+        m_memoryMonitor = memoryMonitor;
         _version = protocolVersionService.LoadVersion();
     }
 
@@ -32,6 +34,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
         m_logger.LogInformation("Initializing simulation {SimulationId}, scenario {ScenarioName}, climate scenario {ClimateScenario}...", request.SimulationId, request.ScenarioName, request.ClimateScenario);
         try
         {
+            m_memoryMonitor.Start(request.SimulationId);
             var contract = GetSurimiContract(request.Simulation);
 
             var result = await m_controller.StartAsync(contract, request.ScenarioName, request.ClimateScenario, context.CancellationToken);
@@ -39,10 +42,12 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
             {
                 throw new RpcException(new Status(StatusCode.Internal, "Failed to initialise Ecopath"));
             }
+            m_memoryMonitor.Record(request.SimulationId, "Initialised");
             return new InitialiseSimulationResponse() { SimulationId = request.SimulationId };
         }
         catch (Exception ex)
         {
+            m_memoryMonitor.Stop(request.SimulationId, "InitialisationFailed");
             m_checksimulationservice.ReleaseSimulation(request.SimulationId);
             m_logger.LogError(ex, "In Initialise. EwE - exception ...{Message}", ex.Message);
             throw;
@@ -52,11 +57,11 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
     public override async Task<FinaliseSimulationResponse> FinaliseSimulation(FinaliseSimulationRequest request, ServerCallContext context)
     {
         await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
-        m_checksimulationservice.ReleaseSimulation(request.SimulationId);
         m_logger.LogInformation("Finalizing simulation {SimulationId}", request.SimulationId);
 
         try
         {
+            m_memoryMonitor.Record(request.SimulationId, "Finalising");
             var result = await m_controller.StopAsync();
             if (result == false)
             {
@@ -69,16 +74,21 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
             m_logger.LogError(ex, "In Finalise - exception");
             throw;
         }
+        finally
+        {
+            m_memoryMonitor.Stop(request.SimulationId, "FinaliseSimulation");
+            m_checksimulationservice.ReleaseSimulation(request.SimulationId);
+        }
     }
 
     public override async Task<CancelSimulationResponse> CancelSimulation(CancelSimulationRequest request, ServerCallContext context)
     {
         await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
-        m_checksimulationservice.ReleaseSimulation(request.SimulationId);
         m_logger.LogInformation("Cancel simulation {SimulationId}", request.SimulationId);
 
         try
         {
+            m_memoryMonitor.Record(request.SimulationId, "Cancelling");
             var result = await m_controller.StopAsync();
             if (result == false)
             {
@@ -91,6 +101,11 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
             m_logger.LogError(ex, "In Cancel - exception");
             throw;
         }
+        finally
+        {
+            m_memoryMonitor.Stop(request.SimulationId, "CancelSimulation");
+            m_checksimulationservice.ReleaseSimulation(request.SimulationId);
+        }
     }
 
     public override async Task<SimulateStepResponse> SimulateStep(SimulateStepRequest request, ServerCallContext context)
@@ -99,6 +114,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
         m_logger.LogInformation("Simulate step for simulation {SimulationId}", request.SimulationId);
 
         var res = await m_controller.ContinueAsync();
+        m_memoryMonitor.Record(request.SimulationId, "AfterSimulateStep");
 
         return new SimulateStepResponse() { SimulationId = request.SimulationId };
     }

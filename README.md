@@ -57,6 +57,17 @@ When you merge a PR to master, the build check Github Action will check if the s
 ### Bridge plugin loading
 The BridgePlugin NuGet package places `Eii.Ecopath.BridgePlugin.dll` in `Plugins\BridgePlugin` relative to the application output directory. Keep this directory in build and publish deployments. The EwE runtime wrapper loads the assembly into the default load context when constructed, before `StartAsync` is JIT-compiled; plugin discovery inside `StartAsync` is too late to resolve its direct bridge type references. The EwE engine and plugin manager are still created lazily when a simulation starts.
 
+### Simulation memory CSV
+Memory monitoring starts in `InitialiseSimulation`, after reservation and before model loading, and ends after `FinaliseSimulation` teardown. Cancellation and failed initialization also stop monitoring. Each run creates a unique `simulation-memory-<UTC timestamp>-<unique ID>.csv` in `Output\memory` beneath the application directory (for example, `SURIMI-Ecopath\bin\Debug\net10.0\Output\memory` when debugging). The full path is logged when the CSV starts and finishes. Files are local to the host/container; they are not uploaded to blob storage. Preserve or mount this output directory when running in a container.
+
+The CSV contains a header, one row per second, and lifecycle checkpoints including initialization, each simulation step, and before/after teardown. Each row is flushed to disk so measurements can be read during the run. `TimestampUtc`, `ElapsedSeconds`, `SimulationId`, and `Stage` identify when the measurement was taken. Values are written directly to CSV instead of logging each sample.
+
+Memory values are in MiB (1,048,576 bytes). `WorkingSetMiB` is resident process memory, `PrivateMemoryMiB` is private process memory (not necessarily resident), and `ManagedHeapMiB` estimates live/uncollected managed allocations without forcing garbage collection. `PrivateMemoryDeltaMiB` is the change from the initialization baseline. `SampledPeakWorkingSetMiB`, `SampledPeakPrivateMemoryMiB`, and `SampledPeakPrivateMemoryDeltaMiB` reset for each simulation; short spikes between samples can be missed.
+
+In Excel, use **Data > From Text/CSV**, select the file, and choose **UTF-8** encoding and **Comma** delimiter. Numbers use a decimal point regardless of the host's locale; for Dutch Excel, import numeric columns using the **English (United States)** locale if necessary. Plot `ElapsedSeconds` against `WorkingSetMiB` or `PrivateMemoryMiB` to view usage over time.
+
+For sizing separate worker processes, use the sampled peak **total** process memory, not just the baseline delta, and leave additional headroom. These measurements include the entire host, runtime, plugins, and request handling, not exclusively EwE allocations. Finalization does not force garbage collection, so its ending value may still include retained/uncollected memory. For the clearest baseline, restart the host before measuring a representative simulation through initialization, steps, and finalization.
+
 ### Initial biomass and fishing mortality
 `GetInitialBiomasses` and `GetInitialFishingMortalities` read input blobs from the request's `ScenarioName` subdirectory. Locally these are `Includes\<ScenarioName>\initial_biomasses.csv` and `Includes\<ScenarioName>\initial_catch.csv`; S3 uses the same scenario directory under the configured input prefix. These RPCs use the shared blob store and should be called before `InitialiseSimulation`, which changes its active scenario subdirectory.
 
