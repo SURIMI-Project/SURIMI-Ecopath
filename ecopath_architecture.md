@@ -28,8 +28,8 @@ This repository is licensed under the **EUROPEAN UNION PUBLIC LICENCE v. 1.2** (
 - Accept regulations (stub; not yet fully wired).
 - Return spatially explicit biomass, catch disposition, and sales snapshots to the controller after
   each time step.
-- Guard access with a single-simulation reservation so only one active simulation can run at a time
-  per pod.
+- Run multiple simulations side by side in one process, each isolated in its own dependency injection
+  scope keyed by `simulationId` (own EwE core, controller, configuration and HCR state). A hosted `ProcessMemoryMonitor` records the memory of the whole process to a CSV for as long as the host runs.
 
 ### Build outputs
 
@@ -51,8 +51,8 @@ The gRPC contract is defined in the external
 | Direction | Message | Description |
 |---|---|---|
 | ← received | `InitialiseSimulation` | Reserves the pod, loads the model, runs Ecopath/Ecosim, starts Ecospace, and waits at the first simulation step. |
-| ← received | `FinaliseSimulation` | Releases the reservation and stops the Ecospace thread cleanly. |
-| ← received | `CancelSimulation` | Emergency stop; releases the reservation and forces Ecospace to stop. |
+| ← received | `FinaliseSimulation` | Stops the Ecospace thread cleanly and disposes the simulation scope. |
+| ← received | `CancelSimulation` | Emergency stop; forces Ecospace to stop and disposes the simulation scope. |
 
 ### Simulation-step messages
 
@@ -93,13 +93,16 @@ species-level biomass can be reconstructed from group-level EwE state.
 
 ## Service architecture
 
-`Program.cs` wires the ASP.NET Core gRPC host, registers all services as singletons, and selects
+`Program.cs` wires the ASP.NET Core gRPC host, registers shared services as singletons and
+per-simulation services as scoped, and selects
 the blob store implementation (S3 or local filesystem). `EcologyService` is the sole gRPC endpoint
-class and acts purely as a transport adapter: it validates input, forwards calls to `EwEController`,
-and maps between gRPC/SURIMI data model types. `EwEController` owns the EwE runtime lifecycle and
+class and acts purely as a transport adapter: it validates input, forwards calls to the
+`EwEController` of the requested simulation, and maps between gRPC/SURIMI data model types.
+`EwEController` owns the EwE runtime lifecycle and
 the pause/resume handshake, running Ecospace on a dedicated background thread and synchronising with
-the ASP.NET thread via `TaskCompletionSource` events. `CheckSimulationService` enforces the
-single-reservation contract and writes the pod host address back as gRPC response metadata. The
+the ASP.NET thread via `TaskCompletionSource` events. `SimulationScopeManager` creates one DI scope
+per `simulationId` at `InitialiseSimulation`, looks it up for every other RPC, and disposes it at
+`FinaliseSimulation`, `CancelSimulation` or a failed initialisation. The
 `IEwECore` and `IPluginManager` wrappers decouple the controller from concrete EwE runtime objects
 to enable unit testing.
 
@@ -110,8 +113,9 @@ The service follows a strict two-layer design: `EcologyService` handles only tra
 ```mermaid
 flowchart TD
     A["gRPC Client\n(Controller)"] -->|"gRPC requests"| B["EcologyService\n(transport layer)"]
-    B -->|"reserve / check / release"| C["CheckSimulationService\n(single-simulation guard)"]
-    B -->|"domain calls"| D["EwEController\n(EwE runtime lifecycle)"]
+    B -->|"create / get / remove scope"| C["SimulationScopeManager\n(one DI scope per simulationId)"]
+    C -->|"scoped services"| D["EwEController\n(EwE runtime lifecycle)"]
+    B -->|"domain calls"| D
     D -->|"load model"| E["IBlobStore\n(S3 or Local)"]
     D -->|"EwE engine"| F["IEwECore / EwECore\n(EwE runtime wrapper)"]
     D -->|"configuration"| G["IEwEConfigurationService\n(species/fleet/market mapping)"]
@@ -147,12 +151,11 @@ The pause/resume handshake works as follows:
 sequenceDiagram
     participant O as Controller
     participant ES as EcologyService
-    participant CSS as CheckSimulationService
+    participant CSS as SimulationScopeManager
     participant EWE as EwEController
 
     O->>ES: InitialiseSimulation(request)
-    ES->>CSS: ReserveSimulationAsync(simulationId)
-    CSS-->>O: response header: host address
+    ES->>CSS: CreateSimulationScope(simulationId)
     ES->>EWE: StartAsync(surimiContract, scenarioName)
     EWE-->>ES: 1 (success)
     ES-->>O: InitialiseSimulationResponse
@@ -188,8 +191,9 @@ sequenceDiagram
     end
 
     O->>ES: FinaliseSimulation(request)
-    ES->>CSS: ReleaseSimulation(simulationId)
+    ES->>CSS: GetSimulation(simulationId)
     ES->>EWE: StopAsync()
+    ES->>CSS: RemoveSimulationScope(simulationId)
     ES-->>O: FinaliseSimulationResponse
 ```
 
@@ -197,7 +201,7 @@ sequenceDiagram
 
 | Decision | Rationale |
 |----------|-----------|
-| Single-simulation reservation per process | EwE is a stateful, non-thread-safe engine. `CheckSimulationService` prevents concurrent simulations and makes the active host discoverable via response metadata, allowing an orchestrator to pin traffic to the correct pod. |
+| One DI scope per simulation | EwE is a stateful engine, so each simulation gets its own `EwECore`, `EwEController`, `EwEConfigurationService` and `HcrInitialisationFileService` through `SimulationScopeManager`. The hosted `ProcessMemoryMonitor` samples the memory of the whole process every second, independent of the simulations. Controlled vocabularies and other stateless services stay singletons and are registered once at startup. Static state inside the EwE assemblies and files shared between simulations of the same scenario are not isolated by scopes. |
 | gRPC contract stored externally (BSR / Buf) | Protobuf schema changes are managed centrally in `SURIMI-protocol` and published via the Buf Schema Registry, so no `.proto` files live in this repository. |
 | EwE runs on a dedicated thread | Ecospace's internal event loop blocks; running it on a dedicated thread allows the gRPC thread pool to remain responsive while the pause/resume mechanism synchronises steps. |
 | Functional-group proxy for species-level fishing | EwE does not natively support species-level fishing; `GroupSpeciesProportions` maintains per-cell proportions so the service can accept and return species-level data. |
@@ -209,8 +213,9 @@ sequenceDiagram
 ## Error handling
 
 - Input validation is performed with `GrpcValidation.ArgumentNotNullOrEmpty` before any processing; invalid inputs throw an `RpcException` with `StatusCode.InvalidArgument`.
-- If `EwEController.StartAsync` returns a non-1 result, an `RpcException` with `StatusCode.Internal` is thrown and the simulation reservation is released.
-- All exceptions thrown inside `InitialiseSimulation` release the simulation reservation via `CheckSimulationService.ReleaseSimulation` before re-throwing, to prevent the service from becoming permanently locked.
+- If `EwEController.StartAsync` returns a non-1 result, an `RpcException` with `StatusCode.Internal` is thrown and the simulation scope is removed.
+- All exceptions thrown inside `InitialiseSimulation` remove the simulation scope via `SimulationScopeManager.RemoveSimulationScope` before re-throwing, so the `simulationId` can be reused and the EwE core is torn down.
+- Initialising an already running `simulationId` throws `StatusCode.AlreadyExists`; any other RPC for an unknown `simulationId` throws `StatusCode.NotFound`.
 - The `ExceptionMetadataInterceptor` (registered globally on the gRPC pipeline) catches unhandled exceptions and enriches the gRPC error response with structured metadata.
 - Vault secret loading errors are caught and logged but do not prevent the service from starting.
 
@@ -258,7 +263,7 @@ When `AWS_ACCESS_KEY_ID` is absent, a `LocalBlobStore` rooted at `Includes/` and
 
 ## Kubernetes
 
-SURIMI-Ecopath is designed to run as a pod in the **EDITO Datalab** Kubernetes cluster. Each pod instance handles at most one active simulation at a time (enforced by `CheckSimulationService`). The `CheckSimulationService` writes the pod's own host address back as gRPC response metadata (`host` header) at `InitialiseSimulation`, so the SURIMI Controller can pin all subsequent calls for that simulation to the same pod (session affinity).
+SURIMI-Ecopath is designed to run as a pod in the **EDITO Datalab** Kubernetes cluster. A pod can run several simulations at the same time, each scoped by its `simulationId`. The service no longer reserves the pod for a single simulation and no longer returns a `host` response header, so it is not compatible with a dispatcher that allocates one pod per simulation and expects `Unavailable` / `active-simulation-id` responses.
 
 The service listens on port **7890** (configured via `ASPNETCORE_HTTP_PORTS`).
 
@@ -272,7 +277,7 @@ The service listens on port **7890** (configured via `ASPNETCORE_HTTP_PORTS`).
 | `AWS_SECRET_ACCESS_KEY` | If S3 | S3 secret access key. |
 | `AWS_S3_ENDPOINT` | If S3 | S3-compatible endpoint URL. |
 | `AWS_BUCKET_NAME` | If S3 | S3 bucket name. |
-| `CREATE_HCR_INITIALISE_FILES` | No | When set, writes initial biomass and catch CSV snapshots at initialization. |
+| `CREATE_HCR_INITIALISE_FILES` | No | When set to `true`, writes initial biomass and catch CSV snapshots at initialization; unset or `false` disables them. Other values are invalid. |
 | `ASPNETCORE_HTTP_PORTS` | No | gRPC listening port (default `7890`). |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | No | OpenTelemetry collector endpoint for metrics/traces. |
 | `OTEL_SERVICE_NAME` | No | Service name reported to OpenTelemetry (default `Ecopath`). |
@@ -344,7 +349,7 @@ SURIMI-Ecopath/
 │   ├── SURIMI-Ecopath.csproj
 │   ├── Services/
 │   │   ├── EcologyService.cs         # gRPC transport layer (this file)
-│   │   └── CheckSimulationService.cs # Single-simulation reservation guard
+│   │   └── SimulationScopeManager.cs # One DI scope per simulationId
 │   ├── EwE/
 │   │   ├── EwEController.cs          # EwE runtime lifecycle and step coordination
 │   │   ├── EwEConfiguration.cs       # Model configuration (scenario, spin-up, output)

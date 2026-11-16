@@ -113,7 +113,9 @@ namespace Ecopath.Services
             m_mappings.Clear();
 
             // Load fleet segment mappings from the semantics file
-            WriteSpeciesMappingsFromModel(core, configuration, surimiContract.Items.Species);
+
+            // commented this out because the speciesmappings.csv file is now generated from the model, and the semantics file is not used for species mappings
+            // WriteSpeciesMappingsFromModel(core, configuration, surimiContract.Items.Species);
 
             await m_surimiContractToEwEService.ReadSemanticMappings(m_mappings, core, scenarioName);
 

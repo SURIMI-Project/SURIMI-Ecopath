@@ -33,7 +33,16 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
     /// <inheritdoc />
     public void BeginInitialization()
     {
-        Enabled = Environment.GetEnvironmentVariable(CreateFilesEnvironmentVariable) is not null;
+        string? setting = Environment.GetEnvironmentVariable(CreateFilesEnvironmentVariable);
+        Enabled = false;
+        if (setting is not null)
+        {
+            if (!bool.TryParse(setting, out bool enabled))
+                throw new FormatException($"Environment variable {CreateFilesEnvironmentVariable} must be 'true' or 'false'.");
+
+            Enabled = enabled;
+        }
+
         _catchHistory.Clear();
     }
 
