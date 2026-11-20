@@ -238,17 +238,21 @@ The service reads and writes the following file types through `IBlobStore`:
 
 | Path | Content |
 |------|---------|
-| `ecopath/<scenario>.eiixml` | EwE model file (Ecopath/Ecosim/Ecospace scenario). |
-| `ecopath/<scenario>.semantics` | Species/fleet/market semantic mapping file. |
+| `ecopath/<scenario>/<scenario>.eiixml` | EwE model file; the filename must match the scenario name. |
+| `ecopath/<scenario>/<scenario>.semantics` | Species/fleet/market semantic mapping file. |
 | `ecopath/Output/` | Ecospace output files (written when `WriteOutput = true`). |
 
 Locally the `Includes/` directory serves as the input root and `Output/` as the output root.
 
-The catch file uses the same species columns and `Catch`; it totals gross catch, including dead discards, over the final 12 spin-up timesteps. Catch history is collected only while EwE reports that spin-up is active, never during regular simulation timesteps. The files are written once at the initial simulation pause. Initialization fails if fewer than 12 spin-up timesteps are available.
+`EwEConfigurationService` checks the exact model key with `IBlobStore.ExistsAsync` before copying the scenario directory. S3 copies scenario assets regardless of filename or extension; local mode uses the existing files. Ecopath does not cache scenario copies across initializations.
+
+The catch file uses
 
 ### S3 bucket authentication
 
-When the environment variable `AWS_ACCESS_KEY_ID` is present at startup, the service creates an `S3BlobStore` using the following variables:
+Vault secrets are loaded into environment variables before vocabulary registration first resolves the singleton blob store. This ensures credentials supplied by Vault participate in storage selection; loading them after resolution would leave the host using the already-created local store.
+
+When the environment variable `AWS_ACCESS_KEY_ID` is present after loading Vault secrets, the service creates an `S3BlobStore` using the following variables:
 
 | Variable | Purpose |
 |----------|---------|

@@ -57,6 +57,9 @@ When you merge a PR to master, the build check Github Action will check if the s
 ### Bridge plugin loading
 The BridgePlugin NuGet package places `Eii.Ecopath.BridgePlugin.dll` in `Plugins\BridgePlugin` relative to the application output directory. Keep this directory in build and publish deployments. The EwE runtime wrapper loads the assembly into the default load context when constructed, before `StartAsync` is JIT-compiled; plugin discovery inside `StartAsync` is too late to resolve its direct bridge type references. The EwE engine and plugin manager are still created lazily when a simulation starts.
 
+### Shared scenario inputs
+Ecopath expects `<scenario>/<scenario>.eiixml` under the input root, for example `northwestern_med/northwestern_med.eiixml`. The S3 directory copy also downloads other scenario files; it does not apply the EwE filename convention.
+
 ### Process memory CSV
 Memory monitoring measures the SURIMI-Ecopath process as a whole, independent of any simulation, so you can relate its memory use to the simulations logged by `SimulationScopeManager` in the same period (it logs the number of active simulations whenever one is created or removed). `ProcessMemoryMonitor` is a hosted service: it opens one CSV when the host starts, samples the memory every second, and writes a final `ProcessStopped` row when the host is disposed, for example on Ctrl+C or SIGTERM. A forced kill cannot write that final row. Each run creates a unique `process-memory-<UTC timestamp>-<unique ID>.csv` in `Output\memory` beneath the application directory (for example, `SURIMI-Ecopath\bin\Debug\net10.0\Output\memory` when debugging). The full path is logged when the CSV starts and finishes. Files are local to the host/container; they are not uploaded to blob storage. Preserve or mount this output directory when running in a container.
 
@@ -92,8 +95,8 @@ dotnet build /t:BuildPushDockerImage -v:detailed
 
 ### Create and Push
 Start Docker Desktop and make sure it is running. 
-To create a new docker image you have to pass the GITHUB_TOKEN and the BSR_TOKEN to restore the solution.
+To create a new docker image you have to pass the GITHUB_TOKEN and the BSR_TOKEN to restore the solution. When they are stored as env vars, you can do that like this:
 
 - Open the `Developer Powershell` window and confirm you are in the `SURIMI-Ecopath` base directory.
-- `docker build -f .\SURIMI-Ecopath\Dockerfile --build-arg GITHUB_TOKEN=<github token> --build-arg BSR_TOKEN=<BSR token> -t rikkert242/ecopath:latest .`
-- `docker push rikkert242/ecopath:latest`
+- `docker build --no-cache -f .\SURIMI-Ecopath\Dockerfile --secret id=GITHUB_TOKEN,env=SURIMI_DOCKER_BUILD_GITHUB_TOKEN --secret id=BSR_TOKEN,env=SURIMI_DOCKER_BUILD_BSR_TOKEN -t ghcr.io/surimi-project/surimiecopath:multicore .`
+- `docker push ghcr.io/surimi-project/surimiecopath:multicore`

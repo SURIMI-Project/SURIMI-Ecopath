@@ -109,6 +109,9 @@ public class Program
         // To make sure we can find local resources. This is rather hack.
         Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 
+        // Load storage credentials before vocabulary registration resolves the singleton blob store.
+        app.Services.GetRequiredService<VaultService>().LoadVaultSecretsInEnvironmentVariables();
+
         // Vocabularies are shared by all simulations, so register them once.
         app.Services.GetRequiredService<IVocabulariesRegisterService>().RegisterVocabularies();
 
@@ -119,8 +122,6 @@ public class Program
         app.MapGrpcReflectionService();
 
         app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
-
-        app.Services.GetRequiredService<VaultService>().LoadVaultSecretsInEnvironmentVariables();
 
         logger.LogInformation("============================= Logging All Environment Variables =============================");
         foreach (System.Collections.DictionaryEntry envVar in Environment.GetEnvironmentVariables())
