@@ -22,29 +22,7 @@ public class InitialStateFileServiceTests
     private readonly Mock<IBlobStore> m_blobStore = new(MockBehavior.Strict);
 
     [Fact]
-    public async Task GetInitialBiomasses_ReturnsUnchangedValuesAndCompleteSpeciesKeys()
-    {
-        // Arrange
-        using var cancellation = new CancellationTokenSource();
-        SetupFile("custom_scenario", "initial_biomasses.csv", BiomassHeader + "ANE,10,2,adult,123.5\nANE,,,juvenile,20\n", cancellation.Token);
-        var context = new Mock<ServerCallContext>();
-        context.Protected().SetupGet<CancellationToken>("CancellationTokenCore").Returns(cancellation.Token);
-        var service = CreateEcologyService(CreateReader());
-
-        // Act
-        var response = await service.GetInitialBiomasses(new GetInitialBiomassesRequest { ScenarioName = "custom_scenario" }, context.Object);
-
-        // Assert
-        response.InitialBiomassSummary.InitialBiomasses.Should().HaveCount(2);
-        var adult = response.InitialBiomassSummary.InitialBiomasses[0];
-        adult.Species.Should().Be(new Species { SpeciesCode = "ANE", LengthClass = "10", Age = "2", LifeStage = "adult" });
-        adult.Biomass.Should().Be(123.5);
-        response.InitialBiomassSummary.InitialBiomasses[1].Biomass.Should().Be(20);
-        m_blobStore.VerifyAll();
-    }
-
-    [Fact]
-    public async Task GetInitialFishingMortalities_MatchesFullKeysRegardlessOfRowOrder()
+    public async Task GetInitialHCRData_CombinesBiomassAndFishingMortalityByFullSpeciesKey()
     {
         // Arrange
         SetupFile("scenario", "initial_biomasses.csv", BiomassHeader + "ANE,10,2,adult,100\nANE,,,juvenile,20\n");
@@ -52,16 +30,18 @@ public class InitialStateFileServiceTests
         var service = CreateEcologyService(CreateReader());
 
         // Act
-        var response = await service.GetInitialFishingMortalities(new GetInitialFishingMortalitiesRequest { ScenarioName = "scenario" }, Mock.Of<ServerCallContext>());
+        var response = await service.GetInitialHCRData(new GetInitialHCRDataRequest { ScenarioName = "scenario" }, Mock.Of<ServerCallContext>());
 
         // Assert
-        response.InitialFishingMortalitySummary.InitialFishingMortalities.Should().HaveCount(2);
-        var adult = response.InitialFishingMortalitySummary.InitialFishingMortalities[0];
+        response.InitialHcrDataSummary.InitialHcrData.Should().HaveCount(2);
+        var adult = response.InitialHcrDataSummary.InitialHcrData[0];
         adult.Species.Should().Be(new Species { SpeciesCode = "ANE", LengthClass = "10", Age = "2", LifeStage = "adult" });
-        adult.FishingMortality.Should().Be(0);
-        var juvenile = response.InitialFishingMortalitySummary.InitialFishingMortalities[1];
-        juvenile.Species.LifeStage.Should().Be("juvenile");
-        juvenile.FishingMortality.Should().Be(0.5);
+        adult.InitialBiomass.Should().Be(100);
+        adult.InitialFishingMortality.Should().Be(0);
+        var juvenile = response.InitialHcrDataSummary.InitialHcrData[1];
+        juvenile.Species.Should().Be(new Species { SpeciesCode = "ANE", LifeStage = "juvenile" });
+        juvenile.InitialBiomass.Should().Be(20);
+        juvenile.InitialFishingMortality.Should().Be(0.5);
         m_blobStore.VerifyAll();
     }
 

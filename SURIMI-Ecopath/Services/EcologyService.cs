@@ -379,28 +379,19 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
         return Task.FromResult(new GetProtocolVersionResponse() { ProtocolVersion = _version });
     }
 
-    public override async Task<GetInitialBiomassesResponse> GetInitialBiomasses(GetInitialBiomassesRequest request, ServerCallContext context)
+    public override async Task<GetInitialHCRDataResponse> GetInitialHCRData(GetInitialHCRDataRequest request, ServerCallContext context)
     {
         GrpcValidation.ArgumentNotNullOrEmpty(request.ScenarioName, "ScenarioName");
-        var biomasses = await m_initialStateFileService.ReadBiomassesAsync(request.ScenarioName, context.CancellationToken);
-        var response = new GetInitialBiomassesResponse { InitialBiomassSummary = new InitialBiomassSummary() };
-        response.InitialBiomassSummary.InitialBiomasses.AddRange(biomasses.Select(entry => new InitialBiomass
+        var initialHCRData = await m_initialStateFileService.ReadInitialHCRDataAsync(request.ScenarioName, context.CancellationToken);
+        var response = new GetInitialHCRDataResponse
+        {
+            InitialHcrDataSummary = new InitialHCRDataSummary()
+        };
+        response.InitialHcrDataSummary.InitialHcrData.AddRange(initialHCRData.Select(entry => new InitialHCRData
         {
             Species = ToInitialSpecies(entry.Key),
-            Biomass = entry.Value
-        }));
-        return response;
-    }
-
-    public override async Task<GetInitialFishingMortalitiesResponse> GetInitialFishingMortalities(GetInitialFishingMortalitiesRequest request, ServerCallContext context)
-    {
-        GrpcValidation.ArgumentNotNullOrEmpty(request.ScenarioName, "ScenarioName");
-        var mortalities = await m_initialStateFileService.ReadFishingMortalitiesAsync(request.ScenarioName, context.CancellationToken);
-        var response = new GetInitialFishingMortalitiesResponse { InitialFishingMortalitySummary = new InitialFishingMortalitySummary() };
-        response.InitialFishingMortalitySummary.InitialFishingMortalities.AddRange(mortalities.Select(entry => new InitialFishingMortality
-        {
-            Species = ToInitialSpecies(entry.Key),
-            FishingMortality = entry.Value
+            InitialBiomass = entry.Value.Biomass,
+            InitialFishingMortality = entry.Value.FishingMortality
         }));
         return response;
     }

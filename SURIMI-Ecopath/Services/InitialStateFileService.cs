@@ -23,14 +23,14 @@ public sealed class InitialStateFileService : IInitialStateFileService
     }
 
     /// <inheritdoc />
-    public async Task<Dictionary<IInitialStateFileService.SpeciesKey, double>> ReadFishingMortalitiesAsync(string scenarioName, CancellationToken cancellationToken)
+    public async Task<Dictionary<IInitialStateFileService.SpeciesKey, (double Biomass, double FishingMortality)>> ReadInitialHCRDataAsync(string scenarioName, CancellationToken cancellationToken)
     {
         var biomasses = await ReadBiomassesAsync(scenarioName, cancellationToken);
         var catches = await ReadValuesAsync(scenarioName, "initial_catch.csv", "Catch", cancellationToken);
         if (!biomasses.Keys.ToHashSet().SetEquals(catches.Keys))
             throw new InvalidDataException($"Initial biomass and catch files for scenario '{scenarioName}' must contain the same species keys.");
 
-        var mortalities = new Dictionary<IInitialStateFileService.SpeciesKey, double>();
+        var initialHCRData = new Dictionary<IInitialStateFileService.SpeciesKey, (double Biomass, double FishingMortality)>();
         foreach (var (species, biomass) in biomasses)
         {
             if (biomass == 0)
@@ -40,9 +40,16 @@ public sealed class InitialStateFileService : IInitialStateFileService
             double mortality = catches[species] / biomass;
             if (!double.IsFinite(mortality))
                 throw new InvalidDataException($"Initial fishing mortality for '{species}' is not finite.");
-            mortalities.Add(species, mortality);
+            initialHCRData.Add(species, (biomass, mortality));
         }
-        return mortalities;
+        return initialHCRData;
+    }
+
+    /// <inheritdoc />
+    public async Task<Dictionary<IInitialStateFileService.SpeciesKey, double>> ReadFishingMortalitiesAsync(string scenarioName, CancellationToken cancellationToken)
+    {
+        var initialHCRData = await ReadInitialHCRDataAsync(scenarioName, cancellationToken);
+        return initialHCRData.ToDictionary(entry => entry.Key, entry => entry.Value.FishingMortality);
     }
 
     private async Task<Dictionary<IInitialStateFileService.SpeciesKey, double>> ReadValuesAsync(string scenarioName, string fileName, string valueColumn, CancellationToken cancellationToken)
