@@ -18,7 +18,7 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
     private readonly Queue<Dictionary<SpeciesKey, double>> _catchHistory = new();
 
     private readonly record struct SpeciesKey(string SpeciesCode, string LengthClass, string Age, string LifeStage);
-    private sealed record InitialHcrCsvRow(string SpeciesCode, string LengthClass, string Age, string LifeStage, double Biomass, double Catch);
+    private sealed record InitialHcrCsvRow(string SpeciesCode, string LengthClass, string Age, string LifeStage, double Biomass, double Catch, double BiomassLimit, double BiomassBase, double FMax);
 
     public HcrInitialisationFileService(IBlobStore blobStore, ILogger<HcrInitialisationFileService> logger)
     {
@@ -108,12 +108,12 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
     }
 
     /// <inheritdoc />
-    public async Task WriteInitialFilesAsync(Biomass biomass, string scenarioName, CancellationToken cancellationToken)
+    public async Task WriteInitialFilesAsync(Biomass biomass, IReadOnlyCollection<DefaultHarvestControlRules> defaultHarvestControlRules, string scenarioName, CancellationToken cancellationToken)
     {
         if (!Enabled)
             throw new InvalidOperationException("HCR initialization files are not enabled.");
         if (_catchHistory.Count < CatchHistoryLength)
-            throw new InvalidOperationException($"Cannot create InitialHCRData.csv: {_catchHistory.Count} modeled timestep(s) are available, but {CatchHistoryLength} are required.");
+            throw new InvalidOperationException($"Cannot create {IInitialStateFileService.FileName(scenarioName)}: {_catchHistory.Count} modeled timestep(s) are available, but {CatchHistoryLength} are required.");
         if (biomass.BiomassGrids == null)
             throw new InvalidOperationException("Initial biomass snapshot is not available.");
 
@@ -135,6 +135,10 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
             }
         }
 
+        var levelsBySpecies = new Dictionary<SpeciesKey, DefaultHarvestControlRules>();
+        foreach (var levels in defaultHarvestControlRules)
+            levelsBySpecies[new SpeciesKey(levels.SpeciesCode, levels.LengthClass, levels.Age, levels.LifeStage)] = levels;
+
         var orderedSpecies = biomassBySpecies.Keys
             .OrderBy(species => species.SpeciesCode, StringComparer.Ordinal)
             .ThenBy(species => species.LengthClass, StringComparer.Ordinal)
@@ -142,16 +146,23 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
             .ThenBy(species => species.LifeStage, StringComparer.Ordinal)
             .ToList();
         var rows = orderedSpecies
-            .Select(species => new InitialHcrCsvRow(
-                species.SpeciesCode,
-                species.LengthClass,
-                species.Age,
-                species.LifeStage,
-                biomassBySpecies[species],
-                catchBySpecies.GetValueOrDefault(species)))
+            .Select(species =>
+            {
+                levelsBySpecies.TryGetValue(species, out var levels);
+                return new InitialHcrCsvRow(
+                    species.SpeciesCode,
+                    species.LengthClass,
+                    species.Age,
+                    species.LifeStage,
+                    biomassBySpecies[species],
+                    catchBySpecies.GetValueOrDefault(species),
+                    levels?.BiomassLimit ?? 0,
+                    levels?.BiomassBase ?? 0,
+                    levels?.FMax ?? 0);
+            })
             .ToList();
 
-        await WriteOutputFilesAsync(scenarioName, [("InitialHCRData.csv", SerializeCsv(rows))], cancellationToken);
+        await WriteOutputFilesAsync(scenarioName, [(IInitialStateFileService.FileName(scenarioName), SerializeCsv(rows))], cancellationToken);
         _logger.LogInformation("Wrote HCR initialization data for {SpeciesCount} species using {CatchTimestepCount} catch timesteps", rows.Count, _catchHistory.Count);
     }
 

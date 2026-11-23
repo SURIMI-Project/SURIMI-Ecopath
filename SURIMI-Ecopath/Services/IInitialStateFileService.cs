@@ -15,20 +15,21 @@ public interface IInitialStateFileService
     public readonly record struct SpeciesKey(string SpeciesCode, string LengthClass, string Age, string LifeStage);
 
     /// <summary>
-    /// Reads initial biomass and calculates fishing mortality for each species as initial catch divided by initial biomass.
+    /// Gets the name of the initial HCR data file for a scenario.
     /// </summary>
-    /// <param name="scenarioName">The scenario subdirectory containing the initial HCR data file.</param>
-    /// <param name="cancellationToken">A token that can cancel the read.</param>
-    /// <returns>Biomass and fishing mortality values keyed by the complete species identity.</returns>
-    /// <exception cref="InvalidDataException">Catch is missing or invalid, or a species has zero biomass.</exception>
-    Task<Dictionary<SpeciesKey, (double Biomass, double FishingMortality)>> ReadInitialHCRDataAsync(string scenarioName, CancellationToken cancellationToken);
+    public static string FileName(string scenarioName) => $"{scenarioName}_initial_hrc_data.csv";
 
     /// <summary>
-    /// Calculates initial fishing mortality for each species as initial catch divided by initial biomass.
+    /// Initial harvest control rule data for one species.
+    /// </summary>
+    public readonly record struct InitialHcrData(double Biomass, double FishingMortality, double DefaultBiomassLimit, double DefaultBiomassBase, double DefaultFMax);
+
+    /// <summary>
+    /// Reads initial biomass and the default harvest control rule reference levels, and calculates fishing mortality for each species as initial catch divided by initial biomass.
     /// </summary>
     /// <param name="scenarioName">The scenario subdirectory containing the initial HCR data file.</param>
     /// <param name="cancellationToken">A token that can cancel the read.</param>
-    /// <returns>Fishing mortality values keyed by the complete species identity.</returns>
+    /// <returns>Initial HCR data keyed by the complete species identity. Reference levels that are absent from the file are returned as zero.</returns>
     /// <exception cref="InvalidDataException">Catch is missing or invalid, or a species has zero biomass.</exception>
-    Task<Dictionary<SpeciesKey, double>> ReadFishingMortalitiesAsync(string scenarioName, CancellationToken cancellationToken);
+    Task<Dictionary<SpeciesKey, InitialHcrData>> ReadInitialHCRDataAsync(string scenarioName, CancellationToken cancellationToken);
 }

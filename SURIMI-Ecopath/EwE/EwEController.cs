@@ -381,7 +381,7 @@ namespace Ecopath.EwE
             }
             // Ready when running Ecospace is waiting for further instructions
             if (_hcrInitialisationFileService.Enabled)
-                await _hcrInitialisationFileService.WriteInitialFilesAsync(_biomassOut!, scenarioName, cancellationToken);
+                await _hcrInitialisationFileService.WriteInitialFilesAsync(_biomassOut!, GetDefaultHarvestControlRules(), scenarioName, cancellationToken);
 
             return (RunState == RunStates.waiting) ? 1 : -1;
         }
@@ -719,6 +719,47 @@ namespace Ecopath.EwE
         }
 
         /// <summary>
+        /// Gets the default MSE reference levels (BLim, BBase, Fmax) per mapped species. Biomass levels are converted from
+        /// group densities to absolute species kg using the same conversion as the biomass snapshot, so they are directly comparable to it.
+        /// </summary>
+        private List<DefaultHarvestControlRules> GetDefaultHarvestControlRules()
+        {
+            var levels = new List<DefaultHarvestControlRules>();
+            if (_configuration == null)
+                return levels;
+
+            cEcospaceDataStructures ds = _core.EcospaceDataStructures;
+            foreach (EwEMapping key in _configurationService.Mappings(KeyDomain.Species))
+            {
+                Species? species = key.ToObject<Species>(_configuration.IncludeVocabularies);
+                int iGroup = key.Index;
+                if (species == null || !_groupSpeciesProportions.TryGetValue(iGroup, out var proportions))
+                    continue;
+
+                var (bLim, bBase, fMax) = _core.GetDefaultHarvestControlRules(iGroup);
+                if (!float.IsFinite(bLim) || bLim < 0 || !float.IsFinite(bBase) || bBase < 0 || !float.IsFinite(fMax) || fMax < 0)
+                {
+                    _logger.LogWarning("Skipping EwE group {GroupIndex} in HCR reference levels because its MSE policy values are unset or invalid", iGroup);
+                    continue;
+                }
+
+                // EwE reports the limit/base as group-level densities (t/km2). Convert them to absolute kg per cell, without time step scaling.
+                double biomassLimit = 0;
+                double biomassBase = 0;
+                for (int ic = 1; ic <= ds.InCol; ic++)
+                    for (int ir = 1; ir <= ds.InRow; ir++)
+                        if (ds.Depth[ir, ic] > 0)
+                        {
+                            biomassLimit += proportions.GetSpeciesBiomass(ir, ic, key, DensityToKg(bLim, ir, ic));
+                            biomassBase += proportions.GetSpeciesBiomass(ir, ic, key, DensityToKg(bBase, ir, ic));
+                        }
+
+                levels.Add(new DefaultHarvestControlRules(species.SpeciesCode ?? string.Empty, species.LengthClass ?? string.Empty, species.Age ?? string.Empty, species.LifeStage ?? string.Empty, biomassLimit, biomassBase, fMax));
+            }
+            return levels;
+        }
+
+        /// <summary>
         /// Prepare a snapshot of the biomasses of the current time step.
         /// </summary>
         private void CacheBiomassData()
@@ -745,8 +786,8 @@ namespace Ecopath.EwE
                             for (int ir = 1; ir <= ds.InRow; ir++)
                                 if (ds.Depth[ir, ic] > 0)
                                 {
-                                    // Express biomass of group proportion in kg at timestep units (not annual)
-                                    double biomassCell = DensityToKg(ds.Bcell[ir, ic, iGroup], ir, ic) * ds.TimeStep;
+                                    // Absolute biomass of the group proportion in kg at this point in time (a stock, so no time step scaling)
+                                    double biomassCell = DensityToKg(ds.Bcell[ir, ic, iGroup], ir, ic);
                                     // Return the biomass proportion in the FG for the current cell
                                     double biomassSpecies = _groupSpeciesProportions[iGroup].GetSpeciesBiomass(ir, ic, key, biomassCell);
 

@@ -391,7 +391,10 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
         {
             Species = ToInitialSpecies(entry.Key),
             InitialBiomass = entry.Value.Biomass,
-            InitialFishingMortality = entry.Value.FishingMortality
+            InitialFishingMortality = entry.Value.FishingMortality,
+            DefaultBiomassLimit = entry.Value.DefaultBiomassLimit,
+            DefaultBiomassBase = entry.Value.DefaultBiomassBase,
+            DefaultFMax = entry.Value.DefaultFMax
         }));
         return response;
     }

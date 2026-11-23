@@ -16,14 +16,14 @@ namespace Ecopath.Tests.Services;
 
 public class InitialStateFileServiceTests
 {
-    private const string Header = "SpeciesCode,LengthClass,Age,LifeStage,Biomass,Catch\n";
+    private const string Header = "SpeciesCode,LengthClass,Age,LifeStage,Biomass,Catch,BiomassLimit,BiomassBase,FMax\n";
     private readonly Mock<IBlobStore> m_blobStore = new(MockBehavior.Strict);
 
     [Fact]
     public async Task GetInitialHCRData_ReturnsBiomassAndFishingMortalityByFullSpeciesKey()
     {
         // Arrange
-        SetupFile("scenario", Header + "ANE,10,2,adult,100,0\nANE,,,juvenile,20,10\n");
+        SetupFile("scenario", Header + "ANE,10,2,adult,100,0,10,40,0.3\nANE,,,juvenile,20,10,,,\n");
         var service = CreateEcologyService(CreateReader());
 
         // Act
@@ -35,10 +35,16 @@ public class InitialStateFileServiceTests
         adult.Species.Should().Be(new Species { SpeciesCode = "ANE", LengthClass = "10", Age = "2", LifeStage = "adult" });
         adult.InitialBiomass.Should().Be(100);
         adult.InitialFishingMortality.Should().Be(0);
+        adult.DefaultBiomassLimit.Should().Be(10);
+        adult.DefaultBiomassBase.Should().Be(40);
+        adult.DefaultFMax.Should().Be(0.3);
         var juvenile = response.InitialHcrDataSummary.InitialHcrData[1];
         juvenile.Species.Should().Be(new Species { SpeciesCode = "ANE", LifeStage = "juvenile" });
         juvenile.InitialBiomass.Should().Be(20);
         juvenile.InitialFishingMortality.Should().Be(0.5);
+        juvenile.DefaultBiomassLimit.Should().Be(0);
+        juvenile.DefaultBiomassBase.Should().Be(0);
+        juvenile.DefaultFMax.Should().Be(0);
         m_blobStore.VerifyAll();
     }
 
@@ -47,7 +53,7 @@ public class InitialStateFileServiceTests
     {
         // Arrange
         CultureInfo previousCulture = CultureInfo.CurrentCulture;
-        SetupFile("scenario", Header + "ANE,,,,123.5,61.75\n");
+        SetupFile("scenario", Header + "ANE,,,,123.5,61.75,1.5,2.5,0.25\n");
         var reader = CreateReader();
         CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("nl-NL");
         try
@@ -56,7 +62,7 @@ public class InitialStateFileServiceTests
             var values = await reader.ReadInitialHCRDataAsync("scenario", CancellationToken.None);
 
             // Assert
-            values.Values.Should().ContainSingle().Which.Should().Be((123.5, 0.5));
+            values.Values.Should().ContainSingle().Which.Should().Be(new IInitialStateFileService.InitialHcrData(123.5, 0.5, 1.5, 2.5, 0.25));
         }
         finally
         {
@@ -65,20 +71,23 @@ public class InitialStateFileServiceTests
     }
 
     [Theory]
-    [InlineData("0,0")]
-    [InlineData("10,")]
-    [InlineData("10,-1")]
-    [InlineData("10,NaN")]
-    [InlineData("10,invalid")]
-    [InlineData("1E-300,1E300")]
-    public async Task ReadFishingMortalitiesAsync_RejectsUndefinedOrInvalidData(string values)
+    [InlineData("0,0,,,")]
+    [InlineData("10,,,,")]
+    [InlineData("10,-1,,,")]
+    [InlineData("10,NaN,,,")]
+    [InlineData("10,invalid,,,")]
+    [InlineData("1E-300,1E300,,,")]
+    [InlineData("10,1,-1,0,0")]
+    [InlineData("10,1,0,NaN,0")]
+    [InlineData("10,1,0,0,invalid")]
+    public async Task ReadInitialHCRDataAsync_RejectsUndefinedOrInvalidData(string values)
     {
         // Arrange
         SetupFile("scenario", Header + "ANE,,,," + values + "\n");
         var reader = CreateReader();
 
         // Act
-        var act = () => reader.ReadFishingMortalitiesAsync("scenario", CancellationToken.None);
+        var act = () => reader.ReadInitialHCRDataAsync("scenario", CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<InvalidDataException>();
@@ -88,10 +97,10 @@ public class InitialStateFileServiceTests
     [InlineData("")]
     [InlineData("SpeciesCode,Biomass\nANE,10\n")]
     [InlineData(Header)]
-    [InlineData(Header + "ANE,,,,10,1\nANE,,,,20,2\n")]
-    [InlineData(Header + "ANE,,,,-1,0\n")]
-    [InlineData(Header + "ANE,,,,NaN,0\n")]
-    [InlineData(Header + ",,,,1,0\n")]
+    [InlineData(Header + "ANE,,,,10,1,,,\nANE,,,,20,2,,,\n")]
+    [InlineData(Header + "ANE,,,,-1,0,,,\n")]
+    [InlineData(Header + "ANE,,,,NaN,0,,,\n")]
+    [InlineData(Header + ",,,,1,0,,,\n")]
     public async Task ReadInitialHCRDataAsync_RejectsInvalidFiles(string content)
     {
         // Arrange
@@ -127,7 +136,7 @@ public class InitialStateFileServiceTests
     public async Task ReadInitialHCRDataAsync_PropagatesMissingFile()
     {
         // Arrange
-        string path = string.Join('/', "scenario", "InitialHCRData.csv");
+        string path = string.Join('/', "scenario", "scenario_initial_hrc_data.csv");
         m_blobStore.Setup(store => store.OpenReadAsync(path, PathType.Input, CancellationToken.None))
             .ThrowsAsync(new FileNotFoundException("Missing initial HCR data file."));
         var reader = CreateReader();
@@ -140,7 +149,7 @@ public class InitialStateFileServiceTests
     }
 
     [Fact]
-    public async Task ReadFishingMortalitiesAsync_ReadsIncludedNorthwesternMedFile()
+    public async Task ReadInitialHCRDataAsync_ReadsIncludedNorthwesternMedFile()
     {
         // Arrange
         var store = new LocalBlobStore(Path.Combine(AppContext.BaseDirectory, "Includes"), Path.Combine(AppContext.BaseDirectory, "Output"));
@@ -148,14 +157,15 @@ public class InitialStateFileServiceTests
 
         // Act
         var initialData = await reader.ReadInitialHCRDataAsync("northwestern_med", CancellationToken.None);
-        var mortalities = await reader.ReadFishingMortalitiesAsync("northwestern_med", CancellationToken.None);
 
         // Assert
         initialData.Should().HaveCount(91);
-        mortalities.Should().HaveCount(91);
         var species = new IInitialStateFileService.SpeciesKey("ALB", "", "", "");
-        initialData[species].Biomass.Should().Be(20526.805687297827);
-        mortalities[species].Should().Be(9912.18643411314 / 20526.805687297827);
+        initialData[species].Biomass.Should().Be(20533.55938757435);
+        initialData[species].FishingMortality.Should().Be(9975.127224426418 / 20533.55938757435);
+        initialData[species].DefaultBiomassLimit.Should().Be(3067.6603237518043);
+        initialData[species].DefaultBiomassBase.Should().Be(12270.645597986155);
+        initialData[species].DefaultFMax.Should().Be(0.055541399866342545);
     }
 
     private InitialStateFileService CreateReader()
@@ -165,7 +175,7 @@ public class InitialStateFileServiceTests
 
     private void SetupFile(string scenario, string content, CancellationToken cancellationToken = default)
     {
-        string path = string.Join('/', scenario, "InitialHCRData.csv");
+        string path = string.Join('/', scenario, $"{scenario}_initial_hrc_data.csv");
         m_blobStore.Setup(store => store.OpenReadAsync(path, PathType.Input, cancellationToken))
             .ReturnsAsync(() => new MemoryStream(Encoding.UTF8.GetBytes(content)));
     }

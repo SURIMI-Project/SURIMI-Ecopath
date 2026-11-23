@@ -88,14 +88,15 @@ public class HcrInitialisationFileServiceTests
                 catchCell.GrossCatchBiomass = timestep;
                 service.CaptureCatchTimestep(catchSummary);
             }
-            await service.WriteInitialFilesAsync(biomass, "scenario", CancellationToken.None);
+            DefaultHarvestControlRules[] defaultHarvestControlRules = [new("SPC", "", "", "", 12.5, 40, 0.25)];
+            await service.WriteInitialFilesAsync(biomass, defaultHarvestControlRules, "scenario", CancellationToken.None);
 
             // Assert
-            uploadedFiles.Should().ContainKey("scenario/InitialHCRData.csv");
-            uploadedFiles["scenario/InitialHCRData.csv"].Split("\r\n", StringSplitOptions.RemoveEmptyEntries).Should().Equal(
-                "SpeciesCode,LengthClass,Age,LifeStage,Biomass,Catch",
-                "SPC,,,,30,78",
-                "SPC,,,juvenile,5,0");
+            uploadedFiles.Should().ContainKey("scenario/scenario_initial_hrc_data.csv");
+            uploadedFiles["scenario/scenario_initial_hrc_data.csv"].Split("\r\n", StringSplitOptions.RemoveEmptyEntries).Should().Equal(
+                "SpeciesCode,LengthClass,Age,LifeStage,Biomass,Catch,BiomassLimit,BiomassBase,FMax",
+                "SPC,,,,30,78,12.5,40,0.25",
+                "SPC,,,juvenile,5,0,0,0,0");
             uploadedFiles.Should().HaveCount(3);
             uploadedFiles.Should().ContainKey("scenario/scenario_recruitment.csv");
             uploadedFiles["scenario/scenario_recruitment.csv"].Split("\r\n", StringSplitOptions.RemoveEmptyEntries).Should().Equal(

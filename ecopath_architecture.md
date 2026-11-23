@@ -239,7 +239,7 @@ The service reads and writes the following file types through `IBlobStore`:
 
 Locally the `Includes/` directory serves as the input root and `Output/` as the output root.
 
-The catch file uses the same species columns and `Catch`; it totals gross catch, including dead discards, over the final 12 spin-up timesteps. Catch history is collected only while EwE reports that spin-up is active, never during regular simulation timesteps. The files are written once at the initial simulation pause. Initialization fails if fewer than 12 spin-up timesteps are available.
+The initial HCR file contains, per species, `Biomass` (absolute kg of the entire species at the initial pause, i.e. the last biomass of spin-up, summed over all water cells and not scaled by the time step) and `Catch` (aggregated gross catch in kg, including dead discards, over the final 12 monthly spin-up timesteps). Catch history is collected only while EwE reports that spin-up is active, never during regular simulation timesteps. The files are written once at the initial simulation pause. Initialization fails if fewer than 12 spin-up timesteps are available.
 
 ### S3 bucket authentication
 
