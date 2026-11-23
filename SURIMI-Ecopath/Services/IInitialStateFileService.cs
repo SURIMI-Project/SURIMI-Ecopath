@@ -15,28 +15,21 @@ public interface IInitialStateFileService
     public readonly record struct SpeciesKey(string SpeciesCode, string LengthClass, string Age, string LifeStage);
 
     /// <summary>
-    /// Reads species biomass values from the scenario's <c>initial_biomasses.csv</c> input file.
+    /// Gets the name of the initial HCR data file for a scenario.
     /// </summary>
-    /// <param name="scenarioName">The scenario subdirectory containing the input file.</param>
+    public static string FileName(string scenarioName) => $"{scenarioName}_initial_hrc_data.csv";
+
+    /// <summary>
+    /// Initial harvest control rule data for one species.
+    /// </summary>
+    public readonly record struct InitialHcrData(double Biomass, double FishingMortality, double DefaultBiomassLimit, double DefaultBiomassBase, double DefaultFMax);
+
+    /// <summary>
+    /// Reads initial biomass and the default harvest control rule reference levels, and calculates fishing mortality for each species as initial catch divided by initial biomass.
+    /// </summary>
+    /// <param name="scenarioName">The scenario subdirectory containing the initial HCR data file.</param>
     /// <param name="cancellationToken">A token that can cancel the read.</param>
-    /// <returns>Biomass values keyed by the complete species identity.</returns>
-    Task<Dictionary<SpeciesKey, double>> ReadBiomassesAsync(string scenarioName, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Reads initial biomass and calculates fishing mortality for each species as initial catch divided by initial biomass.
-    /// </summary>
-    /// <param name="scenarioName">The scenario subdirectory containing the initial biomass and catch files.</param>
-    /// <param name="cancellationToken">A token that can cancel the reads.</param>
-    /// <returns>Biomass and fishing mortality values keyed by the complete species identity.</returns>
-    /// <exception cref="InvalidDataException">The files do not contain matching species, or a species has zero biomass.</exception>
-    Task<Dictionary<SpeciesKey, (double Biomass, double FishingMortality)>> ReadInitialHCRDataAsync(string scenarioName, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Calculates initial fishing mortality for each species as initial catch divided by initial biomass.
-    /// </summary>
-    /// <param name="scenarioName">The scenario subdirectory containing the initial biomass and catch files.</param>
-    /// <param name="cancellationToken">A token that can cancel the reads.</param>
-    /// <returns>Fishing mortality values keyed by the complete species identity.</returns>
-    /// <exception cref="InvalidDataException">The files do not contain matching species, or a species has zero biomass.</exception>
-    Task<Dictionary<SpeciesKey, double>> ReadFishingMortalitiesAsync(string scenarioName, CancellationToken cancellationToken);
+    /// <returns>Initial HCR data keyed by the complete species identity. Reference levels that are absent from the file are returned as zero.</returns>
+    /// <exception cref="InvalidDataException">Catch is missing or invalid, or a species has zero biomass.</exception>
+    Task<Dictionary<SpeciesKey, InitialHcrData>> ReadInitialHCRDataAsync(string scenarioName, CancellationToken cancellationToken);
 }
