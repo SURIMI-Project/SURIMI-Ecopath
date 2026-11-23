@@ -106,6 +106,17 @@ namespace Ecopath.EwE.Wrapper
 
         public cEcoPathGroupInput get_EcopathGroupInputs(int iGroup) => Core.get_EcopathGroupInputs(iGroup);
 
+        /// <inheritdoc />
+        public (float RstockRatio, float RHalfB0Ratio, float CvRec) GetMseRecruitment(int groupIndex)
+        {
+            var inputs = Core.MSEManager.get_GroupInputs(groupIndex);
+            return (inputs.ForcastGain, inputs.RHalfB0Ratio, inputs.RecruitmentCV);
+        }
+
+        /// <inheritdoc />
+        public float GetMseQuotaShare(int fleetIndex, int groupIndex) =>
+            Core.MSEManager.get_EcopathFleetInputs(fleetIndex).get_QuotaShare(groupIndex);
+
         public cTaxon get_Taxon(int iTaxa) => Core.get_Taxon(iTaxa);
 
         public cStanzaGroup get_StanzaGroups(int v) => Core.get_StanzaGroups(v);

@@ -272,7 +272,7 @@ The service listens on port **7890** (configured via `ASPNETCORE_HTTP_PORTS`).
 | `AWS_SECRET_ACCESS_KEY` | If S3 | S3 secret access key. |
 | `AWS_S3_ENDPOINT` | If S3 | S3-compatible endpoint URL. |
 | `AWS_BUCKET_NAME` | If S3 | S3 bucket name. |
-| `CREATE_HCR_INITIALISE_FILES` | No | When set, writes initial biomass and catch CSV snapshots at initialization. |
+| `CREATE_HCR_INITIALISE_FILES` | No | When `true` (or `1`), writes initial biomass, catch, `<scenario>_recruitment.csv`, and (if valid shares exist) `<scenario>_quotashare.csv` to the scenario's output directory. Both MSE exports include only mapped species/life-stage pairs in the simulation contract. Recruitment uses `species_code,life_stage,RstockRatio,RHalfB0Ratio,cvRec`. Quota shares use `species_code,life_stage,GEAR\|COUNTRY,...` for mapped contract fleets; incomplete distributions are logged and omitted, not normalized. |
 | `ASPNETCORE_HTTP_PORTS` | No | gRPC listening port (default `7890`). |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | No | OpenTelemetry collector endpoint for metrics/traces. |
 | `OTEL_SERVICE_NAME` | No | Service name reported to OpenTelemetry (default `Ecopath`). |

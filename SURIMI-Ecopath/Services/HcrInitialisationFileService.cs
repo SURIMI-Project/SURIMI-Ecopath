@@ -33,7 +33,8 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
     /// <inheritdoc />
     public void BeginInitialization()
     {
-        Enabled = Environment.GetEnvironmentVariable(CreateFilesEnvironmentVariable) is not null;
+        string? setting = Environment.GetEnvironmentVariable(CreateFilesEnvironmentVariable);
+        Enabled = setting == "1" || (bool.TryParse(setting, out bool enabled) && enabled);
         _catchHistory.Clear();
     }
 
@@ -58,6 +59,54 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
         // Remove the oldest snapshot after adding a new one so earlier spin-up catches cannot inflate the total.
         while (_catchHistory.Count > CatchHistoryLength)
             _catchHistory.Dequeue();
+    }
+
+    /// <inheritdoc />
+    public async Task WriteRecruitmentFileAsync(IReadOnlyCollection<MseRecruitment> recruitment, string scenarioName, CancellationToken cancellationToken)
+    {
+        if (!Enabled)
+            throw new InvalidOperationException("HCR initialization files are not enabled.");
+
+        string fileName = $"{scenarioName}_recruitment.csv";
+        await WriteOutputFilesAsync(scenarioName, [(fileName, SerializeRecruitmentCsv(recruitment))], cancellationToken);
+        _logger.LogInformation("Wrote stock recruitment file {FileName} for scenario {ScenarioName}", fileName, scenarioName);
+    }
+
+    /// <inheritdoc />
+    public async Task WriteQuotaShareFileAsync(IReadOnlyCollection<MseQuotaShare> quotaShares, string scenarioName, CancellationToken cancellationToken)
+    {
+        if (!Enabled)
+            throw new InvalidOperationException("HCR initialization files are not enabled.");
+
+        var rows = new List<MseQuotaShare>();
+        foreach (var stock in quotaShares.GroupBy(row => (row.SpeciesCode, row.LifeStage)))
+        {
+            var row = stock.First();
+            double sum = row.Shares.Values.Sum();
+            // Match the fisheries authority's tolerance without redistributing any of the model's shares.
+            if (Math.Abs(sum - 1) > 1e-4 || row.Shares.Values.Any(share => !double.IsFinite(share) || share < 0 || share > 1))
+            {
+                _logger.LogWarning("Skipping quota shares for {SpeciesCode} ({LifeStage}): expected valid shares summing to 1, found total {ShareSum}", row.SpeciesCode, row.LifeStage, sum);
+                continue;
+            }
+            if (stock.Skip(1).Any(other => other.Shares.Count != row.Shares.Count ||
+                row.Shares.Any(share => !other.Shares.TryGetValue(share.Key, out double value) || value != share.Value)))
+            {
+                _logger.LogWarning("Skipping conflicting quota shares for {SpeciesCode} ({LifeStage})", row.SpeciesCode, row.LifeStage);
+                continue;
+            }
+            rows.Add(row);
+        }
+
+        if (rows.Count == 0)
+        {
+            _logger.LogWarning("No valid mapped stock and fleet quota shares to export for scenario {ScenarioName}", scenarioName);
+            return;
+        }
+
+        string fileName = $"{scenarioName}_quotashare.csv";
+        await WriteOutputFilesAsync(scenarioName, [(fileName, SerializeQuotaShareCsv(rows))], cancellationToken);
+        _logger.LogInformation("Wrote fleet quota shares for {StockCount} stocks to {FileName}", rows.Count, fileName);
     }
 
     /// <inheritdoc />
@@ -111,11 +160,15 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
                 catchBySpecies.GetValueOrDefault(species)))
             .ToList();
 
-        var files = new Dictionary<string, string>
-        {
-            ["initial_biomasses.csv"] = SerializeCsv(biomassRows),
-            ["initial_catch.csv"] = SerializeCsv(catchRows)
-        };
+        await WriteOutputFilesAsync(scenarioName, [
+            ("initial_biomasses.csv", SerializeCsv(biomassRows)),
+            ("initial_catch.csv", SerializeCsv(catchRows))
+        ], cancellationToken);
+        _logger.LogInformation("Wrote HCR initialization files for {SpeciesCount} species using {CatchTimestepCount} catch timesteps", biomassRows.Count, _catchHistory.Count);
+    }
+
+    private async Task WriteOutputFilesAsync(string scenarioName, IReadOnlyList<(string FileName, string CsvContent)> files, CancellationToken cancellationToken)
+    {
         var attemptedFiles = new List<string>();
         try
         {
@@ -142,8 +195,6 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
             }
             throw;
         }
-
-        _logger.LogInformation("Wrote HCR initialization files for {SpeciesCount} species using {CatchTimestepCount} catch timesteps", biomassRows.Count, _catchHistory.Count);
     }
 
     private static SpeciesKey ToSpeciesKey(Species species)
@@ -153,6 +204,63 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
             species.LengthClass ?? string.Empty,
             species.Age ?? string.Empty,
             species.LifeStage ?? string.Empty);
+    }
+
+    private static string SerializeRecruitmentCsv(IEnumerable<MseRecruitment> recruitment)
+    {
+        using var writer = new StringWriter(CultureInfo.InvariantCulture);
+        using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+        foreach (var header in new[] { "species_code", "life_stage", "RstockRatio", "RHalfB0Ratio", "cvRec" })
+            csv.WriteField(header);
+        csv.NextRecord();
+
+        // The fisheries authority keys recruitment by species and life stage only, ignoring case.
+        var stocks = recruitment
+            .GroupBy(row => (SpeciesCode: row.SpeciesCode.ToUpperInvariant(), LifeStage: row.LifeStage.ToUpperInvariant()))
+            .OrderBy(stock => stock.Key.SpeciesCode, StringComparer.Ordinal)
+            .ThenBy(stock => stock.Key.LifeStage, StringComparer.Ordinal);
+        foreach (var stock in stocks)
+        {
+            var values = stock.Select(row => (row.RstockRatio, row.RHalfB0Ratio, row.CvRec)).Distinct().ToList();
+            if (values.Count != 1)
+                throw new InvalidDataException($"Conflicting MSE recruitment parameters for species '{stock.Key.SpeciesCode}' and life stage '{stock.Key.LifeStage}'.");
+
+            csv.WriteField(stock.Key.SpeciesCode);
+            csv.WriteField(stock.Key.LifeStage);
+            csv.WriteField(values[0].RstockRatio);
+            csv.WriteField(values[0].RHalfB0Ratio);
+            csv.WriteField(values[0].CvRec);
+            csv.NextRecord();
+        }
+        csv.Flush();
+        return writer.ToString();
+    }
+
+    private static string SerializeQuotaShareCsv(IReadOnlyCollection<MseQuotaShare> rows)
+    {
+        var fleets = rows.SelectMany(row => row.Shares.Keys).Distinct()
+            .OrderBy(fleet => fleet.GearCode, StringComparer.Ordinal)
+            .ThenBy(fleet => fleet.CountryCode, StringComparer.Ordinal)
+            .ToArray();
+
+        using var writer = new StringWriter(CultureInfo.InvariantCulture);
+        using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+        csv.WriteField("species_code");
+        csv.WriteField("life_stage");
+        foreach (var fleet in fleets)
+            csv.WriteField($"{fleet.GearCode}|{fleet.CountryCode}");
+        csv.NextRecord();
+
+        foreach (var row in rows.OrderBy(row => row.SpeciesCode, StringComparer.Ordinal).ThenBy(row => row.LifeStage, StringComparer.Ordinal))
+        {
+            csv.WriteField(row.SpeciesCode);
+            csv.WriteField(row.LifeStage);
+            foreach (var fleet in fleets)
+                csv.WriteField(row.Shares.GetValueOrDefault(fleet).ToString("G9", CultureInfo.InvariantCulture));
+            csv.NextRecord();
+        }
+        csv.Flush();
+        return writer.ToString();
     }
 
     private static string SerializeCsv<T>(IEnumerable<T> rows)
