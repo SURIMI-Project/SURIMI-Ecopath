@@ -86,6 +86,60 @@ namespace Ecopath.Tests.EwE
         }
 
         [Fact]
+        public void GetMseRecruitment_ExportsOnlyContractSpeciesAndLifeStages()
+        {
+            // Arrange
+            var descriptors = new KeyFieldDescriptorRegistry();
+            descriptors.Register(new KeyFieldDescriptor(SpeciesFields.SpeciesCode, KeyDomain.Species, KeyPurpose.Species, FieldKind.Code, true, 10));
+            descriptors.Register(new KeyFieldDescriptor(SpeciesFields.Lifestage, KeyDomain.Species, KeyPurpose.Lifestage, FieldKind.Label, false, 3));
+
+            EwEMapping Map(int groupIndex, string code, string? stage = null)
+            {
+                var key = new MultiLevelKey(KeyDomain.Species);
+                key.SetField(SpeciesFields.SpeciesCode, code, descriptors);
+                if (stage != null)
+                    key.SetField(SpeciesFields.Lifestage, stage, descriptors);
+                return new EwEMapping(key, KeyDomain.Species, groupIndex, descriptors);
+            }
+
+            _configServiceMock.Setup(service => service.Mappings(KeyDomain.Species)).Returns(
+                [Map(26, "HKE"), Map(26, "HKE", "juvenile"), Map(27, "HKE", "adult"), Map(35, "BOG"), Map(36, "PIL")]);
+            _coreMock.Setup(core => core.GetMseRecruitment(26)).Returns((0.7677637f, 0.2f, 0.8f));
+            _coreMock.Setup(core => core.GetMseRecruitment(27)).Returns((0.7134952f, 0.2f, 0.8f));
+            _coreMock.Setup(core => core.GetMseRecruitment(35)).Returns((0.893f, 0.2f, 0.8f));
+            IEwEConfiguration configuration = new EwEConfiguration();
+            configuration.FishedGroups.AddRange([26, 27, 35, 36]);
+            var contract = new SurimiContract
+            {
+                Simulation = new Simulation(),
+                Standards = new Standards(),
+                Items = new Items
+                {
+                    Species =
+                    [
+                        new Species { SpeciesCode = "HKE", LifeStage = "JUVENILE" },
+                        new Species { SpeciesCode = "HKE", LifeStage = "adult" },
+                        new Species { SpeciesCode = "BOG" }
+                    ]
+                }
+            };
+            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, descriptors, _multiLevelKeyFactoryMock.Object, _vocabulariesRegisterServiceMock.Object, _blobStoreMock.Object, _hcrInitialisationFileServiceMock.Object);
+
+            // Act
+            var rows = (List<MseRecruitment>)typeof(EwEController).GetMethod("GetMseRecruitment", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .Invoke(controller, [configuration, contract])!;
+
+            // Assert
+            rows.Should().BeEquivalentTo(new MseRecruitment[]
+            {
+                new("HKE", "JUVENILE", 0.7677637f, 0.2f, 0.8f),
+                new("HKE", "ADULT", 0.7134952f, 0.2f, 0.8f),
+                new("BOG", "", 0.893f, 0.2f, 0.8f)
+            });
+            _coreMock.Verify(core => core.GetMseRecruitment(36), Times.Never());
+        }
+
+        [Fact]
         public async Task StopAsync_TeardownsCore_AndReturnsTrue()
         {
             // Arrange

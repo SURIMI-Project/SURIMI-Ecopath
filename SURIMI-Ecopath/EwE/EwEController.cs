@@ -305,6 +305,12 @@ namespace Ecopath.EwE
                     _configuration.FishedGroups.Add(iGroup);
             }
 
+            if (_hcrInitialisationFileService.Enabled)
+            {
+                await _hcrInitialisationFileService.WriteRecruitmentFileAsync(GetMseRecruitment(_configuration, surimiContract), scenarioName, cancellationToken);
+                await _hcrInitialisationFileService.WriteQuotaShareFileAsync(GetMseQuotaShares(_configuration, surimiContract), scenarioName, cancellationToken);
+            }
+
             StringBuilder info = new();
             info.AppendLine("EwE FG - species mappings:");
             foreach (var mapping in _configurationService.Mappings(KeyDomain.Species))
@@ -617,6 +623,99 @@ namespace Ecopath.EwE
                 prop.ApplyRecovery();
                 prop.NormalizeDirtyCells();
             }
+        }
+
+        private static string NormalizeCode(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();
+
+        private IEnumerable<(int GroupIndex, (string SpeciesCode, string LifeStage)[] Stocks)> GetMappedContractStocks(
+            IEwEConfiguration configuration, SurimiContract contract)
+        {
+            static (string SpeciesCode, string LifeStage) StockKey(Species species) =>
+                (NormalizeCode(species.SpeciesCode), NormalizeCode(species.LifeStage));
+
+            var contractSpecies = contract.Items.Species.Select(StockKey).ToHashSet();
+            foreach (var group in _configurationService.Mappings(KeyDomain.Species)
+                .Where(mapping => configuration.FishedGroups.Contains(mapping.Index))
+                .GroupBy(mapping => mapping.Index))
+            {
+                var stocks = group.Select(mapping => mapping.ToObject<Species>(false))
+                    .OfType<Species>()
+                    .Select(StockKey)
+                    .Where(stock => stock.SpeciesCode.Length > 0 && contractSpecies.Contains(stock))
+                    .Distinct()
+                    .ToArray();
+                if (stocks.Length > 0)
+                    yield return (group.Key, stocks);
+            }
+        }
+
+        private List<MseRecruitment> GetMseRecruitment(IEwEConfiguration configuration, SurimiContract contract)
+        {
+            var recruitment = new List<MseRecruitment>();
+            foreach (var (groupIndex, stocks) in GetMappedContractStocks(configuration, contract))
+            {
+                var (rstockRatio, rHalfB0Ratio, cvRec) = _core.GetMseRecruitment(groupIndex);
+                if (!float.IsFinite(rstockRatio) || rstockRatio < 0 ||
+                    !float.IsFinite(rHalfB0Ratio) || rHalfB0Ratio < 0 ||
+                    !float.IsFinite(cvRec) || cvRec < 0)
+                {
+                    _logger.LogWarning("Skipping EwE group {GroupIndex} in recruitment export because its MSE recruitment parameters are unset or invalid", groupIndex);
+                    continue;
+                }
+
+                recruitment.AddRange(stocks.Select(stock => new MseRecruitment(stock.SpeciesCode, stock.LifeStage, rstockRatio, rHalfB0Ratio, cvRec)));
+            }
+            return recruitment;
+        }
+
+        private List<MseQuotaShare> GetMseQuotaShares(IEwEConfiguration configuration, SurimiContract contract)
+        {
+            static (string GearCode, string CountryCode) FleetKey(FleetSegment fleet) =>
+                (NormalizeCode(fleet.GearCode), NormalizeCode(fleet.CountryCode));
+
+            var contractFleets = contract.Items.FleetSegments.Select(FleetKey).ToHashSet();
+            var fleetMappings = _configurationService.Mappings(KeyDomain.FleetSegment)
+                .Where(mapping => mapping.Index >= 1 && mapping.Index <= _core.nFleets)
+                .Select(mapping => (mapping.Index, Fleet: mapping.ToObject<FleetSegment>(false)))
+                .Where(mapping => mapping.Fleet != null)
+                .Select(mapping => (mapping.Index, Key: FleetKey(mapping.Fleet!)))
+                .Where(mapping => mapping.Key.GearCode.Length > 0 && mapping.Key.CountryCode.Length > 0 && contractFleets.Contains(mapping.Key))
+                .Distinct()
+                .ToLookup(mapping => mapping.Index, mapping => mapping.Key);
+
+            var fleets = new Dictionary<int, (string GearCode, string CountryCode)>();
+            foreach (var mapping in fleetMappings)
+            {
+                if (mapping.Count() == 1)
+                    fleets.Add(mapping.Key, mapping.Single());
+                else
+                    _logger.LogWarning("Skipping EwE fleet {FleetIndex} in quota-share export because it maps to multiple contract fleets", mapping.Key);
+            }
+            if (fleets.Count == 0)
+                return [];
+
+            var rows = new List<MseQuotaShare>();
+            foreach (var (groupIndex, stocks) in GetMappedContractStocks(configuration, contract))
+            {
+                var shares = new Dictionary<(string GearCode, string CountryCode), double>();
+                bool valid = true;
+                for (int iFleet = 1; iFleet <= _core.nFleets; iFleet++)
+                {
+                    float share = _core.GetMseQuotaShare(iFleet, groupIndex);
+                    if (!float.IsFinite(share) || share < 0 || share > 1 ||
+                        (share > 0 && !fleets.ContainsKey(iFleet)))
+                    {
+                        _logger.LogWarning("Skipping EwE group {GroupIndex} in quota-share export: fleet {FleetIndex} has an invalid or unmapped share ({Share})", groupIndex, iFleet, share);
+                        valid = false;
+                        break;
+                    }
+                    if (fleets.TryGetValue(iFleet, out var fleet))
+                        shares[fleet] = shares.GetValueOrDefault(fleet) + share;
+                }
+                if (valid)
+                    rows.AddRange(stocks.Select(stock => new MseQuotaShare(stock.SpeciesCode, stock.LifeStage, shares)));
+            }
+            return rows;
         }
 
         /// <summary>
