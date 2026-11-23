@@ -14,12 +14,11 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
     private readonly IBlobStore _blobStore;
     private readonly ILogger<HcrInitialisationFileService> _logger;
     // Each entry holds one completed spin-up month's gross catch totals by species, summed across cells and fleets.
-    // FIFO eviction retains only the latest 12 spin-up timesteps for the initial_catch.csv annual total.
+    // FIFO eviction retains only the latest 12 spin-up timesteps for the annual catch total.
     private readonly Queue<Dictionary<SpeciesKey, double>> _catchHistory = new();
 
     private readonly record struct SpeciesKey(string SpeciesCode, string LengthClass, string Age, string LifeStage);
-    private sealed record BiomassCsvRow(string SpeciesCode, string LengthClass, string Age, string LifeStage, double Biomass);
-    private sealed record CatchCsvRow(string SpeciesCode, string LengthClass, string Age, string LifeStage, double Catch);
+    private sealed record InitialHcrCsvRow(string SpeciesCode, string LengthClass, string Age, string LifeStage, double Biomass, double Catch);
 
     public HcrInitialisationFileService(IBlobStore blobStore, ILogger<HcrInitialisationFileService> logger)
     {
@@ -55,8 +54,7 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
         }
 
         _catchHistory.Enqueue(timestepCatch);
-        // Spin-up can span many years, but initial_catch.csv needs only the final 12 modeled timesteps.
-        // Remove the oldest snapshot after adding a new one so earlier spin-up catches cannot inflate the total.
+        // Remove older spin-up catches so only the final 12 modeled timesteps contribute to the total.
         while (_catchHistory.Count > CatchHistoryLength)
             _catchHistory.Dequeue();
     }
@@ -115,7 +113,7 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
         if (!Enabled)
             throw new InvalidOperationException("HCR initialization files are not enabled.");
         if (_catchHistory.Count < CatchHistoryLength)
-            throw new InvalidOperationException($"Cannot create initial_catch.csv: {_catchHistory.Count} modeled timestep(s) are available, but {CatchHistoryLength} are required.");
+            throw new InvalidOperationException($"Cannot create InitialHCRData.csv: {_catchHistory.Count} modeled timestep(s) are available, but {CatchHistoryLength} are required.");
         if (biomass.BiomassGrids == null)
             throw new InvalidOperationException("Initial biomass snapshot is not available.");
 
@@ -143,28 +141,18 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
             .ThenBy(species => species.Age, StringComparer.Ordinal)
             .ThenBy(species => species.LifeStage, StringComparer.Ordinal)
             .ToList();
-        var biomassRows = orderedSpecies
-            .Select(species => new BiomassCsvRow(
+        var rows = orderedSpecies
+            .Select(species => new InitialHcrCsvRow(
                 species.SpeciesCode,
                 species.LengthClass,
                 species.Age,
                 species.LifeStage,
-                biomassBySpecies[species]))
-            .ToList();
-        var catchRows = orderedSpecies
-            .Select(species => new CatchCsvRow(
-                species.SpeciesCode,
-                species.LengthClass,
-                species.Age,
-                species.LifeStage,
+                biomassBySpecies[species],
                 catchBySpecies.GetValueOrDefault(species)))
             .ToList();
 
-        await WriteOutputFilesAsync(scenarioName, [
-            ("initial_biomasses.csv", SerializeCsv(biomassRows)),
-            ("initial_catch.csv", SerializeCsv(catchRows))
-        ], cancellationToken);
-        _logger.LogInformation("Wrote HCR initialization files for {SpeciesCount} species using {CatchTimestepCount} catch timesteps", biomassRows.Count, _catchHistory.Count);
+        await WriteOutputFilesAsync(scenarioName, [("InitialHCRData.csv", SerializeCsv(rows))], cancellationToken);
+        _logger.LogInformation("Wrote HCR initialization data for {SpeciesCount} species using {CatchTimestepCount} catch timesteps", rows.Count, _catchHistory.Count);
     }
 
     private async Task WriteOutputFilesAsync(string scenarioName, IReadOnlyList<(string FileName, string CsvContent)> files, CancellationToken cancellationToken)

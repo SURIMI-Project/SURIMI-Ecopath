@@ -35,12 +35,12 @@ public interface IHcrInitialisationFileService
     Task WriteQuotaShareFileAsync(IReadOnlyCollection<MseQuotaShare> quotaShares, string scenarioName, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Writes the initial biomass snapshot and the catch totals from the final 12 collected spin-up timesteps.
+    /// Writes the initial biomass snapshot and the catch totals from the final 12 collected spin-up timesteps to <c>InitialHCRData.csv</c>.
     /// </summary>
     /// <param name="biomass">Biomass snapshot taken at the initial simulation pause.</param>
-    /// <param name="scenarioName">Scenario whose output directory will contain the files.</param>
-    /// <param name="cancellationToken">Token used to cancel blob-store uploads.</param>
-    /// <returns>A task that completes when both CSV files have been written.</returns>
+    /// <param name="scenarioName">Scenario whose output directory will contain the file.</param>
+    /// <param name="cancellationToken">Token used to cancel the blob-store upload.</param>
+    /// <returns>A task that completes when the CSV file has been written.</returns>
     /// <exception cref="InvalidOperationException">Files are disabled, the initial biomass snapshot is unavailable, or fewer than 12 catch timesteps have been collected.</exception>
     Task WriteInitialFilesAsync(Biomass biomass, string scenarioName, CancellationToken cancellationToken);
 }

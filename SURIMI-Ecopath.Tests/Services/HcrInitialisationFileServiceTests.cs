@@ -59,6 +59,9 @@ public class HcrInitialisationFileServiceTests
             var biomassGrid = new BiomassGrid { Species = new Species { SpeciesCode = "SPC" } };
             biomassGrid.BiomassCells.Add(new BiomassCell { Biomass = 30 });
             biomass.BiomassGrids.Add(biomassGrid);
+            var uncaughtGrid = new BiomassGrid { Species = new Species { SpeciesCode = "SPC", LifeStage = "juvenile" } };
+            uncaughtGrid.BiomassCells.Add(new BiomassCell { Biomass = 5 });
+            biomass.BiomassGrids.Add(uncaughtGrid);
             MseRecruitment[] recruitment =
             [
                 new("HKE", "juvenile", 0.7677637f, 0.2f, 0.8f),
@@ -88,11 +91,12 @@ public class HcrInitialisationFileServiceTests
             await service.WriteInitialFilesAsync(biomass, "scenario", CancellationToken.None);
 
             // Assert
-            uploadedFiles.Should().ContainKey("scenario/initial_biomasses.csv");
-            uploadedFiles["scenario/initial_biomasses.csv"].Should().Contain("SPC,,,,30");
-            uploadedFiles.Should().ContainKey("scenario/initial_catch.csv");
-            uploadedFiles["scenario/initial_catch.csv"].Should().Contain("Catch").And.Contain("SPC,,,,78");
-            uploadedFiles["scenario/initial_catch.csv"].Should().NotContain("CatchKg");
+            uploadedFiles.Should().ContainKey("scenario/InitialHCRData.csv");
+            uploadedFiles["scenario/InitialHCRData.csv"].Split("\r\n", StringSplitOptions.RemoveEmptyEntries).Should().Equal(
+                "SpeciesCode,LengthClass,Age,LifeStage,Biomass,Catch",
+                "SPC,,,,30,78",
+                "SPC,,,juvenile,5,0");
+            uploadedFiles.Should().HaveCount(3);
             uploadedFiles.Should().ContainKey("scenario/scenario_recruitment.csv");
             uploadedFiles["scenario/scenario_recruitment.csv"].Split("\r\n", StringSplitOptions.RemoveEmptyEntries).Should().Equal(
                 "species_code,life_stage,RstockRatio,RHalfB0Ratio,cvRec",

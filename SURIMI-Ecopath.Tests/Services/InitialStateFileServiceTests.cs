@@ -8,7 +8,6 @@ using Grpc.Core;
 using Grpc.Surimi;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using Moq.Protected;
 using SURIMI.Common.gRPC.Services;
 using Xunit;
 using EcologyService = Ecopath.Services.EcologyService;
@@ -17,16 +16,14 @@ namespace Ecopath.Tests.Services;
 
 public class InitialStateFileServiceTests
 {
-    private const string BiomassHeader = "SpeciesCode,LengthClass,Age,LifeStage,Biomass\n";
-    private const string CatchHeader = "SpeciesCode,LengthClass,Age,LifeStage,Catch\n";
+    private const string Header = "SpeciesCode,LengthClass,Age,LifeStage,Biomass,Catch\n";
     private readonly Mock<IBlobStore> m_blobStore = new(MockBehavior.Strict);
 
     [Fact]
-    public async Task GetInitialHCRData_CombinesBiomassAndFishingMortalityByFullSpeciesKey()
+    public async Task GetInitialHCRData_ReturnsBiomassAndFishingMortalityByFullSpeciesKey()
     {
         // Arrange
-        SetupFile("scenario", "initial_biomasses.csv", BiomassHeader + "ANE,10,2,adult,100\nANE,,,juvenile,20\n");
-        SetupFile("scenario", "initial_catch.csv", CatchHeader + "ANE,,,juvenile,10\nANE,10,2,adult,0\n");
+        SetupFile("scenario", Header + "ANE,10,2,adult,100,0\nANE,,,juvenile,20,10\n");
         var service = CreateEcologyService(CreateReader());
 
         // Act
@@ -46,20 +43,20 @@ public class InitialStateFileServiceTests
     }
 
     [Fact]
-    public async Task ReadBiomassesAsync_UsesInvariantCulture()
+    public async Task ReadInitialHCRDataAsync_UsesInvariantCulture()
     {
         // Arrange
         CultureInfo previousCulture = CultureInfo.CurrentCulture;
-        SetupFile("scenario", "initial_biomasses.csv", BiomassHeader + "ANE,,,,123.5\n");
+        SetupFile("scenario", Header + "ANE,,,,123.5,61.75\n");
         var reader = CreateReader();
         CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("nl-NL");
         try
         {
             // Act
-            var values = await reader.ReadBiomassesAsync("scenario", CancellationToken.None);
+            var values = await reader.ReadInitialHCRDataAsync("scenario", CancellationToken.None);
 
             // Assert
-            values.Values.Should().ContainSingle().Which.Should().Be(123.5);
+            values.Values.Should().ContainSingle().Which.Should().Be((123.5, 0.5));
         }
         finally
         {
@@ -68,14 +65,16 @@ public class InitialStateFileServiceTests
     }
 
     [Theory]
-    [InlineData("SpeciesCode,LengthClass,Age,LifeStage,Biomass\nANE,,,,0\n", "SpeciesCode,LengthClass,Age,LifeStage,Catch\nANE,,,,0\n")]
-    [InlineData("SpeciesCode,LengthClass,Age,LifeStage,Biomass\nANE,,,,10\n", "SpeciesCode,LengthClass,Age,LifeStage,Catch\nPIL,,,,1\n")]
-    [InlineData("SpeciesCode,LengthClass,Age,LifeStage,Biomass\nANE,,,,1E-300\n", "SpeciesCode,LengthClass,Age,LifeStage,Catch\nANE,,,,1E300\n")]
-    public async Task ReadFishingMortalitiesAsync_RejectsUndefinedOrMismatchedData(string biomass, string caught)
+    [InlineData("0,0")]
+    [InlineData("10,")]
+    [InlineData("10,-1")]
+    [InlineData("10,NaN")]
+    [InlineData("10,invalid")]
+    [InlineData("1E-300,1E300")]
+    public async Task ReadFishingMortalitiesAsync_RejectsUndefinedOrInvalidData(string values)
     {
         // Arrange
-        SetupFile("scenario", "initial_biomasses.csv", biomass);
-        SetupFile("scenario", "initial_catch.csv", caught);
+        SetupFile("scenario", Header + "ANE,,,," + values + "\n");
         var reader = CreateReader();
 
         // Act
@@ -88,19 +87,19 @@ public class InitialStateFileServiceTests
     [Theory]
     [InlineData("")]
     [InlineData("SpeciesCode,Biomass\nANE,10\n")]
-    [InlineData(BiomassHeader)]
-    [InlineData(BiomassHeader + "ANE,,,,10\nANE,,,,20\n")]
-    [InlineData(BiomassHeader + "ANE,,,,-1\n")]
-    [InlineData(BiomassHeader + "ANE,,,,NaN\n")]
-    [InlineData(BiomassHeader + ",,,,1\n")]
-    public async Task ReadBiomassesAsync_RejectsInvalidFiles(string content)
+    [InlineData(Header)]
+    [InlineData(Header + "ANE,,,,10,1\nANE,,,,20,2\n")]
+    [InlineData(Header + "ANE,,,,-1,0\n")]
+    [InlineData(Header + "ANE,,,,NaN,0\n")]
+    [InlineData(Header + ",,,,1,0\n")]
+    public async Task ReadInitialHCRDataAsync_RejectsInvalidFiles(string content)
     {
         // Arrange
-        SetupFile("scenario", "initial_biomasses.csv", content);
+        SetupFile("scenario", content);
         var reader = CreateReader();
 
         // Act
-        var act = () => reader.ReadBiomassesAsync("scenario", CancellationToken.None);
+        var act = () => reader.ReadInitialHCRDataAsync("scenario", CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<InvalidDataException>();
@@ -111,13 +110,13 @@ public class InitialStateFileServiceTests
     [InlineData("..")]
     [InlineData("..\\scenario")]
     [InlineData("../scenario")]
-    public async Task ReadBiomassesAsync_RejectsInvalidScenariosBeforeAccessingStorage(string scenario)
+    public async Task ReadInitialHCRDataAsync_RejectsInvalidScenariosBeforeAccessingStorage(string scenario)
     {
         // Arrange
         var reader = CreateReader();
 
         // Act
-        var act = () => reader.ReadBiomassesAsync(scenario, CancellationToken.None);
+        var act = () => reader.ReadInitialHCRDataAsync(scenario, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<ArgumentException>();
@@ -125,37 +124,37 @@ public class InitialStateFileServiceTests
     }
 
     [Fact]
-    public async Task ReadBiomassesAsync_PropagatesMissingFile()
+    public async Task ReadInitialHCRDataAsync_PropagatesMissingFile()
     {
         // Arrange
-        string path = string.Join('/', "scenario", "initial_biomasses.csv");
+        string path = string.Join('/', "scenario", "InitialHCRData.csv");
         m_blobStore.Setup(store => store.OpenReadAsync(path, PathType.Input, CancellationToken.None))
-            .ThrowsAsync(new FileNotFoundException("Missing initial biomass file."));
+            .ThrowsAsync(new FileNotFoundException("Missing initial HCR data file."));
         var reader = CreateReader();
 
         // Act
-        var act = () => reader.ReadBiomassesAsync("scenario", CancellationToken.None);
+        var act = () => reader.ReadInitialHCRDataAsync("scenario", CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<FileNotFoundException>();
     }
 
     [Fact]
-    public async Task ReadFishingMortalitiesAsync_ReadsIncludedNorthwesternMedFiles()
+    public async Task ReadFishingMortalitiesAsync_ReadsIncludedNorthwesternMedFile()
     {
         // Arrange
         var store = new LocalBlobStore(Path.Combine(AppContext.BaseDirectory, "Includes"), Path.Combine(AppContext.BaseDirectory, "Output"));
         var reader = new InitialStateFileService(store, NullLogger<InitialStateFileService>.Instance);
 
         // Act
-        var biomasses = await reader.ReadBiomassesAsync("northwestern_med", CancellationToken.None);
+        var initialData = await reader.ReadInitialHCRDataAsync("northwestern_med", CancellationToken.None);
         var mortalities = await reader.ReadFishingMortalitiesAsync("northwestern_med", CancellationToken.None);
 
         // Assert
-        biomasses.Should().HaveCount(91);
+        initialData.Should().HaveCount(91);
         mortalities.Should().HaveCount(91);
         var species = new IInitialStateFileService.SpeciesKey("ALB", "", "", "");
-        biomasses[species].Should().Be(20526.805687297827);
+        initialData[species].Biomass.Should().Be(20526.805687297827);
         mortalities[species].Should().Be(9912.18643411314 / 20526.805687297827);
     }
 
@@ -164,9 +163,9 @@ public class InitialStateFileServiceTests
         return new InitialStateFileService(m_blobStore.Object, NullLogger<InitialStateFileService>.Instance);
     }
 
-    private void SetupFile(string scenario, string file, string content, CancellationToken cancellationToken = default)
+    private void SetupFile(string scenario, string content, CancellationToken cancellationToken = default)
     {
-        string path = string.Join('/', scenario, file);
+        string path = string.Join('/', scenario, "InitialHCRData.csv");
         m_blobStore.Setup(store => store.OpenReadAsync(path, PathType.Input, cancellationToken))
             .ReturnsAsync(() => new MemoryStream(Encoding.UTF8.GetBytes(content)));
     }
