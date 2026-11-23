@@ -161,10 +161,10 @@ public class InitialStateFileServiceTests
         // Assert
         initialData.Should().HaveCount(91);
         var species = new IInitialStateFileService.SpeciesKey("ALB", "", "", "");
-        initialData[species].Biomass.Should().Be(20533.55938757435);
-        initialData[species].FishingMortality.Should().Be(9975.127224426418 / 20533.55938757435);
-        initialData[species].DefaultBiomassLimit.Should().Be(3067.6603237518043);
-        initialData[species].DefaultBiomassBase.Should().Be(12270.645597986155);
+        initialData[species].Biomass.Should().Be(246510.92653906345);
+        initialData[species].FishingMortality.Should().Be(9868.656302842779 / 246510.92653906345);
+        initialData[species].DefaultBiomassLimit.Should().Be(36811.920959472656);
+        initialData[species].DefaultBiomassBase.Should().Be(147247.7354736328);
         initialData[species].DefaultFMax.Should().Be(0.055541399866342545);
     }
 
