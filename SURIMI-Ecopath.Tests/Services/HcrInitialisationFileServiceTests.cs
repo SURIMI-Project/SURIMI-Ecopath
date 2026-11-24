@@ -98,6 +98,7 @@ public class HcrInitialisationFileServiceTests
                 .Returns(Task.CompletedTask);
 
             var service = new HcrInitialisationFileService(blobStore.Object, logger.Object);
+            service.BeginInitialization();
             var catchSummary = new CatchDispositionSummary();
             var catchGrid = new DispositionGrid
             {
@@ -192,7 +193,7 @@ public class HcrInitialisationFileServiceTests
     [Theory]
     [InlineData("false", false)]
     [InlineData(null, false)]
-    [InlineData("1", true)]
+    [InlineData("true", true)]
     public void BeginInitialization_EnablesExportsOnlyWhenOptedIn(string? setting, bool expected)
     {
         // Arrange

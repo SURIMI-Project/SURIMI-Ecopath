@@ -109,7 +109,7 @@ namespace Ecopath.Tests.EwE
             _coreMock.Setup(core => core.GetMseRecruitment(36)).Returns((0.5f, 0.2f, 0.8f));
             IEwEConfiguration configuration = new EwEConfiguration();
             configuration.FishedGroups.AddRange([26, 27, 35, 36]);
-            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, descriptors, _multiLevelKeyFactoryMock.Object, _vocabulariesRegisterServiceMock.Object, _blobStoreMock.Object, _hcrInitialisationFileServiceMock.Object);
+            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, descriptors, _multiLevelKeyFactoryMock.Object, _blobStoreMock.Object, _hcrInitialisationFileServiceMock.Object);
 
             // Act
             var rows = (List<MseRecruitment>)typeof(EwEController).GetMethod("GetMseRecruitment", BindingFlags.Instance | BindingFlags.NonPublic)!
@@ -154,7 +154,7 @@ namespace Ecopath.Tests.EwE
                 Standards = new Standards(),
                 Items = new Items { FleetSegments = [new FleetSegment { GearCode = "OTB", CountryCode = "FRA" }] }
             };
-            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, descriptors, _multiLevelKeyFactoryMock.Object, _vocabulariesRegisterServiceMock.Object, _blobStoreMock.Object, _hcrInitialisationFileServiceMock.Object);
+            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, descriptors, _multiLevelKeyFactoryMock.Object, _blobStoreMock.Object, _hcrInitialisationFileServiceMock.Object);
 
             // Act
             var rows = (List<MseQuotaShare>)typeof(EwEController).GetMethod("GetMseQuotaShares", BindingFlags.Instance | BindingFlags.NonPublic)!

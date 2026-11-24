@@ -137,46 +137,36 @@ public class EcologyServiceTests : IClassFixture<EcopathWebApplicationFactory>
     public async Task InitialiseSimulation_WithSixConcurrentRequests_ReturnsEachSimulationId()
     {
         // Arrange
-        using var channel = GrpcChannel.ForAddress("http://localhost:7890");
-        var client = new EcologyService.EcologyServiceClient(channel);
-
-        try
-        {
-            var requests = Enumerable.Range(0, 2)
-                .Select(_ =>
-                {
-                    var request = LoadMessage<InitialiseSimulationRequest>(
-                        @"InitialiseSimulation\EcologyService_InitialiseSimulation_Northwestern_med.json");
-                    request.SimulationId = Guid.NewGuid().ToString();
-                    return request;
-                })
-                .ToArray();
-            var expectedSimulationIds = requests.Select(request => request.SimulationId).ToArray();
-
-            // Act
-            var responses = await Task.WhenAll(
-                requests.Select(request => client.InitialiseSimulationAsync(request).ResponseAsync));
-
-            // Assert
-            responses.Select(response => response.SimulationId)
-                .Should().BeEquivalentTo(expectedSimulationIds);
-            responses.Select(response => response.SimulationId)
-                .Should().OnlyHaveUniqueItems();
-
-            var finaliseTasks = expectedSimulationIds.Select(simulationId =>
+        var client = CreateClient();
+        var requests = Enumerable.Range(0, 2)
+            .Select(_ =>
             {
-                var request = LoadMessage<FinaliseSimulationRequest>(
-                    @"FinaliseSimulation\EcologyService_FinaliseSimulation.json");
-                request.SimulationId = simulationId;
-                return client.FinaliseSimulationAsync(request).ResponseAsync;
-            });
-            await Task.WhenAll(finaliseTasks);
-        }
-        catch (Exception ex)
-        {
+                var request = LoadMessage<InitialiseSimulationRequest>(
+                    @"InitialiseSimulation\EcologyService_InitialiseSimulation_Northwestern_med.json");
+                request.SimulationId = Guid.NewGuid().ToString();
+                return request;
+            })
+            .ToArray();
+        var expectedSimulationIds = requests.Select(request => request.SimulationId).ToArray();
 
-            throw;
-        }
+        // Act
+        var responses = await Task.WhenAll(
+            requests.Select(request => client.InitialiseSimulationAsync(request).ResponseAsync));
+
+        // Assert
+        responses.Select(response => response.SimulationId)
+            .Should().BeEquivalentTo(expectedSimulationIds);
+        responses.Select(response => response.SimulationId)
+            .Should().OnlyHaveUniqueItems();
+
+        var finaliseTasks = expectedSimulationIds.Select(simulationId =>
+        {
+            var request = LoadMessage<FinaliseSimulationRequest>(
+                @"FinaliseSimulation\EcologyService_FinaliseSimulation.json");
+            request.SimulationId = simulationId;
+            return client.FinaliseSimulationAsync(request).ResponseAsync;
+        });
+        await Task.WhenAll(finaliseTasks);
     }
 
     [Fact]
