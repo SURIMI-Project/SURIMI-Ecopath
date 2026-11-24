@@ -71,12 +71,17 @@ In Excel, use **Data > From Text/CSV**, select the file, and choose **UTF-8** en
 
 For sizing separate worker processes, use the sampled peak **total** process memory, not just the baseline delta, and leave additional headroom. These measurements include the entire host, runtime, plugins, and request handling, not exclusively EwE allocations. Finalization does not force garbage collection, so its ending value may still include retained/uncollected memory. For the clearest baseline, restart the host before measuring a representative simulation through initialization, steps, and finalization.
 
-### Initial biomass and fishing mortality
-`GetInitialBiomasses` and `GetInitialFishingMortalities` read input blobs from the request's `ScenarioName` subdirectory. Locally these are `Includes\<ScenarioName>\initial_biomasses.csv` and `Includes\<ScenarioName>\initial_catch.csv`; S3 uses the same scenario directory under the configured input prefix. These RPCs use the shared blob store and should be called before `InitialiseSimulation`, which changes its active scenario subdirectory.
+### Initial HCR data
+`GetInitialHCRData` reads `Includes\<ScenarioName>\<ScenarioName>_initial_hrc_data.csv` locally, or the same scenario directory under the configured S3 input prefix, and returns initial biomass, fishing mortality and the default HCR reference levels (`default_biomass_limit`, `default_biomass_base`, `default_f_max`) for each species. The RPC uses the shared blob store and should be called before `InitialiseSimulation`, which changes its active scenario subdirectory. When HCR initialization exports are enabled, the generated file is written to the scenario's output directory.
 
-`IInitialStateFileService` documents the initial-state file-reading contract and returns values keyed by the complete species identity (`SpeciesCode`, `LengthClass`, `Age`, `LifeStage`).
+`IInitialStateFileService` documents the initial-state file-reading contract and keys values by the complete species identity (`SpeciesCode`, `LengthClass`, `Age`, `LifeStage`). The CSV columns are `SpeciesCode,LengthClass,Age,LifeStage,Biomass,Catch,BiomassLimit,BiomassBase,FMax`, with invariant-culture numbers:
 
-Both CSV files use `SpeciesCode,LengthClass,Age,LifeStage` as the species key, with invariant-culture numeric columns named `Biomass` and `Catch`, respectively. Biomass is returned unchanged. Fishing mortality is annual initial catch divided by initial biomass, matched by the complete species key rather than row order. Both files must contain the same species keys. Missing files, malformed or duplicate rows, negative/non-finite values, and zero biomass in the mortality calculation produce errors rather than incomplete results.
+- `Biomass` is the absolute biomass (kg) of the entire species at the end of initialisation, i.e. the last biomass read during spin-up (typically December), summed over all water cells. It is a stock at one point in time and is not scaled by the time step. It is returned unchanged.
+- `Catch` is the aggregated gross catch (kg, including dead discards) of the species over the previous 12 monthly time steps of spin-up. Fishing mortality is this annual catch divided by `Biomass`. A catch value may be blank when unavailable, but calculating mortality requires a valid catch for every species.
+- `BiomassLimit`, `BiomassBase` and `FMax` come from the EwE MSE target fishing mortality policy (`eVarNameFlags.MSEBLim`, `MSEBBase`, `MSEFmax`). The two biomass levels are group densities (t/km2) converted to absolute species kg in the same way as `Biomass` (summed over all water cells, no time step scaling). `FMax` is unconverted. These three columns are optional when reading; absent or blank values are returned as 0.
+
+Missing files, malformed or duplicate rows, negative/non-finite values, and zero biomass in the mortality calculation produce errors rather than incomplete results.
+
 
 ## Visual package manager doesnt't work
 The visual package manager in Visual Studio does not work for the Buf packages.

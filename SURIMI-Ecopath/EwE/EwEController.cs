@@ -305,6 +305,12 @@ namespace Ecopath.EwE
                     _configuration.FishedGroups.Add(iGroup);
             }
 
+            if (_hcrInitialisationFileService.Enabled)
+            {
+                await _hcrInitialisationFileService.WriteRecruitmentFileAsync(GetMseRecruitment(_configuration), scenarioName, cancellationToken);
+                await _hcrInitialisationFileService.WriteQuotaShareFileAsync(GetMseQuotaShares(_configuration, surimiContract), scenarioName, cancellationToken);
+            }
+
             StringBuilder info = new();
             info.AppendLine("EwE FG - species mappings:");
             foreach (var mapping in _configurationService.Mappings(KeyDomain.Species))
@@ -375,7 +381,7 @@ namespace Ecopath.EwE
             }
             // Ready when running Ecospace is waiting for further instructions
             if (_hcrInitialisationFileService.Enabled)
-                await _hcrInitialisationFileService.WriteInitialFilesAsync(_biomassOut!, scenarioName, cancellationToken);
+                await _hcrInitialisationFileService.WriteInitialFilesAsync(_biomassOut!, GetDefaultHarvestControlRules(), scenarioName, cancellationToken);
 
             return (RunState == RunStates.waiting) ? 1 : -1;
         }
@@ -619,6 +625,139 @@ namespace Ecopath.EwE
             }
         }
 
+        private static string NormalizeCode(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();
+
+        private IEnumerable<(int GroupIndex, (string SpeciesCode, string LifeStage)[] Stocks)> GetMappedFishedStocks(
+            IEwEConfiguration configuration)
+        {
+            static (string SpeciesCode, string LifeStage) StockKey(Species species) =>
+                (NormalizeCode(species.SpeciesCode), NormalizeCode(species.LifeStage));
+
+            foreach (var group in _configurationService.Mappings(KeyDomain.Species)
+                .Where(mapping => configuration.FishedGroups.Contains(mapping.Index))
+                .GroupBy(mapping => mapping.Index))
+            {
+                var stocks = group.Select(mapping => mapping.ToObject<Species>(false))
+                    .OfType<Species>()
+                    .Select(StockKey)
+                    .Where(stock => stock.SpeciesCode.Length > 0)
+                    .Distinct()
+                    .ToArray();
+                if (stocks.Length > 0)
+                    yield return (group.Key, stocks);
+            }
+        }
+
+        private List<MseRecruitment> GetMseRecruitment(IEwEConfiguration configuration)
+        {
+            var recruitment = new List<MseRecruitment>();
+            foreach (var (groupIndex, stocks) in GetMappedFishedStocks(configuration))
+            {
+                var (rstockRatio, rHalfB0Ratio, cvRec) = _core.GetMseRecruitment(groupIndex);
+                if (!float.IsFinite(rstockRatio) || rstockRatio < 0 ||
+                    !float.IsFinite(rHalfB0Ratio) || rHalfB0Ratio < 0 ||
+                    !float.IsFinite(cvRec) || cvRec < 0)
+                {
+                    _logger.LogWarning("Skipping EwE group {GroupIndex} in recruitment export because its MSE recruitment parameters are unset or invalid", groupIndex);
+                    continue;
+                }
+
+                recruitment.AddRange(stocks.Select(stock => new MseRecruitment(stock.SpeciesCode, stock.LifeStage, rstockRatio, rHalfB0Ratio, cvRec)));
+            }
+            return recruitment;
+        }
+
+        private List<MseQuotaShare> GetMseQuotaShares(IEwEConfiguration configuration, SurimiContract contract)
+        {
+            static (string GearCode, string CountryCode) FleetKey(FleetSegment fleet) =>
+                (NormalizeCode(fleet.GearCode), NormalizeCode(fleet.CountryCode));
+
+            var contractFleets = contract.Items.FleetSegments.Select(FleetKey).ToHashSet();
+            var fleetMappings = _configurationService.Mappings(KeyDomain.FleetSegment)
+                .Where(mapping => mapping.Index >= 1 && mapping.Index <= _core.nFleets)
+                .Select(mapping => (mapping.Index, Fleet: mapping.ToObject<FleetSegment>(false)))
+                .Where(mapping => mapping.Fleet != null)
+                .Select(mapping => (mapping.Index, Key: FleetKey(mapping.Fleet!)))
+                .Where(mapping => mapping.Key.GearCode.Length > 0 && mapping.Key.CountryCode.Length > 0 && contractFleets.Contains(mapping.Key))
+                .Distinct()
+                .ToLookup(mapping => mapping.Index, mapping => mapping.Key);
+
+            var fleets = new Dictionary<int, (string GearCode, string CountryCode)>();
+            foreach (var mapping in fleetMappings)
+            {
+                if (mapping.Count() == 1)
+                    fleets.Add(mapping.Key, mapping.Single());
+                else
+                    _logger.LogWarning("Skipping EwE fleet {FleetIndex} in quota-share export because it maps to multiple contract fleets", mapping.Key);
+            }
+            if (fleets.Count == 0)
+                return [];
+
+            var rows = new List<MseQuotaShare>();
+            foreach (var (groupIndex, stocks) in GetMappedFishedStocks(configuration))
+            {
+                var shares = new Dictionary<(string GearCode, string CountryCode), double>();
+                bool valid = true;
+                for (int iFleet = 1; iFleet <= _core.nFleets; iFleet++)
+                {
+                    float share = _core.GetMseQuotaShare(iFleet, groupIndex);
+                    if (!float.IsFinite(share) || share < 0 || share > 1 ||
+                        (share > 0 && !fleets.ContainsKey(iFleet)))
+                    {
+                        _logger.LogWarning("Skipping EwE group {GroupIndex} in quota-share export: fleet {FleetIndex} has an invalid or unmapped share ({Share})", groupIndex, iFleet, share);
+                        valid = false;
+                        break;
+                    }
+                    if (fleets.TryGetValue(iFleet, out var fleet))
+                        shares[fleet] = shares.GetValueOrDefault(fleet) + share;
+                }
+                if (valid)
+                    rows.AddRange(stocks.Select(stock => new MseQuotaShare(stock.SpeciesCode, stock.LifeStage, shares)));
+            }
+            return rows;
+        }
+
+        /// <summary>
+        /// Gets the default MSE reference levels (BLim, BBase, Fmax) per mapped species. Biomass levels are converted from
+        /// group densities to absolute species kg using the same conversion as the biomass snapshot, so they are directly comparable to it.
+        /// </summary>
+        private List<DefaultHarvestControlRules> GetDefaultHarvestControlRules()
+        {
+            var levels = new List<DefaultHarvestControlRules>();
+            if (_configuration == null)
+                return levels;
+
+            cEcospaceDataStructures ds = _core.EcospaceDataStructures;
+            foreach (EwEMapping key in _configurationService.Mappings(KeyDomain.Species))
+            {
+                Species? species = key.ToObject<Species>(_configuration.IncludeVocabularies);
+                int iGroup = key.Index;
+                if (species == null || !_groupSpeciesProportions.TryGetValue(iGroup, out var proportions))
+                    continue;
+
+                var (bLim, bBase, fMax) = _core.GetDefaultHarvestControlRules(iGroup);
+                if (!float.IsFinite(bLim) || bLim < 0 || !float.IsFinite(bBase) || bBase < 0 || !float.IsFinite(fMax) || fMax < 0)
+                {
+                    _logger.LogWarning("Skipping EwE group {GroupIndex} in HCR reference levels because its MSE policy values are unset or invalid", iGroup);
+                    continue;
+                }
+
+                // EwE reports the limit/base as group-level densities (t/km2). Convert them to absolute kg per cell, without time step scaling.
+                double biomassLimit = 0;
+                double biomassBase = 0;
+                for (int ic = 1; ic <= ds.InCol; ic++)
+                    for (int ir = 1; ir <= ds.InRow; ir++)
+                        if (ds.Depth[ir, ic] > 0)
+                        {
+                            biomassLimit += proportions.GetSpeciesBiomass(ir, ic, key, DensityToKg(bLim, ir, ic));
+                            biomassBase += proportions.GetSpeciesBiomass(ir, ic, key, DensityToKg(bBase, ir, ic));
+                        }
+
+                levels.Add(new DefaultHarvestControlRules(species.SpeciesCode ?? string.Empty, species.LengthClass ?? string.Empty, species.Age ?? string.Empty, species.LifeStage ?? string.Empty, biomassLimit, biomassBase, fMax));
+            }
+            return levels;
+        }
+
         /// <summary>
         /// Prepare a snapshot of the biomasses of the current time step.
         /// </summary>
@@ -646,8 +785,8 @@ namespace Ecopath.EwE
                             for (int ir = 1; ir <= ds.InRow; ir++)
                                 if (ds.Depth[ir, ic] > 0)
                                 {
-                                    // Express biomass of group proportion in kg at timestep units (not annual)
-                                    double biomassCell = DensityToKg(ds.Bcell[ir, ic, iGroup], ir, ic) * ds.TimeStep;
+                                    // Absolute biomass of the group proportion in kg at this point in time (a stock, so no time step scaling)
+                                    double biomassCell = DensityToKg(ds.Bcell[ir, ic, iGroup], ir, ic);
                                     // Return the biomass proportion in the FG for the current cell
                                     double biomassSpecies = _groupSpeciesProportions[iGroup].GetSpeciesBiomass(ir, ic, key, biomassCell);
 

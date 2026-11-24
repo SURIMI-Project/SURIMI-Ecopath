@@ -85,6 +85,89 @@ namespace Ecopath.Tests.EwE
         }
 
         [Fact]
+        public void GetMseRecruitment_ExportsMappedStocksInFishedGroups()
+        {
+            // Arrange
+            var descriptors = new KeyFieldDescriptorRegistry();
+            descriptors.Register(new KeyFieldDescriptor(SpeciesFields.SpeciesCode, KeyDomain.Species, KeyPurpose.Species, FieldKind.Code, true, 10));
+            descriptors.Register(new KeyFieldDescriptor(SpeciesFields.Lifestage, KeyDomain.Species, KeyPurpose.Lifestage, FieldKind.Label, false, 3));
+
+            EwEMapping Map(int groupIndex, string code, string? stage = null)
+            {
+                var key = new MultiLevelKey(KeyDomain.Species);
+                key.SetField(SpeciesFields.SpeciesCode, code, descriptors);
+                if (stage != null)
+                    key.SetField(SpeciesFields.Lifestage, stage, descriptors);
+                return new EwEMapping(key, KeyDomain.Species, groupIndex, descriptors);
+            }
+
+            _configServiceMock.Setup(service => service.Mappings(KeyDomain.Species)).Returns(
+                [Map(26, "HKE"), Map(26, "HKE", "juvenile"), Map(27, "HKE", "adult"), Map(35, "BOG"), Map(36, "PIL"), Map(37, "ANE")]);
+            _coreMock.Setup(core => core.GetMseRecruitment(26)).Returns((0.7677637f, 0.2f, 0.8f));
+            _coreMock.Setup(core => core.GetMseRecruitment(27)).Returns((0.7134952f, 0.2f, 0.8f));
+            _coreMock.Setup(core => core.GetMseRecruitment(35)).Returns((0.893f, 0.2f, 0.8f));
+            _coreMock.Setup(core => core.GetMseRecruitment(36)).Returns((0.5f, 0.2f, 0.8f));
+            IEwEConfiguration configuration = new EwEConfiguration();
+            configuration.FishedGroups.AddRange([26, 27, 35, 36]);
+            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, descriptors, _multiLevelKeyFactoryMock.Object, _vocabulariesRegisterServiceMock.Object, _blobStoreMock.Object, _hcrInitialisationFileServiceMock.Object);
+
+            // Act
+            var rows = (List<MseRecruitment>)typeof(EwEController).GetMethod("GetMseRecruitment", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .Invoke(controller, [configuration])!;
+
+            // Assert
+            rows.Should().BeEquivalentTo(new MseRecruitment[]
+            {
+                new("HKE", "", 0.7677637f, 0.2f, 0.8f),
+                new("HKE", "JUVENILE", 0.7677637f, 0.2f, 0.8f),
+                new("HKE", "ADULT", 0.7134952f, 0.2f, 0.8f),
+                new("BOG", "", 0.893f, 0.2f, 0.8f),
+                new("PIL", "", 0.5f, 0.2f, 0.8f)
+            });
+            _coreMock.Verify(core => core.GetMseRecruitment(37), Times.Never());
+        }
+
+        [Fact]
+        public void GetMseQuotaShares_ExportsMappedFishedStockAbsentFromContract()
+        {
+            // Arrange
+            var descriptors = new KeyFieldDescriptorRegistry();
+            descriptors.Register(new KeyFieldDescriptor(SpeciesFields.SpeciesCode, KeyDomain.Species, KeyPurpose.Species, FieldKind.Code, true, 10));
+            descriptors.Register(new KeyFieldDescriptor(SpeciesFields.Lifestage, KeyDomain.Species, KeyPurpose.Lifestage, FieldKind.Label, false, 3));
+            descriptors.Register(new KeyFieldDescriptor(FishingFields.GearCode, KeyDomain.FleetSegment, KeyPurpose.Gear, FieldKind.Code, true, 10));
+            descriptors.Register(new KeyFieldDescriptor(FishingFields.CountryCode, KeyDomain.FleetSegment, KeyPurpose.Country, FieldKind.Code, false, 3));
+            var speciesKey = new MultiLevelKey(KeyDomain.Species);
+            speciesKey.SetField(SpeciesFields.SpeciesCode, "HKE", descriptors);
+            speciesKey.SetField(SpeciesFields.Lifestage, "adult", descriptors);
+            var fleetKey = new MultiLevelKey(KeyDomain.FleetSegment);
+            fleetKey.SetField(FishingFields.GearCode, "OTB", descriptors);
+            fleetKey.SetField(FishingFields.CountryCode, "FRA", descriptors);
+            _configServiceMock.Setup(service => service.Mappings(KeyDomain.Species)).Returns([new EwEMapping(speciesKey, KeyDomain.Species, 26, descriptors)]);
+            _configServiceMock.Setup(service => service.Mappings(KeyDomain.FleetSegment)).Returns([new EwEMapping(fleetKey, KeyDomain.FleetSegment, 1, descriptors)]);
+            _coreMock.SetupGet(core => core.nFleets).Returns(1);
+            _coreMock.Setup(core => core.GetMseQuotaShare(1, 26)).Returns(1f);
+            IEwEConfiguration configuration = new EwEConfiguration();
+            configuration.FishedGroups.Add(26);
+            var contract = new SurimiContract
+            {
+                Simulation = new Simulation(),
+                Standards = new Standards(),
+                Items = new Items { FleetSegments = [new FleetSegment { GearCode = "OTB", CountryCode = "FRA" }] }
+            };
+            var controller = new EwEController(_loggerMock.Object, _configServiceMock.Object, _coreMock.Object, descriptors, _multiLevelKeyFactoryMock.Object, _vocabulariesRegisterServiceMock.Object, _blobStoreMock.Object, _hcrInitialisationFileServiceMock.Object);
+
+            // Act
+            var rows = (List<MseQuotaShare>)typeof(EwEController).GetMethod("GetMseQuotaShares", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .Invoke(controller, [configuration, contract])!;
+
+            // Assert
+            rows.Should().ContainSingle();
+            rows[0].SpeciesCode.Should().Be("HKE");
+            rows[0].LifeStage.Should().Be("ADULT");
+            rows[0].Shares.Should().ContainSingle().Which.Should().Be(new KeyValuePair<(string GearCode, string CountryCode), double>(("OTB", "FRA"), 1));
+        }
+
+        [Fact]
         public async Task StopAsync_TeardownsCore_AndReturnsTrue()
         {
             // Arrange

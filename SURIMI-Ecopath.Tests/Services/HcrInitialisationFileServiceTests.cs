@@ -68,8 +68,9 @@ public class HcrInitialisationFileServiceTests
     }
 
     [Fact]
-    public async Task WriteInitialFilesAsync_UploadsBiomassAndCatchTotals()
+    public async Task WriteInitialFilesAsync_UploadsHcrDataInitialQuotaRecruitmentAndQuotaShares()
     {
+        // Arrange
         const string environmentVariable = "CREATE_HCR_INITIALISE_FILES";
         string? previousValue = Environment.GetEnvironmentVariable(environmentVariable);
         Environment.SetEnvironmentVariable(environmentVariable, "true");
@@ -109,27 +110,104 @@ public class HcrInitialisationFileServiceTests
             };
             catchGrid.DispositionCells.Add(catchCell);
             catchSummary.DispositionGrids.Add(catchGrid);
+            var additionalCatchGrid = new DispositionGrid
+            {
+                FleetSegment = new FleetSegment { GearCode = "GEAR", CountryCode = "USA" },
+                Species = new Species { SpeciesCode = "SPC", Age = "adult" }
+            };
+            var additionalCatchCell = new DispositionCell { GrossCatchBiomass = 0.5 };
+            additionalCatchGrid.DispositionCells.Add(additionalCatchCell);
+            catchSummary.DispositionGrids.Add(additionalCatchGrid);
 
             var biomass = new Biomass { MeasurementUnit = "kg" };
             var biomassGrid = new BiomassGrid { Species = new Species { SpeciesCode = "SPC" } };
             biomassGrid.BiomassCells.Add(new BiomassCell { Biomass = 30 });
             biomass.BiomassGrids.Add(biomassGrid);
+            var additionalBiomassGrid = new BiomassGrid { Species = new Species { SpeciesCode = "SPC", Age = "adult" } };
+            additionalBiomassGrid.BiomassCells.Add(new BiomassCell { Biomass = 2 });
+            biomass.BiomassGrids.Add(additionalBiomassGrid);
+            var uncaughtGrid = new BiomassGrid { Species = new Species { SpeciesCode = "SPC", LifeStage = "juvenile" } };
+            uncaughtGrid.BiomassCells.Add(new BiomassCell { Biomass = 5 });
+            biomass.BiomassGrids.Add(uncaughtGrid);
+            MseRecruitment[] recruitment =
+            [
+                new("HKE", "juvenile", 0.7677637f, 0.2f, 0.8f),
+                new("BOG", "", 0.893f, 0.2f, 0.8f),
+                new("HKE", "adult", 0.7134952f, 0.2f, 0.8f),
+                new("hke", "ADULT", 0.7134952f, 0.2f, 0.8f)
+            ];
+            var adultShares = new Dictionary<(string, string), double> { [("OTB", "FRA")] = 0.25, [("OTB", "ESP")] = 0.75 };
+            MseQuotaShare[] quotaShares =
+            [
+                new("HKE", "JUVENILE", new Dictionary<(string, string), double> { [("OTB", "FRA")] = 1 }),
+                new("HKE", "ADULT", adultShares),
+                new("HKE", "ADULT", adultShares),
+                new("BOG", "", new Dictionary<(string, string), double> { [("OTB", "ESP")] = 0.75 }),
+                new("PIL", "ADULT", new Dictionary<(string, string), double> { [("OTB", "ESP")] = 1 }),
+                new("PIL", "ADULT", new Dictionary<(string, string), double> { [("OTB", "FRA")] = 1 })
+            ];
 
             // Act
-            service.BeginInitialization();
+            await service.WriteRecruitmentFileAsync(recruitment, "scenario", CancellationToken.None);
+            await service.WriteQuotaShareFileAsync(quotaShares, "scenario", CancellationToken.None);
             for (int timestep = 1; timestep <= 12; timestep++)
             {
                 catchCell.GrossCatchBiomass = timestep;
                 service.CaptureCatchTimestep(catchSummary);
             }
-            await service.WriteInitialFilesAsync(biomass, "scenario", CancellationToken.None);
+            DefaultHarvestControlRules[] defaultHarvestControlRules = [new("SPC", "", "", "", 12.5, 40, 0.25)];
+            await service.WriteInitialFilesAsync(biomass, defaultHarvestControlRules, "scenario", CancellationToken.None);
 
             // Assert
-            uploadedFiles.Should().ContainKey("scenario/initial_biomasses.csv");
-            uploadedFiles["scenario/initial_biomasses.csv"].Should().Contain("SPC,,,,30");
-            uploadedFiles.Should().ContainKey("scenario/initial_catch.csv");
-            uploadedFiles["scenario/initial_catch.csv"].Should().Contain("Catch").And.Contain("SPC,,,,78");
-            uploadedFiles["scenario/initial_catch.csv"].Should().NotContain("CatchKg");
+            uploadedFiles.Should().ContainKey("scenario/scenario_initial_hrc_data.csv");
+            uploadedFiles["scenario/scenario_initial_hrc_data.csv"].Split("\r\n", StringSplitOptions.RemoveEmptyEntries).Should().Equal(
+                "SpeciesCode,LengthClass,Age,LifeStage,Biomass,Catch,BiomassLimit,BiomassBase,FMax",
+                "SPC,,,,30,78,12.5,40,0.25",
+                "SPC,,,juvenile,5,0,0,0,0",
+                "SPC,,adult,,2,6,0,0,0");
+            uploadedFiles.Should().ContainKey("scenario/scenario_initial_quota.csv");
+            uploadedFiles["scenario/scenario_initial_quota.csv"].Split("\r\n", StringSplitOptions.RemoveEmptyEntries).Should().Equal(
+                "species_code,life_stage,TAC",
+                "SPC,,84",
+                "SPC,juvenile,0");
+            uploadedFiles.Should().HaveCount(4);
+            uploadedFiles.Should().ContainKey("scenario/scenario_recruitment.csv");
+            uploadedFiles["scenario/scenario_recruitment.csv"].Split("\r\n", StringSplitOptions.RemoveEmptyEntries).Should().Equal(
+                "species_code,life_stage,RstockRatio,RHalfB0Ratio,cvRec",
+                "BOG,,0.893,0.2,0.8",
+                "HKE,ADULT,0.7134952,0.2,0.8",
+                "HKE,JUVENILE,0.7677637,0.2,0.8");
+            uploadedFiles.Should().ContainKey("scenario/scenario_quotashare.csv");
+            uploadedFiles["scenario/scenario_quotashare.csv"].Split("\r\n", StringSplitOptions.RemoveEmptyEntries).Should().Equal(
+                "species_code,life_stage,OTB|ESP,OTB|FRA",
+                "HKE,ADULT,0.75,0.25",
+                "HKE,JUVENILE,0,1");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(environmentVariable, previousValue);
+        }
+    }
+
+    [Theory]
+    [InlineData("false", false)]
+    [InlineData(null, false)]
+    [InlineData("1", true)]
+    public void BeginInitialization_EnablesExportsOnlyWhenOptedIn(string? setting, bool expected)
+    {
+        // Arrange
+        const string environmentVariable = "CREATE_HCR_INITIALISE_FILES";
+        string? previousValue = Environment.GetEnvironmentVariable(environmentVariable);
+        Environment.SetEnvironmentVariable(environmentVariable, setting);
+        var service = new HcrInitialisationFileService(Mock.Of<IBlobStore>(), Mock.Of<ILogger<HcrInitialisationFileService>>());
+
+        try
+        {
+            // Act
+            service.BeginInitialization();
+
+            // Assert
+            service.Enabled.Should().Be(expected);
         }
         finally
         {

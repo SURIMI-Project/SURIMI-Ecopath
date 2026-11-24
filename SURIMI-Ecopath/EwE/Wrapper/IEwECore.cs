@@ -35,6 +35,14 @@ namespace Ecopath.EwE.Wrapper
         cStanzaGroup get_StanzaGroups(int v);
         cCoreInputOutputBase? get_EcopathFleetInputs(int index);
 
+        /// <summary>Gets the MSE stock-recruitment parameters for a one-based EwE group index.</summary>
+        (float RstockRatio, float RHalfB0Ratio, float CvRec) GetMseRecruitment(int groupIndex);
+
+        /// <summary>Gets the MSE target fishing mortality policy (BLim, BBase and Fmax) for a one-based EwE group index.</summary>
+        (float BLim, float BBase, float FMax) GetDefaultHarvestControlRules(int groupIndex);
+
+        /// <summary>Gets the configured MSE quota share for one-based EwE fleet and group indices.</summary>
+        float GetMseQuotaShare(int fleetIndex, int groupIndex);
 
         /// <summary>
         /// Get/set the output path for simulation results.     

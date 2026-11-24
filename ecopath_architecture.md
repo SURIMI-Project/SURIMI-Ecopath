@@ -244,9 +244,7 @@ The service reads and writes the following file types through `IBlobStore`:
 
 Locally the `Includes/` directory serves as the input root and `Output/` as the output root.
 
-`EwEConfigurationService` checks the exact model key with `IBlobStore.ExistsAsync` before copying the scenario directory. S3 copies scenario assets regardless of filename or extension; local mode uses the existing files. Ecopath does not cache scenario copies across initializations.
-
-The catch file uses
+The initial HCR file contains, per species, `Biomass` (absolute kg of the entire species at the initial pause, i.e. the last biomass of spin-up, summed over all water cells and not scaled by the time step) and `Catch` (aggregated gross catch in kg, including dead discards, over the final 12 monthly spin-up timesteps). Catch history is collected only while EwE reports that spin-up is active, never during regular simulation timesteps. The files are written once at the initial simulation pause. Initialization fails if fewer than 12 spin-up timesteps are available.
 
 ### S3 bucket authentication
 
@@ -281,7 +279,7 @@ The service listens on port **7890** (configured via `ASPNETCORE_HTTP_PORTS`).
 | `AWS_SECRET_ACCESS_KEY` | If S3 | S3 secret access key. |
 | `AWS_S3_ENDPOINT` | If S3 | S3-compatible endpoint URL. |
 | `AWS_BUCKET_NAME` | If S3 | S3 bucket name. |
-| `CREATE_HCR_INITIALISE_FILES` | No | When set to `true`, writes initial biomass and catch CSV snapshots at initialization; unset or `false` disables them. Other values are invalid. |
+| `CREATE_HCR_INITIALISE_FILES` | No | When `true` (or `1`), writes initial biomass, catch, `<scenario>_recruitment.csv`, and (if valid shares exist) `<scenario>_quotashare.csv` to the scenario's output directory. Both MSE exports include only mapped species/life-stage pairs in the simulation contract. Recruitment uses `species_code,life_stage,RstockRatio,RHalfB0Ratio,cvRec`. Quota shares use `species_code,life_stage,GEAR\|COUNTRY,...` for mapped contract fleets; incomplete distributions are logged and omitted, not normalized. |
 | `ASPNETCORE_HTTP_PORTS` | No | gRPC listening port (default `7890`). |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | No | OpenTelemetry collector endpoint for metrics/traces. |
 | `OTEL_SERVICE_NAME` | No | Service name reported to OpenTelemetry (default `Ecopath`). |
