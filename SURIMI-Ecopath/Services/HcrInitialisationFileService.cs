@@ -19,6 +19,7 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
 
     private readonly record struct SpeciesKey(string SpeciesCode, string LengthClass, string Age, string LifeStage);
     private sealed record InitialHcrCsvRow(string SpeciesCode, string LengthClass, string Age, string LifeStage, double Biomass, double Catch, double BiomassLimit, double BiomassBase, double FMax);
+    private sealed record InitialQuotaCsvRow(string SpeciesCode, string LifeStage, double Tac);
 
     public HcrInitialisationFileService(IBlobStore blobStore, ILogger<HcrInitialisationFileService> logger)
     {
@@ -162,8 +163,13 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
             })
             .ToList();
 
-        await WriteOutputFilesAsync(scenarioName, [(IInitialStateFileService.FileName(scenarioName), SerializeCsv(rows))], cancellationToken);
-        _logger.LogInformation("Wrote HCR initialization data for {SpeciesCount} species using {CatchTimestepCount} catch timesteps", rows.Count, _catchHistory.Count);
+        string quotaFileName = $"{scenarioName}_initial_quota.csv";
+        await WriteOutputFilesAsync(scenarioName,
+        [
+            (IInitialStateFileService.FileName(scenarioName), SerializeCsv(rows)),
+            (quotaFileName, SerializeInitialQuotaCsv(rows))
+        ], cancellationToken);
+        _logger.LogInformation("Wrote HCR initialization data and initial quota for {SpeciesCount} species using {CatchTimestepCount} catch timesteps", rows.Count, _catchHistory.Count);
     }
 
     private async Task WriteOutputFilesAsync(string scenarioName, IReadOnlyList<(string FileName, string CsvContent)> files, CancellationToken cancellationToken)
@@ -256,6 +262,31 @@ public class HcrInitialisationFileService : IHcrInitialisationFileService
             csv.WriteField(row.LifeStage);
             foreach (var fleet in fleets)
                 csv.WriteField(row.Shares.GetValueOrDefault(fleet).ToString("G9", CultureInfo.InvariantCulture));
+            csv.NextRecord();
+        }
+        csv.Flush();
+        return writer.ToString();
+    }
+
+    private static string SerializeInitialQuotaCsv(IEnumerable<InitialHcrCsvRow> rows)
+    {
+        var quotaRows = rows
+            .GroupBy(row => (row.SpeciesCode, row.LifeStage))
+            .Select(stock => new InitialQuotaCsvRow(stock.Key.SpeciesCode, stock.Key.LifeStage, stock.Sum(row => row.Catch)))
+            .OrderBy(row => row.SpeciesCode, StringComparer.Ordinal)
+            .ThenBy(row => row.LifeStage, StringComparer.Ordinal);
+
+        using var writer = new StringWriter(CultureInfo.InvariantCulture);
+        using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+        csv.WriteField("species_code");
+        csv.WriteField("life_stage");
+        csv.WriteField("TAC");
+        csv.NextRecord();
+        foreach (InitialQuotaCsvRow row in quotaRows)
+        {
+            csv.WriteField(row.SpeciesCode);
+            csv.WriteField(row.LifeStage);
+            csv.WriteField(row.Tac);
             csv.NextRecord();
         }
         csv.Flush();

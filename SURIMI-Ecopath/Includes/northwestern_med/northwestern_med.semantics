@@ -141,10 +141,6 @@
           "Target": "model=group;DBID=25"
         },
         {
-          "Source": "speciescode=HKE",
-          "Target": "model=group;DBID=26"
-        },
-        {
           "Source": "speciescode=HKE;lifestage=juvenile",
           "Target": "model=group;DBID=26"
         },

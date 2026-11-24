@@ -35,7 +35,7 @@ public interface IHcrInitialisationFileService
     Task WriteQuotaShareFileAsync(IReadOnlyCollection<MseQuotaShare> quotaShares, string scenarioName, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Writes the initial biomass snapshot (absolute kg of the whole species at the initial pause), the aggregated catch of the final 12 collected monthly spin-up timesteps and the default harvest control rule reference levels to <c>&lt;scenario&gt;_initial_hrc_data.csv</c>.
+    /// Writes the initial biomass snapshot (absolute kg of the whole species at the initial pause), the aggregated catch of the final 12 collected monthly spin-up timesteps and the default harvest control rule reference levels to <c>&lt;scenario&gt;_initial_hrc_data.csv</c>. Also writes <c>&lt;scenario&gt;_initial_quota.csv</c> with TAC values from the same catch data, aggregated by species code and life stage.
     /// </summary>
     /// <param name="biomass">Biomass snapshot taken at the initial simulation pause.</param>
     /// <param name="defaultHarvestControlRules">Default harvest control rules per species, in the same units as <paramref name="biomass"/>. Species without an entry are written as zero.</param>

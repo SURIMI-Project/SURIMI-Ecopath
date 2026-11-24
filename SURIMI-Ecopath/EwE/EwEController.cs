@@ -307,7 +307,7 @@ namespace Ecopath.EwE
 
             if (_hcrInitialisationFileService.Enabled)
             {
-                await _hcrInitialisationFileService.WriteRecruitmentFileAsync(GetMseRecruitment(_configuration, surimiContract), scenarioName, cancellationToken);
+                await _hcrInitialisationFileService.WriteRecruitmentFileAsync(GetMseRecruitment(_configuration), scenarioName, cancellationToken);
                 await _hcrInitialisationFileService.WriteQuotaShareFileAsync(GetMseQuotaShares(_configuration, surimiContract), scenarioName, cancellationToken);
             }
 
@@ -627,13 +627,12 @@ namespace Ecopath.EwE
 
         private static string NormalizeCode(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();
 
-        private IEnumerable<(int GroupIndex, (string SpeciesCode, string LifeStage)[] Stocks)> GetMappedContractStocks(
-            IEwEConfiguration configuration, SurimiContract contract)
+        private IEnumerable<(int GroupIndex, (string SpeciesCode, string LifeStage)[] Stocks)> GetMappedFishedStocks(
+            IEwEConfiguration configuration)
         {
             static (string SpeciesCode, string LifeStage) StockKey(Species species) =>
                 (NormalizeCode(species.SpeciesCode), NormalizeCode(species.LifeStage));
 
-            var contractSpecies = contract.Items.Species.Select(StockKey).ToHashSet();
             foreach (var group in _configurationService.Mappings(KeyDomain.Species)
                 .Where(mapping => configuration.FishedGroups.Contains(mapping.Index))
                 .GroupBy(mapping => mapping.Index))
@@ -641,7 +640,7 @@ namespace Ecopath.EwE
                 var stocks = group.Select(mapping => mapping.ToObject<Species>(false))
                     .OfType<Species>()
                     .Select(StockKey)
-                    .Where(stock => stock.SpeciesCode.Length > 0 && contractSpecies.Contains(stock))
+                    .Where(stock => stock.SpeciesCode.Length > 0)
                     .Distinct()
                     .ToArray();
                 if (stocks.Length > 0)
@@ -649,10 +648,10 @@ namespace Ecopath.EwE
             }
         }
 
-        private List<MseRecruitment> GetMseRecruitment(IEwEConfiguration configuration, SurimiContract contract)
+        private List<MseRecruitment> GetMseRecruitment(IEwEConfiguration configuration)
         {
             var recruitment = new List<MseRecruitment>();
-            foreach (var (groupIndex, stocks) in GetMappedContractStocks(configuration, contract))
+            foreach (var (groupIndex, stocks) in GetMappedFishedStocks(configuration))
             {
                 var (rstockRatio, rHalfB0Ratio, cvRec) = _core.GetMseRecruitment(groupIndex);
                 if (!float.IsFinite(rstockRatio) || rstockRatio < 0 ||
@@ -695,7 +694,7 @@ namespace Ecopath.EwE
                 return [];
 
             var rows = new List<MseQuotaShare>();
-            foreach (var (groupIndex, stocks) in GetMappedContractStocks(configuration, contract))
+            foreach (var (groupIndex, stocks) in GetMappedFishedStocks(configuration))
             {
                 var shares = new Dictionary<(string GearCode, string CountryCode), double>();
                 bool valid = true;

@@ -159,10 +159,10 @@ public class InitialStateFileServiceTests
         var initialData = await reader.ReadInitialHCRDataAsync("northwestern_med", CancellationToken.None);
 
         // Assert
-        initialData.Should().HaveCount(91);
+        initialData.Should().HaveCount(90);
         var species = new IInitialStateFileService.SpeciesKey("ALB", "", "", "");
-        initialData[species].Biomass.Should().Be(246510.92653906345);
-        initialData[species].FishingMortality.Should().Be(9868.656302842779 / 246510.92653906345);
+        initialData[species].Biomass.Should().Be(245872.499312222);
+        initialData[species].FishingMortality.Should().Be(9894.500916593961 / 245872.499312222);
         initialData[species].DefaultBiomassLimit.Should().Be(36811.920959472656);
         initialData[species].DefaultBiomassBase.Should().Be(147247.7354736328);
         initialData[species].DefaultFMax.Should().Be(0.055541399866342545);
