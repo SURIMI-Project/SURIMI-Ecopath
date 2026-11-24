@@ -12,7 +12,7 @@ namespace Ecopath.Tests.Services;
 public class HcrInitialisationFileServiceTests
 {
     [Fact]
-    public async Task WriteInitialFilesAsync_UploadsBiomassCatchRecruitmentAndQuotaShares()
+    public async Task WriteInitialFilesAsync_UploadsHcrDataInitialQuotaRecruitmentAndQuotaShares()
     {
         // Arrange
         const string environmentVariable = "CREATE_HCR_INITIALISE_FILES";
@@ -54,11 +54,22 @@ public class HcrInitialisationFileServiceTests
             };
             catchGrid.DispositionCells.Add(catchCell);
             catchSummary.DispositionGrids.Add(catchGrid);
+            var additionalCatchGrid = new DispositionGrid
+            {
+                FleetSegment = new FleetSegment { GearCode = "GEAR", CountryCode = "USA" },
+                Species = new Species { SpeciesCode = "SPC", Age = "adult" }
+            };
+            var additionalCatchCell = new DispositionCell { GrossCatchBiomass = 0.5 };
+            additionalCatchGrid.DispositionCells.Add(additionalCatchCell);
+            catchSummary.DispositionGrids.Add(additionalCatchGrid);
 
             var biomass = new Biomass { MeasurementUnit = "kg" };
             var biomassGrid = new BiomassGrid { Species = new Species { SpeciesCode = "SPC" } };
             biomassGrid.BiomassCells.Add(new BiomassCell { Biomass = 30 });
             biomass.BiomassGrids.Add(biomassGrid);
+            var additionalBiomassGrid = new BiomassGrid { Species = new Species { SpeciesCode = "SPC", Age = "adult" } };
+            additionalBiomassGrid.BiomassCells.Add(new BiomassCell { Biomass = 2 });
+            biomass.BiomassGrids.Add(additionalBiomassGrid);
             var uncaughtGrid = new BiomassGrid { Species = new Species { SpeciesCode = "SPC", LifeStage = "juvenile" } };
             uncaughtGrid.BiomassCells.Add(new BiomassCell { Biomass = 5 });
             biomass.BiomassGrids.Add(uncaughtGrid);
@@ -96,8 +107,14 @@ public class HcrInitialisationFileServiceTests
             uploadedFiles["scenario/scenario_initial_hrc_data.csv"].Split("\r\n", StringSplitOptions.RemoveEmptyEntries).Should().Equal(
                 "SpeciesCode,LengthClass,Age,LifeStage,Biomass,Catch,BiomassLimit,BiomassBase,FMax",
                 "SPC,,,,30,78,12.5,40,0.25",
-                "SPC,,,juvenile,5,0,0,0,0");
-            uploadedFiles.Should().HaveCount(3);
+                "SPC,,,juvenile,5,0,0,0,0",
+                "SPC,,adult,,2,6,0,0,0");
+            uploadedFiles.Should().ContainKey("scenario/scenario_initial_quota.csv");
+            uploadedFiles["scenario/scenario_initial_quota.csv"].Split("\r\n", StringSplitOptions.RemoveEmptyEntries).Should().Equal(
+                "species_code,life_stage,TAC",
+                "SPC,,84",
+                "SPC,juvenile,0");
+            uploadedFiles.Should().HaveCount(4);
             uploadedFiles.Should().ContainKey("scenario/scenario_recruitment.csv");
             uploadedFiles["scenario/scenario_recruitment.csv"].Split("\r\n", StringSplitOptions.RemoveEmptyEntries).Should().Equal(
                 "species_code,life_stage,RstockRatio,RHalfB0Ratio,cvRec",
