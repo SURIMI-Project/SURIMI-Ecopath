@@ -46,7 +46,7 @@ namespace Ecopath.EwE
     /// Shell class that provides the interactions between SURIMI and the EwE model.
     /// </summary>
     /// =======================================================================
-    public class EwEController : IEwEController
+    public class EwEController : IEwEController, IDisposable
     {
         #region Private vars 
 
@@ -92,24 +92,24 @@ namespace Ecopath.EwE
 
         #endregion // Private vars 
 
-        public EwEController(ILogger<EwEController> logger, IEwEConfigurationService configurationService, IEwECore core, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory, IVocabulariesRegisterService vocabulariesRegisterService, IBlobStore lobStore, IHcrInitialisationFileService hcrInitialisationFileService)
+        public EwEController(ILogger<EwEController> logger, IEwEConfigurationService configurationService, IEwECore core, IKeyFieldDescriptorRegistry keyFieldDescriptorRegistry, IMultiLevelKeyFactory multiLevelKeyFactory, IBlobStore lobStore, IHcrInitialisationFileService hcrInitialisationFileService)
         {
             _core = core;
             _keyFieldDescriptorRegistry = keyFieldDescriptorRegistry;
             _multiLevelKeyFactory = multiLevelKeyFactory;
             _configurationService = configurationService;
             _hcrInitialisationFileService = hcrInitialisationFileService;
-            vocabulariesRegisterService.RegisterVocabularies();
 
             RunState = RunStates.idle;
 
-            // To make sure we can find local resources. This is rather hack.
-            Directory.SetCurrentDirectory(System.AppDomain.CurrentDomain.BaseDirectory);
             _logger = logger;
             _blobStore = lobStore;
         }
 
-        ~EwEController()
+        /// <summary>
+        /// Stops Ecospace and tears down the EwE core when the simulation scope is disposed.
+        /// </summary>
+        public void Dispose()
         {
             ForceStop();
             _core.Teardown(); // No-op if already torn down

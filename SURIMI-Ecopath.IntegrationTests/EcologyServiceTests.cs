@@ -134,6 +134,42 @@ public class EcologyServiceTests : IClassFixture<EcopathWebApplicationFactory>
     }
 
     [Fact]
+    public async Task InitialiseSimulation_WithSixConcurrentRequests_ReturnsEachSimulationId()
+    {
+        // Arrange
+        var client = CreateClient();
+        var requests = Enumerable.Range(0, 6)
+            .Select(_ =>
+            {
+                var request = LoadMessage<InitialiseSimulationRequest>(
+                    @"InitialiseSimulation\EcologyService_InitialiseSimulation.json");
+                request.SimulationId = Guid.NewGuid().ToString();
+                return request;
+            })
+            .ToArray();
+        var expectedSimulationIds = requests.Select(request => request.SimulationId).ToArray();
+
+        // Act
+        var responses = await Task.WhenAll(
+            requests.Select(request => client.InitialiseSimulationAsync(request).ResponseAsync));
+
+        // Assert
+        responses.Select(response => response.SimulationId)
+            .Should().BeEquivalentTo(expectedSimulationIds);
+        responses.Select(response => response.SimulationId)
+            .Should().OnlyHaveUniqueItems();
+
+        var finaliseTasks = expectedSimulationIds.Select(simulationId =>
+        {
+            var request = LoadMessage<FinaliseSimulationRequest>(
+                @"FinaliseSimulation\EcologyService_FinaliseSimulation.json");
+            request.SimulationId = simulationId;
+            return client.FinaliseSimulationAsync(request).ResponseAsync;
+        });
+        await Task.WhenAll(finaliseTasks);
+    }
+
+    [Fact]
     public async Task InitialiseSimulation_WithEmptyScenarioName_ReturnsInvalidArgument()
     {
         var client = CreateClient();

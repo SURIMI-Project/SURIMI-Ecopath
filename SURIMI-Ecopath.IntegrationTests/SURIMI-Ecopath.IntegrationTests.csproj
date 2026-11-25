@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <None Remove="..\postman\collections\InitialiseSimulation\EcologyService_InitialiseSimulation_BadRequest.request.yaml" />
+    <None Remove="..\postman\collections\InitialiseSimulation\EcologyService_InitialiseSimulation_Northwestern_med.request.yaml" />
   </ItemGroup>
 
   <ItemGroup>

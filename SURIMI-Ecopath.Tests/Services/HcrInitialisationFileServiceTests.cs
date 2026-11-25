@@ -11,6 +11,62 @@ namespace Ecopath.Tests.Services;
 
 public class HcrInitialisationFileServiceTests
 {
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("false", false)]
+    [InlineData("true", true)]
+    public void BeginInitialization_SetsEnabledFromBooleanEnvironmentVariable(string? setting, bool expectedEnabled)
+    {
+        const string environmentVariable = "CREATE_HCR_INITIALISE_FILES";
+        string? previousValue = Environment.GetEnvironmentVariable(environmentVariable);
+        Environment.SetEnvironmentVariable(environmentVariable, setting);
+
+        try
+        {
+            // Arrange
+            var service = new HcrInitialisationFileService(
+                Mock.Of<IBlobStore>(),
+                Mock.Of<ILogger<HcrInitialisationFileService>>());
+
+            // Act
+            service.BeginInitialization();
+
+            // Assert
+            service.Enabled.Should().Be(expectedEnabled);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(environmentVariable, previousValue);
+        }
+    }
+
+    [Fact]
+    public void BeginInitialization_ThrowsForInvalidBooleanEnvironmentVariable()
+    {
+        const string environmentVariable = "CREATE_HCR_INITIALISE_FILES";
+        string? previousValue = Environment.GetEnvironmentVariable(environmentVariable);
+        Environment.SetEnvironmentVariable(environmentVariable, "enabled");
+
+        try
+        {
+            // Arrange
+            var service = new HcrInitialisationFileService(
+                Mock.Of<IBlobStore>(),
+                Mock.Of<ILogger<HcrInitialisationFileService>>());
+
+            // Act
+            Action act = service.BeginInitialization;
+
+            // Assert
+            act.Should().Throw<FormatException>()
+                .WithMessage("Environment variable CREATE_HCR_INITIALISE_FILES must be 'true' or 'false'.");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(environmentVariable, previousValue);
+        }
+    }
+
     [Fact]
     public async Task WriteInitialFilesAsync_UploadsHcrDataInitialQuotaRecruitmentAndQuotaShares()
     {
@@ -21,6 +77,7 @@ public class HcrInitialisationFileServiceTests
 
         try
         {
+            // Arrange
             var blobStore = new Mock<IBlobStore>();
             var logger = new Mock<ILogger<HcrInitialisationFileService>>();
             var uploadedFiles = new Dictionary<string, string>();
@@ -136,7 +193,7 @@ public class HcrInitialisationFileServiceTests
     [Theory]
     [InlineData("false", false)]
     [InlineData(null, false)]
-    [InlineData("1", true)]
+    [InlineData("true", true)]
     public void BeginInitialization_EnablesExportsOnlyWhenOptedIn(string? setting, bool expected)
     {
         // Arrange

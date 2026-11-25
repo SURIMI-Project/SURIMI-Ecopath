@@ -9,16 +9,14 @@ namespace Ecopath.Services;
 public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
 {
     private readonly ILogger<EcologyService> m_logger;
-    private readonly ICheckSimulationService m_checksimulationservice;
-    private readonly IEwEController m_controller;
+    private readonly ISimulationScopeManager m_simulationScopeManager;
     private readonly IInitialStateFileService m_initialStateFileService;
     private readonly string _version;
 
-    public EcologyService(ILogger<EcologyService> logger, ICheckSimulationService service, IEwEController controller, ProtocolVersionService protocolVersionService, IInitialStateFileService initialStateFileService)
+    public EcologyService(ILogger<EcologyService> logger, ISimulationScopeManager simulationScopeManager, ProtocolVersionService protocolVersionService, IInitialStateFileService initialStateFileService)
     {
         m_logger = logger;
-        m_checksimulationservice = service;
-        m_controller = controller;
+        m_simulationScopeManager = simulationScopeManager;
         m_initialStateFileService = initialStateFileService;
         _version = protocolVersionService.LoadVersion();
     }
@@ -26,15 +24,14 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
     public override async Task<InitialiseSimulationResponse> InitialiseSimulation(InitialiseSimulationRequest request, ServerCallContext context)
     {
         GrpcValidation.ArgumentNotNullOrEmpty(request.ScenarioName, "ScenarioName");
-        await m_checksimulationservice.ReserveSimulationAsync(request.SimulationId, context);
-
+        var controller = m_simulationScopeManager.CreateSimulationScope(request.SimulationId);
 
         m_logger.LogInformation("Initializing simulation {SimulationId}, scenario {ScenarioName}, climate scenario {ClimateScenario}...", request.SimulationId, request.ScenarioName, request.ClimateScenario);
         try
         {
             var contract = GetSurimiContract(request.Simulation);
 
-            var result = await m_controller.StartAsync(contract, request.ScenarioName, request.ClimateScenario, context.CancellationToken);
+            var result = await controller.StartAsync(contract, request.ScenarioName, request.ClimateScenario, context.CancellationToken);
             if (result != 1)
             {
                 throw new RpcException(new Status(StatusCode.Internal, "Failed to initialise Ecopath"));
@@ -43,7 +40,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
         }
         catch (Exception ex)
         {
-            m_checksimulationservice.ReleaseSimulation(request.SimulationId);
+            m_simulationScopeManager.RemoveSimulationScope(request.SimulationId);
             m_logger.LogError(ex, "In Initialise. EwE - exception ...{Message}", ex.Message);
             throw;
         }
@@ -51,13 +48,12 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
 
     public override async Task<FinaliseSimulationResponse> FinaliseSimulation(FinaliseSimulationRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
-        m_checksimulationservice.ReleaseSimulation(request.SimulationId);
+        var controller = m_simulationScopeManager.GetSimulation(request.SimulationId);
         m_logger.LogInformation("Finalizing simulation {SimulationId}", request.SimulationId);
 
         try
         {
-            var result = await m_controller.StopAsync();
+            var result = await controller.StopAsync();
             if (result == false)
             {
                 throw new RpcException(new Status(StatusCode.Internal, "Failed to finalise Ecopath"));
@@ -69,17 +65,20 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
             m_logger.LogError(ex, "In Finalise - exception");
             throw;
         }
+        finally
+        {
+            m_simulationScopeManager.RemoveSimulationScope(request.SimulationId);
+        }
     }
 
     public override async Task<CancelSimulationResponse> CancelSimulation(CancelSimulationRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
-        m_checksimulationservice.ReleaseSimulation(request.SimulationId);
+        var controller = m_simulationScopeManager.GetSimulation(request.SimulationId);
         m_logger.LogInformation("Cancel simulation {SimulationId}", request.SimulationId);
 
         try
         {
-            var result = await m_controller.StopAsync();
+            var result = await controller.StopAsync();
             if (result == false)
             {
                 throw new RpcException(new Status(StatusCode.Internal, "Failed to cancel Ecopath"));
@@ -91,24 +90,28 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
             m_logger.LogError(ex, "In Cancel - exception");
             throw;
         }
+        finally
+        {
+            m_simulationScopeManager.RemoveSimulationScope(request.SimulationId);
+        }
     }
 
     public override async Task<SimulateStepResponse> SimulateStep(SimulateStepRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
+        var controller = m_simulationScopeManager.GetSimulation(request.SimulationId);
         m_logger.LogInformation("Simulate step for simulation {SimulationId}", request.SimulationId);
 
-        var res = await m_controller.ContinueAsync();
+        var res = await controller.ContinueAsync();
 
         return new SimulateStepResponse() { SimulationId = request.SimulationId };
     }
 
     public override async Task<GetBiomassResponse> GetBiomass(GetBiomassRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
+        var controller = m_simulationScopeManager.GetSimulation(request.SimulationId);
         m_logger.LogInformation("GetBiomass for simulation {SimulationId}", request.SimulationId);
 
-        var biomass = await m_controller.GetBiomassAsync();
+        var biomass = await controller.GetBiomassAsync();
 
         var grpcBiomass = new GetBiomassResponse
         {
@@ -144,8 +147,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
 
     public override async Task<UpdateCatchDispositionResponse> UpdateCatchDisposition(UpdateCatchDispositionRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
-        GrpcValidation.ArgumentNotNullOrEmpty(request.SimulationId);
+        var controller = m_simulationScopeManager.GetSimulation(request.SimulationId);
 
         var catchDisposition = new SURIMI.Datamodel.CatchDispositionSummary
         {
@@ -178,17 +180,17 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
             .ToList()
         };
 
-        var res = await m_controller.UpdateCatchDispositionSummaryAsync(catchDisposition);
+        var res = await controller.UpdateCatchDispositionSummaryAsync(catchDisposition);
 
         return new UpdateCatchDispositionResponse() { SimulationId = request.SimulationId };
     }
 
     public override async Task<GetCatchDispositionResponse> GetCatchDisposition(GetCatchDispositionRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
+        var controller = m_simulationScopeManager.GetSimulation(request.SimulationId);
         m_logger.LogInformation("Ecopath GetCatchDisposition for {SimulationId}...", request.SimulationId);
 
-        var catchDisposition = await m_controller.GetCatchDispositionSummaryAsync(
+        var catchDisposition = await controller.GetCatchDispositionSummaryAsync(
             request.StartDateTime.ToDateTime(),
             request.EndDateTime.ToDateTime()
         );
@@ -244,10 +246,10 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
 
     public override async Task<GetFishingActivityResponse> GetFishingActivity(GetFishingActivityRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
+        var controller = m_simulationScopeManager.GetSimulation(request.SimulationId);
         m_logger.LogInformation("Getting Fishing Activity for Simulation {SimulationId}...", request.SimulationId);
 
-        var fishingActivity = await m_controller.GetFishingActivityAsync();
+        var fishingActivity = await controller.GetFishingActivityAsync();
 
         var fishingActivityGrpc = new FishingActivitySummary
         {
@@ -275,7 +277,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
 
     public override async Task<UpdateRegulationsResponse> UpdateRegulations(UpdateRegulationsRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
+        var controller = m_simulationScopeManager.GetSimulation(request.SimulationId);
         m_logger.LogInformation("Updating Regulations for Simulation {SimulationId}", request.SimulationId);
 
         var regulations = new SURIMI.Datamodel.RegulationsSummary
@@ -299,17 +301,17 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
                 .ToList()
         };
 
-        var res = await m_controller.UpdateRegulationsAsync(regulations);
+        var res = await controller.UpdateRegulationsAsync(regulations);
 
         return new UpdateRegulationsResponse() { SimulationId = request.SimulationId };
     }
 
     public override async Task<GetSalesResponse> GetSales(GetSalesRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
+        var controller = m_simulationScopeManager.GetSimulation(request.SimulationId);
         m_logger.LogInformation("Ecopath GetSales for {SimulationId}...", request.SimulationId);
 
-        var salesSummaries = await m_controller.GetSalesSummariesAsync(request.StartDateTime.ToDateTime(), request.EndDateTime.ToDateTime());
+        var salesSummaries = await controller.GetSalesSummariesAsync(request.StartDateTime.ToDateTime(), request.EndDateTime.ToDateTime());
 
         var response = new GetSalesResponse() { SimulationId = request.SimulationId, StartDateTime = request.StartDateTime, EndDateTime = request.EndDateTime, SalesSummary = new SalesSummary() };
         response.SalesSummary.MarketSales.AddRange(
@@ -352,7 +354,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
 
     public override async Task<UpdateSpeciesPricesResponse> UpdateSpeciesPrices(UpdateSpeciesPricesRequest request, ServerCallContext context)
     {
-        await m_checksimulationservice.CheckIfCorrectSimulationAsync(request.SimulationId, context);
+        var controller = m_simulationScopeManager.GetSimulation(request.SimulationId);
         m_logger.LogInformation("Updating prices for {SpeciesCount} species...", request.SpeciesPriceSummary.SpeciesPrices.Count);
 
         var speciesPrices = request.SpeciesPriceSummary.SpeciesPrices
@@ -369,7 +371,7 @@ public class EcologyService : Grpc.Surimi.EcologyService.EcologyServiceBase
             })
             .ToList();
 
-        var res = await m_controller.UpdatePricesAsync(speciesPrices);
+        var res = await controller.UpdatePricesAsync(speciesPrices);
 
         return new UpdateSpeciesPricesResponse() { SimulationId = request.SimulationId };
     }

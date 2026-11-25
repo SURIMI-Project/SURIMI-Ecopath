@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Ecopath.EwE;
 using Ecopath.EwE.Wrapper;
 using Ecopath.Services;
@@ -23,6 +24,11 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        // EwE writes Trace messages from its parallel Ecospace solver threads (e.g. for every IBM packet move).
+        // The DefaultTraceListener forwards these to an attached debugger under a process-wide lock, which
+        // serialises all simulations and slows them down dramatically. Our own logging goes through ILogger.
+        Trace.Listeners.Clear();
+
         var builder = WebApplication.CreateBuilder(args);
 
         // Initialize LoggerFactory of EwE sources that don't get the ILogger via Dependency injection
@@ -77,10 +83,11 @@ public class Program
         });
         builder.Services.AddGrpcReflection();
 
-        builder.Services.AddSingleton<ICheckSimulationService, CheckSimulationService>();
-        builder.Services.AddSingleton<IHcrInitialisationFileService, HcrInitialisationFileService>();
-        builder.Services.AddSingleton<IEwECore, EwE.Wrapper.EwECore>();
-        builder.Services.AddSingleton<IEwEController, EwEController>();
+        builder.Services.AddSingleton<ISimulationScopeManager, SimulationScopeManager>();
+        builder.Services.AddHostedService<ProcessMemoryMonitor>();
+        builder.Services.AddScoped<IHcrInitialisationFileService, HcrInitialisationFileService>();
+        builder.Services.AddScoped<IEwECore, EwE.Wrapper.EwECore>();
+        builder.Services.AddScoped<IEwEController, EwEController>();
         builder.Services.AddSingleton<ASFISSpeciesCodeVocabulary>();
         builder.Services.AddSingleton<ISSCFGGearCodeVocabulary>();
         builder.Services.AddSingleton<ISO3166CountryCodeVocabulary>();
@@ -92,12 +99,21 @@ public class Program
         builder.Services.AddSingleton<IKeyFieldDescriptorIndexer, KeyFieldDescriptorIndexer>();
         builder.Services.AddSingleton<IMultiLevelKeyFactory, MultiLevelKeyFactory>();
         builder.Services.AddSingleton<ProtocolVersionService>();
-        builder.Services.AddSingleton<IEwEConfigurationService, EwEConfigurationService>();
+        builder.Services.AddScoped<IEwEConfigurationService, EwEConfigurationService>();
         builder.Services.AddTransient<ISurimiContractToEwEService, SurimiContractToEwEService>();
         builder.Services.AddTransient<IVocabulariesRegisterService, VocabulariesRegisterService>();
         builder.Services.AddTransient<VaultService>();
 
         var app = builder.Build();
+
+        // To make sure we can find local resources. This is rather hack.
+        Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+
+        // Load storage credentials before vocabulary registration resolves the singleton blob store.
+        app.Services.GetRequiredService<VaultService>().LoadVaultSecretsInEnvironmentVariables();
+
+        // Vocabularies are shared by all simulations, so register them once.
+        app.Services.GetRequiredService<IVocabulariesRegisterService>().RegisterVocabularies();
 
         app.MapDefaultEndpoints();
 
@@ -106,8 +122,6 @@ public class Program
         app.MapGrpcReflectionService();
 
         app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
-
-        app.Services.GetRequiredService<VaultService>().LoadVaultSecretsInEnvironmentVariables();
 
         logger.LogInformation("============================= Logging All Environment Variables =============================");
         foreach (System.Collections.DictionaryEntry envVar in Environment.GetEnvironmentVariables())

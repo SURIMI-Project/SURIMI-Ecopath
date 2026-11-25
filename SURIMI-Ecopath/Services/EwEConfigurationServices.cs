@@ -15,6 +15,7 @@ using SURIMI.Datamodel;
 namespace Ecopath.Services
 {
 
+    /// <inheritdoc />
     public partial class EwEConfigurationService : IEwEConfigurationService
     {
         /// <summary>
@@ -62,13 +63,18 @@ namespace Ecopath.Services
             m_surimiContractToEwEService = surimiContractToEwEService;
         }
 
+        /// <inheritdoc />
         public async Task<IEwEConfiguration> CreateConfigurationAsync(string scenarioName, CancellationToken cancellationToken)
         {
             // Keep each scenario's inputs and outputs under its own blob-store key prefix.
+            if (string.IsNullOrWhiteSpace(scenarioName) || scenarioName is "." or ".." ||
+                scenarioName.IndexOfAny(['/', '\\', ':']) >= 0 || Path.IsPathRooted(scenarioName))
+                throw new ArgumentException("ScenarioName must be a single non-empty subdirectory name.", nameof(scenarioName));
+
             var modelName = $"{scenarioName}.eiixml";
-            var scenarioModelKey = string.Join('/', scenarioName, modelName);
-            if (!await m_blobStore.ExistsAsync(scenarioModelKey, PathType.Input))
-                throw new FileNotFoundException($"EwE model file '{scenarioModelKey}' cannot be found");
+            var scenarioModelKey = $"{scenarioName}/{modelName}";
+            if (!await m_blobStore.ExistsAsync(scenarioModelKey, PathType.Input, cancellationToken))
+                throw new FileNotFoundException($"EwE model file '{scenarioModelKey}' cannot be found.", scenarioModelKey);
 
             // If connected to a remote blob store, copy the scenario directory locally to the Includes folder
             await m_blobStore.CopyToLocalDirectoryOrIgnoreAsync(scenarioName, PathType.Input, cancellationToken);
@@ -113,7 +119,9 @@ namespace Ecopath.Services
             m_mappings.Clear();
 
             // Load fleet segment mappings from the semantics file
-            WriteSpeciesMappingsFromModel(core, configuration, surimiContract.Items.Species);
+
+            // commented this out because the speciesmappings.csv file is now generated from the model, and the semantics file is not used for species mappings
+            // WriteSpeciesMappingsFromModel(core, configuration, surimiContract.Items.Species);
 
             await m_surimiContractToEwEService.ReadSemanticMappings(m_mappings, core, scenarioName);
 
