@@ -138,11 +138,11 @@ public class EcologyServiceTests : IClassFixture<EcopathWebApplicationFactory>
     {
         // Arrange
         var client = CreateClient();
-        var requests = Enumerable.Range(0, 2)
+        var requests = Enumerable.Range(0, 6)
             .Select(_ =>
             {
                 var request = LoadMessage<InitialiseSimulationRequest>(
-                    @"InitialiseSimulation\EcologyService_InitialiseSimulation_Northwestern_med.json");
+                    @"InitialiseSimulation\EcologyService_InitialiseSimulation.json");
                 request.SimulationId = Guid.NewGuid().ToString();
                 return request;
             })
